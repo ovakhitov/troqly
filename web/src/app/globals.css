@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/*
+  Direction artistique « Verre prune » (page Fondations Troqly, relue avec Codex).
+  Palette issue du template Gency ; le verre est réservé aux éléments flottants.
+*/
+:root {
+  --ivoire: #f6f4f3;
+  --surface: #fcfcfb;
+  --ligne: #e9e2e1;
+  --prune: #532753;
+  --prune-nuit: #2f172f;
+  --mauve: #745874;
+  --abricot: #ff8a5b;
+  --statut: #1f7a4d;
+  --action: #532753;
+  --sur-action: #ffffff;
+  --verre: rgba(255, 255, 255, 0.58);
+  --verre-fort: rgba(255, 255, 255, 0.84);
+  --verre-bord: rgba(255, 255, 255, 0.7);
+  --halo: rgba(83, 39, 83, 0.14);
+  --ombre: 0 10px 34px rgba(47, 23, 47, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ivoire: #170d17;
+    --surface: #221522;
+    --ligne: #3a2739;
+    --prune: #e2b8e0;
+    --prune-nuit: #f6ecf4;
+    --mauve: #c3a9c1;
+    --abricot: #ff9b72;
+    --statut: #5fd39a;
+    /* Action principale : prune soutenu aussi la nuit (revue Codex) */
+    --action: #6b336b;
+    --sur-action: #ffffff;
+    --verre: rgba(46, 28, 46, 0.62);
+    --verre-fort: rgba(34, 21, 34, 0.86);
+    --verre-bord: rgba(255, 255, 255, 0.12);
+    --halo: rgba(160, 90, 160, 0.2);
+    --ombre: 0 10px 34px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-ivoire: var(--ivoire);
+  --color-surface: var(--surface);
+  --color-ligne: var(--ligne);
+  --color-prune: var(--prune);
+  --color-prune-nuit: var(--prune-nuit);
+  --color-mauve: var(--mauve);
+  --color-abricot: var(--abricot);
+  --color-statut: var(--statut);
+  --color-action: var(--action);
+  --color-sur-action: var(--sur-action);
+  --font-titre: var(--ff-general), var(--ff-inter), system-ui, sans-serif;
+  --font-sans: var(--ff-inter), system-ui, sans-serif;
+  --radius-carte: 24px;
+  --radius-photo: 20px;
+  --radius-champ: 16px;
+  --ease-verre: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body {
+  background: var(--ivoire);
+  color: var(--prune-nuit);
+}
+
+/* Surface de verre : en-tête, menus, pastilles posées sur les photos */
+@utility verre {
+  background: var(--verre);
+  border: 1px solid var(--verre-bord);
+  box-shadow: var(--ombre), inset 0 1px 0 var(--verre-bord);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Verre plus opaque pour un texte posé sur une photo (prix) */
+@utility verre-fort {
+  background: var(--verre-fort);
+  border: 1px solid var(--verre-bord);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .verre {
+    background: var(--surface);
+  }
+}
+
+/* Halo de marque unique, limité au haut de l'accueil */
+@utility halo {
+  background: radial-gradient(45% 60% at 20% 0%, var(--halo), transparent 70%);
+}
+
+:focus-visible {
+  outline: 3px solid var(--abricot);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
