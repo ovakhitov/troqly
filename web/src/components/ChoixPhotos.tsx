@@ -12,6 +12,17 @@ const EXTENSIONS = /\.(jpe?g|jfif|png|webp|heic|heif)$/i;
 
 type Photo = { chemin: string; apercu: string };
 
+// crypto.randomUUID n'existe qu'en HTTPS ou sur localhost : depuis un téléphone sur le réseau
+// local (http://192.168…), on fabrique l'identifiant avec getRandomValues, disponible partout
+function identifiant() {
+  if (typeof crypto.randomUUID === "function" && window.isSecureContext) return crypto.randomUUID();
+  const o = crypto.getRandomValues(new Uint8Array(16));
+  o[6] = (o[6] & 0x0f) | 0x40;
+  o[8] = (o[8] & 0x3f) | 0x80;
+  const h = Array.from(o, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 class ErreurPhoto extends Error {
   constructor(public raison: "format" | "envoi") {
     super(raison);
@@ -77,7 +88,7 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
       try {
         if (!fichier.type.startsWith("image/") && !EXTENSIONS.test(fichier.name)) throw new ErreurPhoto("format");
         const { blob, extension } = await preparerImage(fichier);
-        const chemin = `${idUtilisateur}/${crypto.randomUUID()}.${extension}`;
+        const chemin = `${idUtilisateur}/${identifiant()}.${extension}`;
         const { error } = await supabase.storage
           .from(BUCKET_PHOTOS)
           .upload(chemin, blob, { contentType: blob.type, upsert: false });

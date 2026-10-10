@@ -14,9 +14,9 @@ import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
 async function origine() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  // Adresse réellement utilisée par le navigateur (localhost sur le PC, 192.168… depuis un téléphone)
   const h = await headers();
-  return h.get("origin") ?? "http://localhost:3001";
+  return h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 }
 
 async function membre(suivant: string) {
