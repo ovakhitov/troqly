@@ -104,3 +104,26 @@ export function IconePourcent({ className }: Props) {
     </svg>
   );
 }
+
+export function IconeBulle({ className }: Props) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <path
+        d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9l-4 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconePersonne({ className }: Props) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <circle cx="10" cy="7" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3.5 17c.8-3 3.3-4.8 6.5-4.8s5.7 1.8 6.5 4.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}

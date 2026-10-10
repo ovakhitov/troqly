@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
-import { IconeLoupe, LogoTroqly } from "./Icones";
+import { IconeBulle, IconeLoupe, IconePersonne, LogoTroqly } from "./Icones";
 
 async function etatMembre() {
   if (!supabaseEnv()) return { connecte: false, nonLus: 0 };
@@ -48,28 +48,30 @@ export async function EnTete() {
           {connecte && (
             <Link
               href="/messages"
-              className="relative rounded-full px-3 py-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface"
+              className="relative inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface sm:px-3"
             >
-              Messages
+              <IconeBulle className="size-5 sm:hidden" />
+              <span className="sr-only sm:not-sr-only">Messages</span>
               {nonLus > 0 && (
-                <span className="ml-1.5 inline-grid min-w-5 place-items-center rounded-full bg-action px-1.5 text-xs text-sur-action">
+                <span className="inline-grid min-w-5 place-items-center rounded-full bg-action px-1.5 text-xs text-sur-action">
                   <span className="sr-only">, non lus : </span>
-                  {nonLus}
+                  {nonLus > 99 ? "99+" : nonLus}
                 </span>
               )}
             </Link>
           )}
           <Link
             href={connecte ? "/compte" : "/connexion"}
-            className="hidden rounded-full px-4 py-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface sm:inline-block"
+            className="inline-flex min-h-11 items-center rounded-full px-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface sm:px-4"
           >
-            {connecte ? "Mon compte" : "Se connecter"}
+            <IconePersonne className="size-5 sm:hidden" />
+            <span className="sr-only sm:not-sr-only">{connecte ? "Mon compte" : "Se connecter"}</span>
           </Link>
           <Link
             href="/deposer"
-            className="rounded-full bg-action px-4 py-2.5 text-sm font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
+            className="inline-flex min-h-11 items-center rounded-full bg-action px-4 text-sm font-semibold whitespace-nowrap text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
           >
-            Déposer une annonce
+            Déposer<span className="sr-only sm:not-sr-only">&nbsp;une annonce</span>
           </Link>
         </nav>
       </div>

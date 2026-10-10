@@ -33,22 +33,27 @@ export default async function PageMessages() {
     .limit(100);
   const conversations = (data ?? []) as unknown as Conversation[];
 
-  // Dernier message et nombre de non-lus par conversation
+  // Aperçu du dernier message, et non-lus comptés sur tous les messages reçus non lus
   const ids = conversations.map((c) => c.id);
-  const { data: messages } = ids.length
-    ? await supabase
-        .from("messages")
-        .select("conversation, auteur, contenu, lu_le")
-        .in("conversation", ids)
-        .order("cree_le", { ascending: false })
-        .limit(500)
-    : { data: [] };
+  const [{ data: recents }, { data: nonLus }] = ids.length
+    ? await Promise.all([
+        supabase
+          .from("messages")
+          .select("conversation, auteur, contenu")
+          .in("conversation", ids)
+          .order("cree_le", { ascending: false })
+          .limit(300),
+        supabase.from("messages").select("conversation").in("conversation", ids).neq("auteur", moi).is("lu_le", null),
+      ])
+    : [{ data: [] }, { data: [] }];
 
   const apercus = new Map<string, { contenu: string; deMoi: boolean; nonLus: number }>();
-  for (const m of messages ?? []) {
-    const a = apercus.get(m.conversation) ?? { contenu: m.contenu, deMoi: m.auteur === moi, nonLus: 0 };
-    if (m.auteur !== moi && !m.lu_le) a.nonLus++;
-    apercus.set(m.conversation, a);
+  for (const m of recents ?? []) {
+    if (!apercus.has(m.conversation)) apercus.set(m.conversation, { contenu: m.contenu, deMoi: m.auteur === moi, nonLus: 0 });
+  }
+  for (const m of nonLus ?? []) {
+    const a = apercus.get(m.conversation);
+    if (a) a.nonLus++;
   }
 
   return (

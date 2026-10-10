@@ -49,11 +49,18 @@ export default async function PageConversation({ params }: { params: Promise<{ i
   const pseudoAutre =
     (conversation.acheteur === moi ? conversation.vendeur_profil?.pseudo : conversation.acheteur_profil?.pseudo) ?? "Membre";
 
-  const [{ data: messages }, { data: blocage }] = await Promise.all([
+  const [{ data: messages }, { data: blocage }, { data: blocageMutuel }] = await Promise.all([
     supabase.from("messages").select("id, auteur, contenu, cree_le").eq("conversation", id).order("cree_le").limit(300),
     supabase.from("blocages").select("bloque").eq("bloqueur", moi).eq("bloque", idAutre).maybeSingle(),
+    // Vrai aussi quand c'est l'autre membre qui vous a bloqué
+    supabase.rpc("blocage_entre", { a: moi, b: idAutre }),
     supabase.rpc("marquer_lu", { id_conversation: id }),
   ]);
+  const raisonDesactivation = blocage
+    ? `Vous avez bloqué ${pseudoAutre}. Débloquez ce membre pour lui écrire.`
+    : blocageMutuel
+      ? "Vous ne pouvez plus écrire dans cette conversation."
+      : undefined;
 
   return (
     <div className="halo min-h-screen">
@@ -105,10 +112,7 @@ export default async function PageConversation({ params }: { params: Promise<{ i
           })}
         </ol>
 
-        <Envoi
-          idConversation={id}
-          desactive={blocage ? `Vous avez bloqué ${pseudoAutre}. Débloquez ce membre pour lui écrire.` : undefined}
-        />
+        <Envoi idConversation={id} desactive={raisonDesactivation} />
       </main>
     </div>
   );
