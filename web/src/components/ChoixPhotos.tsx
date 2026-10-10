@@ -6,26 +6,53 @@ import { BUCKET_PHOTOS, PHOTOS_MAX, urlPhoto } from "@/lib/annonces";
 import { creerClientNavigateur } from "@/lib/supabase/navigateur";
 
 const COTE_MAX = 1600;
-const TYPES_ACCEPTES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+// Le type annoncé varie selon l'appareil (image/jpg, image/pjpeg…) : on se fie d'abord à l'extension,
+// puis au décodage réel de l'image par le navigateur
+const EXTENSIONS = /\.(jpe?g|jfif|png|webp|heic|heif)$/i;
 
 type Photo = { chemin: string; apercu: string };
 
+class ErreurPhoto extends Error {
+  constructor(public raison: "format" | "envoi") {
+    super(raison);
+  }
+}
+
+// Décode l'image : createImageBitmap, ou à défaut une balise <img> (plus tolérante selon les navigateurs)
+async function decoder(fichier: File): Promise<{ source: CanvasImageSource; largeur: number; hauteur: number; liberer: () => void }> {
+  try {
+    const bitmap = await createImageBitmap(fichier, { imageOrientation: "from-image" });
+    return { source: bitmap, largeur: bitmap.width, hauteur: bitmap.height, liberer: () => bitmap.close() };
+  } catch {
+    const url = URL.createObjectURL(fichier);
+    const img = new Image();
+    img.src = url;
+    try {
+      await img.decode();
+    } catch {
+      URL.revokeObjectURL(url);
+      throw new ErreurPhoto("format");
+    }
+    return { source: img, largeur: img.naturalWidth, hauteur: img.naturalHeight, liberer: () => URL.revokeObjectURL(url) };
+  }
+}
+
 // Réduit l'image à 1600 px et la convertit en WebP (ou JPEG si le navigateur ne sait pas)
 async function preparerImage(fichier: File): Promise<{ blob: Blob; extension: "webp" | "jpg" }> {
-  const image = await createImageBitmap(fichier, { imageOrientation: "from-image" });
-  const echelle = Math.min(1, COTE_MAX / Math.max(image.width, image.height));
+  const image = await decoder(fichier);
+  const echelle = Math.min(1, COTE_MAX / Math.max(image.largeur, image.hauteur));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(image.width * echelle);
-  canvas.height = Math.round(image.height * echelle);
-  canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
-  image.close();
+  canvas.width = Math.round(image.largeur * echelle);
+  canvas.height = Math.round(image.hauteur * echelle);
+  canvas.getContext("2d")!.drawImage(image.source, 0, 0, canvas.width, canvas.height);
+  image.liberer();
 
   const versBlob = (type: string) =>
     new Promise<Blob | null>((ok) => canvas.toBlob(ok, type, 0.82));
   const webp = await versBlob("image/webp");
   if (webp?.type === "image/webp") return { blob: webp, extension: "webp" };
   const jpeg = await versBlob("image/jpeg");
-  if (!jpeg) throw new Error("conversion");
+  if (!jpeg) throw new ErreurPhoto("format");
   return { blob: jpeg, extension: "jpg" };
 }
 
@@ -48,16 +75,24 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
 
     for (const fichier of choisis) {
       try {
-        if (fichier.type && !TYPES_ACCEPTES.includes(fichier.type)) throw new Error("type");
+        if (!fichier.type.startsWith("image/") && !EXTENSIONS.test(fichier.name)) throw new ErreurPhoto("format");
         const { blob, extension } = await preparerImage(fichier);
         const chemin = `${idUtilisateur}/${crypto.randomUUID()}.${extension}`;
         const { error } = await supabase.storage
           .from(BUCKET_PHOTOS)
           .upload(chemin, blob, { contentType: blob.type, upsert: false });
-        if (error) throw error;
+        if (error) {
+          console.error("Envoi de la photo refusé :", error.message);
+          throw new ErreurPhoto("envoi");
+        }
         setPhotos((p) => [...p, { chemin, apercu: URL.createObjectURL(blob) }]);
-      } catch {
-        setErreur(`« ${fichier.name} » n'a pas pu être ajoutée. Utilisez une photo JPEG, PNG ou WebP.`);
+      } catch (e) {
+        console.error("Photo non ajoutée :", fichier.name, fichier.type, e);
+        setErreur(
+          e instanceof ErreurPhoto && e.raison === "envoi"
+            ? `« ${fichier.name} » n'a pas pu être envoyée. Vérifiez votre connexion, reconnectez-vous puis réessayez.`
+            : `« ${fichier.name} » n'a pas pu être lue par votre navigateur. Essayez une autre photo, ou enregistrez-la en JPEG.`,
+        );
       } finally {
         setEnvoiEnCours((n) => n - 1);
       }
@@ -130,7 +165,7 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
               ref={champ}
               id="ajout-photos"
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.heic,.heif"
               multiple
               className="peer sr-only"
               onChange={(e) => ajouter(e.target.files)}
