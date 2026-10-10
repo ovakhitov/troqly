@@ -9,6 +9,7 @@ import { creerClientServeur } from "@/lib/supabase/serveur";
 import { montantVendeur } from "@/lib/frais";
 import { enregistrerPaiement, fraisStripe } from "@/lib/synchro-stripe";
 import { annulerEtRembourser, confirmerReception } from "../actions";
+import { EnvoiColis } from "./EnvoiColis";
 import { SaisieCode } from "./SaisieCode";
 
 export const metadata: Metadata = { title: "Commande | Troqly" };
@@ -24,7 +25,18 @@ type Commande = {
   total_centimes: number;
   mode_remise: "main_propre" | "livraison";
   statut: StatutCommande;
+  livraison_centimes: number;
+  transporteur: string | null;
+  mode_livraison: "domicile" | "point_relais" | null;
+  point_relais: string | null;
+  adresse_livraison: Record<string, string | null> | null;
+  numero_suivi: string | null;
+  expediee_le: string | null;
 };
+
+function adresseEnLignes(a: Record<string, string | null>) {
+  return [a.nom, a.line1, a.line2, [a.postal_code, a.city].filter(Boolean).join(" ")].filter(Boolean) as string[];
+}
 
 const boutonPrincipal =
   "rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]";
@@ -46,7 +58,9 @@ export default async function PageCommande({
 
   const { data } = await supabase
     .from("commandes")
-    .select("id, annonce, titre, acheteur, vendeur, prix_centimes, frais_service_centimes, total_centimes, mode_remise, statut")
+    .select(
+      "id, annonce, titre, acheteur, vendeur, prix_centimes, frais_service_centimes, total_centimes, mode_remise, statut, livraison_centimes, transporteur, mode_livraison, point_relais, adresse_livraison, numero_suivi, expediee_le",
+    )
     .eq("id", id)
     .maybeSingle();
   let c = data as Commande | null;
@@ -126,12 +140,24 @@ export default async function PageCommande({
               <>
                 <dt>Frais de service</dt>
                 <dd className="text-right">{formaterPrix(c.frais_service_centimes)}</dd>
+                {c.livraison_centimes > 0 && (
+                  <>
+                    <dt>Livraison {c.transporteur}</dt>
+                    <dd className="text-right">{formaterPrix(c.livraison_centimes)}</dd>
+                  </>
+                )}
                 <dt className="font-semibold">Total payé</dt>
                 <dd className="text-right font-semibold">{formaterPrix(c.total_centimes)}</dd>
               </>
             )}
             {estVendeur && pourVendeur && (
               <>
+                {c.livraison_centimes > 0 && (
+                  <>
+                    <dt>Frais d&apos;envoi payés par l&apos;acheteur</dt>
+                    <dd className="text-right">+ {formaterPrix(c.livraison_centimes)}</dd>
+                  </>
+                )}
                 <dt>Frais de paiement par carte</dt>
                 <dd className="text-right">− {formaterPrix(pourVendeur.fraisCarte)}</dd>
                 <dt className="font-semibold">{c.statut === "terminee" ? "Versé sur votre compte" : "Vous recevrez"}</dt>
@@ -154,6 +180,15 @@ export default async function PageCommande({
 
         {c.statut === "payee" && estAcheteur && c.mode_remise === "livraison" && (
           <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-6">
+            <p className="text-sm text-prune-nuit">
+              {c.expediee_le ? (
+                <>
+                  Colis expédié par {c.transporteur}. Numéro de suivi : <strong className="tabular-nums">{c.numero_suivi}</strong>
+                </>
+              ) : (
+                <>Le vendeur n&apos;a pas encore expédié le colis ({c.transporteur}).</>
+              )}
+            </p>
             <h2 className="font-titre text-lg font-semibold text-prune-nuit">Vous avez reçu l&apos;objet ?</h2>
             <p className="text-sm text-mauve">Confirmez la réception seulement après avoir vérifié l&apos;objet. Le vendeur est alors payé.</p>
             <form action={confirmerReception.bind(null, c.id)}>
@@ -169,9 +204,29 @@ export default async function PageCommande({
             {c.mode_remise === "main_propre" ? (
               <SaisieCode idCommande={c.id} />
             ) : (
-              <p className="text-sm text-prune-nuit">
-                Envoyez l&apos;objet à l&apos;acheteur. Le paiement vous est versé dès qu&apos;il confirme la réception.
-              </p>
+              <div className="grid gap-3">
+                <h2 className="font-titre text-lg font-semibold text-prune-nuit">
+                  À envoyer par {c.transporteur} ({c.mode_livraison === "point_relais" ? "point relais" : "à domicile"})
+                </h2>
+                <address className="text-sm whitespace-pre-line text-prune-nuit not-italic">
+                  {c.mode_livraison === "point_relais"
+                    ? c.point_relais
+                    : c.adresse_livraison
+                      ? adresseEnLignes(c.adresse_livraison).join("\n")
+                      : "Adresse en cours de récupération"}
+                </address>
+                <p className="text-xs text-mauve">
+                  Déposez le colis auprès du transporteur : les frais d&apos;envoi payés par l&apos;acheteur vous sont reversés avec
+                  le prix. Le paiement vous est versé dès que l&apos;acheteur confirme la réception.
+                </p>
+                {c.expediee_le ? (
+                  <p className="text-sm text-prune-nuit">
+                    Expédié. Numéro de suivi : <strong className="tabular-nums">{c.numero_suivi}</strong>
+                  </p>
+                ) : (
+                  <EnvoiColis idCommande={c.id} />
+                )}
+              </div>
             )}
             <form action={annulerEtRembourser.bind(null, c.id)} className="grid gap-2 border-t border-ligne pt-4">
               <label className="flex items-start gap-2 text-sm text-prune-nuit">

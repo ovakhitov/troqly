@@ -13,8 +13,8 @@ export type EtatAnnonce = {
 };
 
 function echec(erreur: string, formData: FormData): EtatAnnonce {
-  const { titre, description, prix, categorie, ville, codePostal, mainPropre, livraison } = lireFormulaireAnnonce(formData);
-  return { erreur, valeurs: { titre, description, prix, categorie, ville, codePostal, mainPropre, livraison } };
+  const { photos: _photos, ...valeurs } = lireFormulaireAnnonce(formData); // eslint-disable-line @typescript-eslint/no-unused-vars
+  return { erreur, valeurs };
 }
 
 async function utilisateurConnecte() {
@@ -47,6 +47,7 @@ export async function creerAnnonce(_: EtatAnnonce, formData: FormData): Promise<
       code_postal: a.codePostal,
       main_propre: a.mainPropre,
       livraison: a.livraison,
+      format_colis: a.livraison ? a.formatColis : null,
     })
     .select("id")
     .single();
@@ -100,6 +101,7 @@ export async function modifierAnnonce(
       code_postal: a.codePostal,
       main_propre: a.mainPropre,
       livraison: a.livraison,
+      format_colis: a.livraison ? a.formatColis : null,
     })
     .eq("id", idAnnonce)
     .eq("vendeur", id)

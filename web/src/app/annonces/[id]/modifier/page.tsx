@@ -19,7 +19,7 @@ export default async function PageModifierAnnonce({ params }: { params: Promise<
   const [{ data: annonce }, { data: categories }] = await Promise.all([
     supabase
       .from("annonces")
-      .select("id, vendeur, titre, description, prix_centimes, categorie, ville, code_postal, main_propre, livraison, photos_annonces(chemin, position)")
+      .select("id, vendeur, titre, description, prix_centimes, categorie, ville, code_postal, main_propre, livraison, format_colis, photos_annonces(chemin, position)")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("categories").select("slug, libelle").order("ordre"),
@@ -44,6 +44,7 @@ export default async function PageModifierAnnonce({ params }: { params: Promise<
           codePostal: annonce.code_postal,
           mainPropre: annonce.main_propre,
           livraison: annonce.livraison,
+          formatColis: annonce.format_colis ?? "",
           photos: [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => p.chemin),
         }}
       />

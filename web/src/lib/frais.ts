@@ -3,7 +3,7 @@
 // (décision du 10/10/2026) : Troqly garde ainsi exactement sa commission.
 // Les frais Connect par vendeur ne sont pas encore couverts (décision en attente).
 
-const COMMISSION_BPS = Number(process.env.TROQLY_COMMISSION_BPS ?? 125); // 1,25 %
+export const COMMISSION_BPS = Number(process.env.TROQLY_COMMISSION_BPS ?? 125); // 1,25 %
 
 export function calculerFrais(prixCentimes: number) {
   const commission = Math.ceil((prixCentimes * COMMISSION_BPS) / 10_000);

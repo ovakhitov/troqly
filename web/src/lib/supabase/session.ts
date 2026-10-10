@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseEnv } from "./env";
 
-const PAGES_PROTEGEES = ["/compte", "/deposer", "/messages", "/moderation", "/commandes"];
+const PAGES_PROTEGEES = ["/compte", "/deposer", "/messages", "/moderation", "/commandes", "/offres"];
 
 // Rafraîchit la session à chaque requête et protège les pages réservées aux membres
 export async function mettreAJourSession(request: NextRequest) {

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { EtatAnnonce } from "@/app/annonces/actions";
+import { FORMATS_COLIS, libellesFormat } from "@/lib/annonces";
 import { ChoixPhotos } from "./ChoixPhotos";
 import { BoutonEnvoyer, Champ, Message } from "./Formulaire";
 
@@ -14,6 +15,7 @@ export type ValeursAnnonce = {
   codePostal: string;
   mainPropre: boolean;
   livraison: boolean;
+  formatColis: string;
   photos: string[];
 };
 
@@ -94,9 +96,32 @@ export function FormulaireAnnonce({ action, idUtilisateur, categories, initiales
         </label>
         <label className="flex items-center gap-3 text-prune-nuit">
           <input type="checkbox" name="livraison" defaultChecked={v.livraison} className="size-4 accent-[var(--action)]" />
-          Livraison
+          Livraison (frais d&apos;envoi payés par l&apos;acheteur)
         </label>
       </fieldset>
+
+      <div className="grid min-w-0 gap-1.5">
+        <label htmlFor="formatColis" className="text-sm font-semibold text-prune-nuit">
+          Taille du colis (si livraison)
+        </label>
+        <select
+          id="formatColis"
+          name="formatColis"
+          defaultValue={v.formatColis}
+          aria-describedby="formatColis-aide"
+          className="w-full rounded-champ border border-ligne bg-surface px-4 py-3 text-prune-nuit outline-none focus:border-prune"
+        >
+          <option value="">Choisissez une taille</option>
+          {FORMATS_COLIS.map((f) => (
+            <option key={f} value={f}>
+              {libellesFormat[f]}
+            </option>
+          ))}
+        </select>
+        <p id="formatColis-aide" className="text-xs text-mauve">
+          Elle fixe le prix d&apos;envoi proposé à l&apos;acheteur : Mondial Relay, Relais Colis, Colissimo ou Chronopost.
+        </p>
+      </div>
 
       <BoutonEnvoyer enCours="Enregistrement…">{libelleBouton}</BoutonEnvoyer>
     </form>

@@ -4,7 +4,9 @@ import { randomInt } from "node:crypto";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type Stripe from "stripe";
 import { calculerFrais, montantVendeur } from "@/lib/frais";
+import { COLONNES_OFFRE, offreUtilisable, prixConvenu, type Offre } from "@/lib/offres";
 import { fraisStripe } from "@/lib/synchro-stripe";
 import { stripe } from "@/lib/stripe";
 import { lienActivation } from "@/lib/stripe-connect";
@@ -77,7 +79,7 @@ export async function acheter(idAnnonce: string, formData: FormData) {
 
   const { data: annonce } = await supabase
     .from("annonces")
-    .select("id, vendeur, titre, prix_centimes, statut, moderation, main_propre, livraison")
+    .select("id, vendeur, titre, prix_centimes, statut, moderation, main_propre, livraison, format_colis")
     .eq("id", idAnnonce)
     .maybeSingle();
   if (!annonce || annonce.moderation !== "visible" || annonce.statut !== "publiee") retourErreur("indisponible");
@@ -88,6 +90,41 @@ export async function acheter(idAnnonce: string, formData: FormData) {
     retourErreur("mode");
   }
 
+  // Livraison : tarif du transporteur choisi, pour la taille de colis de l'annonce
+  let tarif: { id: number; libelle: string; mode: "domicile" | "point_relais"; prix_centimes: number } | null = null;
+  let pointRelais: string | null = null;
+  if (mode === "livraison") {
+    const { data } = await supabase
+      .from("tarifs_livraison")
+      .select("id, libelle, mode, prix_centimes")
+      .eq("id", Number(formData.get("tarif")))
+      .eq("format", annonce.format_colis ?? "")
+      .eq("actif", true)
+      .maybeSingle();
+    if (!data) retourErreur("mode");
+    tarif = data;
+    if (tarif.mode === "point_relais") {
+      pointRelais = String(formData.get("pointRelais") ?? "").trim().slice(0, 300);
+      if (pointRelais.length < 5) retourErreur("relais");
+    }
+  }
+
+  // Prix négocié : offre acceptée, encore valable, de cet acheteur sur cette annonce
+  let prix = annonce.prix_centimes as number;
+  let idOffre: number | null = null;
+  if (formData.get("offre")) {
+    const { data: offre } = await supabase
+      .from("offres")
+      .select(COLONNES_OFFRE)
+      .eq("id", Number(formData.get("offre")))
+      .eq("annonce", annonce.id)
+      .eq("acheteur", id)
+      .maybeSingle();
+    if (!offre || !offreUtilisable(offre as Offre)) retourErreur("offre");
+    prix = prixConvenu(offre as Offre);
+    idOffre = (offre as Offre).id;
+  }
+
   const admin = creerClientAdmin();
   const { data: compteVendeur } = await admin
     .from("comptes_paiement")
@@ -96,7 +133,8 @@ export async function acheter(idAnnonce: string, formData: FormData) {
     .maybeSingle();
   if (!compteVendeur?.versements_actifs) retourErreur("vendeur");
 
-  const frais = calculerFrais(annonce.prix_centimes);
+  const frais = calculerFrais(prix);
+  const livraison = tarif?.prix_centimes ?? 0;
   const { data: commande, error } = await admin
     .from("commandes")
     .insert({
@@ -106,13 +144,36 @@ export async function acheter(idAnnonce: string, formData: FormData) {
       vendeur: annonce.vendeur,
       prix_centimes: frais.prixCentimes,
       frais_service_centimes: frais.fraisServiceCentimes,
-      total_centimes: frais.totalCentimes,
+      livraison_centimes: livraison,
+      total_centimes: frais.totalCentimes + livraison,
       mode_remise: mode,
+      transporteur: tarif?.libelle ?? null,
+      mode_livraison: tarif?.mode ?? null,
+      point_relais: pointRelais,
+      offre: idOffre,
       code_remise: String(randomInt(0, 1_000_000)).padStart(6, "0"),
     })
     .select("id")
     .single();
   if (error || !commande) retourErreur("erreur");
+
+  const lignes: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    { quantity: 1, price_data: { currency: "eur", unit_amount: frais.prixCentimes, product_data: { name: annonce.titre } } },
+    {
+      quantity: 1,
+      price_data: { currency: "eur", unit_amount: frais.fraisServiceCentimes, product_data: { name: "Frais de service Troqly (1,25 %)" } },
+    },
+  ];
+  if (tarif) {
+    lignes.push({
+      quantity: 1,
+      price_data: {
+        currency: "eur",
+        unit_amount: tarif.prix_centimes,
+        product_data: { name: `Livraison ${tarif.libelle} (${tarif.mode === "point_relais" ? "point relais" : "à domicile"})` },
+      },
+    });
+  }
 
   const base = await origine();
   const session = await stripe().checkout.sessions.create(
@@ -120,20 +181,9 @@ export async function acheter(idAnnonce: string, formData: FormData) {
       mode: "payment",
       customer_email: email,
       locale: "fr",
-      line_items: [
-        {
-          quantity: 1,
-          price_data: { currency: "eur", unit_amount: frais.prixCentimes, product_data: { name: annonce.titre } },
-        },
-        {
-          quantity: 1,
-          price_data: {
-            currency: "eur",
-            unit_amount: frais.fraisServiceCentimes,
-            product_data: { name: "Frais de service Troqly (1,25 %)" },
-          },
-        },
-      ],
+      line_items: lignes,
+      // Adresse demandée par Stripe pour une livraison à domicile
+      ...(tarif?.mode === "domicile" ? { shipping_address_collection: { allowed_countries: ["FR"] } } : {}),
       payment_intent_data: { transfer_group: commande.id, metadata: { commande: commande.id } },
       metadata: { commande: commande.id },
       // Une commande non payée libère l'annonce au bout de 30 minutes
@@ -247,4 +297,29 @@ export async function annulerEtRembourser(idCommande: string) {
 
   revalidatePath(`/commandes/${idCommande}`);
   redirect(`/commandes/${idCommande}?remboursee=1`);
+}
+
+// Livraison : le vendeur indique le numéro de suivi une fois le colis déposé
+export type EtatEnvoi = { erreur?: string };
+
+export async function marquerExpediee(idCommande: string, _: EtatEnvoi, formData: FormData): Promise<EtatEnvoi> {
+  const { supabase, id } = await membre(`/commandes/${idCommande}`);
+  const { data: c } = await supabase
+    .from("commandes")
+    .select("vendeur, statut, mode_remise")
+    .eq("id", idCommande)
+    .maybeSingle();
+  if (!c || c.vendeur !== id || c.statut !== "payee" || c.mode_remise !== "livraison") {
+    return { erreur: "Cette commande ne peut pas être marquée comme expédiée." };
+  }
+  const suivi = String(formData.get("suivi") ?? "").replace(/\s/g, "").toUpperCase();
+  if (!/^[A-Z0-9]{6,40}$/.test(suivi)) return { erreur: "Saisissez le numéro de suivi indiqué sur le reçu du transporteur." };
+
+  await creerClientAdmin()
+    .from("commandes")
+    .update({ numero_suivi: suivi, expediee_le: new Date().toISOString() })
+    .eq("id", idCommande)
+    .eq("statut", "payee");
+  revalidatePath(`/commandes/${idCommande}`);
+  return {};
 }

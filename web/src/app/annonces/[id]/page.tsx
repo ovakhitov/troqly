@@ -4,8 +4,12 @@ import { notFound } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
-import { calculerFrais } from "@/lib/frais";
+import { COMMISSION_BPS } from "@/lib/frais";
+import { COLONNES_OFFRE, offreUtilisable, prixConvenu, type Offre } from "@/lib/offres";
 import { stripeConfigure } from "@/lib/stripe";
+import { Achat, type Tarif } from "./Achat";
+import { Negociation } from "./Negociation";
+import { OffresRecues } from "./OffresRecues";
 import { acheter } from "../../commandes/actions";
 import { contacterVendeur } from "../../messages/actions";
 import { basculerFavori } from "../actions";
@@ -26,6 +30,8 @@ const ERREURS_ACHAT: Record<string, string> = {
   indisponible: "Cet objet n'est plus disponible à l'achat.",
   mode: "Ce mode de remise n'est pas proposé pour cet objet.",
   vendeur: "Ce vendeur n'a pas encore activé les paiements en ligne. Contactez-le par message.",
+  relais: "Indiquez le nom et l'adresse du point relais choisi.",
+  offre: "Le prix négocié n'est plus valable. Faites une nouvelle offre au vendeur.",
   erreur: "Le paiement n'a pas pu démarrer. Réessayez dans un instant.",
 };
 
@@ -37,7 +43,7 @@ async function chargerAnnonce(id: string) {
   const { data } = await supabase
     .from("annonces")
     .select(
-      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, statut, moderation, cree_le, categories(libelle), profils!annonces_vendeur_fkey(pseudo, cree_le), photos_annonces(chemin, position)",
+      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, format_colis, statut, moderation, cree_le, categories(libelle), profils!annonces_vendeur_fkey(pseudo, cree_le), photos_annonces(chemin, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -64,8 +70,39 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
       : Promise.resolve({ data: null }),
     stripeConfigure() ? supabase.rpc("vendeur_paiement_actif", { id_vendeur: annonce.vendeur }) : Promise.resolve({ data: false }),
   ]);
-  const frais = calculerFrais(annonce.prix_centimes);
-  const achetable = Boolean(paiementActif) && annonce.statut === "publiee" && annonce.moderation === "visible";
+  // Tarifs d'envoi selon la taille du colis choisie par le vendeur
+  const { data: tarifsData } =
+    annonce.livraison && annonce.format_colis
+      ? await supabase
+          .from("tarifs_livraison")
+          .select("id, libelle, mode, prix_centimes, delai")
+          .eq("format", annonce.format_colis)
+          .eq("actif", true)
+          .order("ordre")
+      : { data: [] };
+  const tarifs = (tarifsData ?? []) as Tarif[];
+
+  // Négociation en cours de ce membre sur cette annonce
+  const { data: offreData } =
+    idMembre && !estVendeur
+      ? await supabase
+          .from("offres")
+          .select(COLONNES_OFFRE)
+          .eq("annonce", id)
+          .eq("acheteur", idMembre)
+          .order("cree_le", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+  const offreAcheteur = offreData as Offre | null;
+  const offreAcceptee =
+    offreAcheteur && offreUtilisable(offreAcheteur)
+      ? { id: offreAcheteur.id, prix: prixConvenu(offreAcheteur), jusquAu: offreAcheteur.valable_jusqu_au! }
+      : null;
+
+  const remisePossible = annonce.main_propre || tarifs.length > 0;
+  const achetable =
+    Boolean(paiementActif) && remisePossible && annonce.statut === "publiee" && annonce.moderation === "visible";
 
   const photos = [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => urlPhoto(p.chemin));
   const statut = annonce.statut as StatutAnnonce;
@@ -134,37 +171,17 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
               {!estVendeur && (
                 <div className="grid gap-3">
                   {achetable && idMembre && (
-                    <form action={acheter.bind(null, annonce.id)} className="grid gap-3 rounded-champ border border-ligne bg-ivoire p-4">
-                      {annonce.main_propre && annonce.livraison ? (
-                        <fieldset className="grid gap-1.5">
-                          <legend className="mb-1 text-sm font-semibold text-prune-nuit">Remise</legend>
-                          <label className="flex items-center gap-2 text-sm text-prune-nuit">
-                            <input type="radio" name="mode" value="main_propre" defaultChecked className="size-4 accent-[var(--action)]" />
-                            En main propre
-                          </label>
-                          <label className="flex items-center gap-2 text-sm text-prune-nuit">
-                            <input type="radio" name="mode" value="livraison" className="size-4 accent-[var(--action)]" />
-                            Livraison (frais d&apos;envoi à convenir avec le vendeur)
-                          </label>
-                        </fieldset>
-                      ) : (
-                        <input type="hidden" name="mode" value={annonce.livraison ? "livraison" : "main_propre"} />
-                      )}
-                      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-prune-nuit tabular-nums">
-                        <dt>Prix</dt>
-                        <dd className="text-right">{formaterPrix(frais.prixCentimes)}</dd>
-                        <dt>Frais de service (1,25 %)</dt>
-                        <dd className="text-right">{formaterPrix(frais.fraisServiceCentimes)}</dd>
-                        <dt className="font-semibold">Total</dt>
-                        <dd className="text-right font-semibold">{formaterPrix(frais.totalCentimes)}</dd>
-                      </dl>
-                      <button type="submit" className={boutonPrincipal}>
-                        Acheter
-                      </button>
-                      <p className="text-xs text-mauve">
-                        Paiement sécurisé par Stripe. Le vendeur n&apos;est payé qu&apos;après la remise de l&apos;objet.
-                      </p>
-                    </form>
+                    <Achat
+                      action={acheter.bind(null, annonce.id)}
+                      prixCentimes={annonce.prix_centimes}
+                      offre={offreAcceptee}
+                      mainPropre={annonce.main_propre}
+                      tarifs={tarifs}
+                      commissionBps={COMMISSION_BPS}
+                    />
+                  )}
+                  {achetable && idMembre && !offreAcceptee && (
+                    <Negociation idAnnonce={annonce.id} prixCentimes={annonce.prix_centimes} offre={offreAcheteur} />
                   )}
                   {statut !== "vendue" &&
                     (idMembre ? (
@@ -211,6 +228,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
               </div>
             )}
 
+            {estVendeur && <OffresRecues idAnnonce={annonce.id} />}
             {estVendeur && <GestionAnnonce id={annonce.id} statut={statut} />}
             {idMembre && !estVendeur && <Signaler idAnnonce={annonce.id} />}
 

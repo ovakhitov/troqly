@@ -8,6 +8,7 @@ import {
   bloquerCompte,
   changerRole,
   modererAnnonce,
+  modifierTarif,
   rejeterSignalement,
   supprimerAnnonceModeration,
 } from "./actions";
@@ -18,8 +19,11 @@ const ONGLETS = [
   ["signalements", "Signalements"],
   ["masquees", "Annonces masquées"],
   ["membres", "Membres"],
+  ["livraison", "Tarifs de livraison"],
   ["journal", "Journal"],
 ] as const;
+
+const RESERVES_ADMIN: string[] = ["journal", "livraison"];
 
 const MOTIFS: Record<string, string> = {
   arnaque: "Arnaque",
@@ -62,7 +66,7 @@ export default async function PageModeration({
   const estAdmin = role === "administrateur";
 
   const onglet = ONGLETS.some(([o]) => o === ongletDemande) ? ongletDemande! : "signalements";
-  if (onglet === "journal" && !estAdmin) notFound();
+  if (RESERVES_ADMIN.includes(onglet) && !estAdmin) notFound();
 
   return (
     <div className="halo min-h-screen">
@@ -71,7 +75,7 @@ export default async function PageModeration({
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Modération</h1>
 
         <nav className="flex flex-wrap gap-2" aria-label="Sections">
-          {ONGLETS.filter(([o]) => o !== "journal" || estAdmin).map(([o, libelle]) => (
+          {ONGLETS.filter(([o]) => !RESERVES_ADMIN.includes(o) || estAdmin).map(([o, libelle]) => (
             <Link
               key={o}
               href={`/moderation?onglet=${o}`}
@@ -94,6 +98,7 @@ export default async function PageModeration({
         {onglet === "signalements" && <Signalements />}
         {onglet === "masquees" && <Masquees />}
         {onglet === "membres" && <Membres recherche={q} estAdmin={estAdmin} />}
+        {onglet === "livraison" && <Tarifs />}
         {onglet === "journal" && <Journal />}
       </main>
     </div>
@@ -330,4 +335,57 @@ async function Journal() {
 
 function Vide({ texte }: { texte: string }) {
   return <p className="rounded-carte border border-ligne bg-surface p-6 text-mauve">{texte}</p>;
+}
+
+async function Tarifs() {
+  const supabase = await creerClientServeur();
+  const { data } = await supabase
+    .from("tarifs_livraison")
+    .select("id, libelle, mode, format, prix_centimes, delai, actif")
+    .order("ordre")
+    .order("format");
+  const tarifs = (data ?? []) as {
+    id: number;
+    libelle: string;
+    mode: string;
+    format: string;
+    prix_centimes: number;
+    delai: string;
+    actif: boolean;
+  }[];
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-sm text-mauve">
+        Prix d&apos;envoi proposés aux acheteurs, payés par eux et reversés au vendeur. Vérifiez-les sur les grilles des
+        transporteurs avant la mise en ligne.
+      </p>
+      <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+        {tarifs.map((t) => (
+          <li key={t.id} className="border-b border-ligne p-4 last:border-b-0">
+            <form action={modifierTarif.bind(null, t.id)} className="flex flex-wrap items-center gap-3">
+              <input type="hidden" name="onglet" value="livraison" />
+              <span className="min-w-[14rem] flex-1 text-sm text-prune-nuit">
+                <strong>{t.libelle}</strong> · {t.mode === "point_relais" ? "point relais" : "domicile"} · colis {t.format} ·{" "}
+                {t.delai}
+              </span>
+              <label className="sr-only" htmlFor={`prix-${t.id}`}>Prix en euros</label>
+              <input
+                id={`prix-${t.id}`}
+                name="prix"
+                inputMode="decimal"
+                defaultValue={(t.prix_centimes / 100).toFixed(2).replace(".", ",")}
+                className={`${champMotif} w-24 flex-none text-right tabular-nums`}
+              />
+              <label className="flex items-center gap-1.5 text-xs text-prune-nuit">
+                <input type="checkbox" name="actif" defaultChecked={t.actif} className="size-4 accent-[var(--action)]" />
+                Proposé
+              </label>
+              <button type="submit" className={bouton}>Enregistrer</button>
+            </form>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }

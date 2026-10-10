@@ -125,6 +125,9 @@ export default async function PageCompte({
         <Link href="/commandes" className="text-prune hover:underline">
           Achats et ventes
         </Link>
+        <Link href="/offres" className="text-prune hover:underline">
+          Négociations
+        </Link>
         <Link href="/messages" className="text-prune hover:underline">
           Messages
         </Link>

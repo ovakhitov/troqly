@@ -14,6 +14,7 @@ export async function fraisStripe(idCharge: string) {
 // le résultat est le même quel que soit le premier arrivé.
 export async function enregistrerPaiement(idCommande: string, idSession: string) {
   const session = await stripe().checkout.sessions.retrieve(idSession, { expand: ["payment_intent"] });
+  const adresse = session.collected_information?.shipping_details ?? null;
   if (session.metadata?.commande !== idCommande || session.payment_status !== "paid") return false;
 
   const paiement = session.payment_intent;
@@ -23,10 +24,16 @@ export async function enregistrerPaiement(idCommande: string, idSession: string)
   const admin = creerClientAdmin();
   const { data: maj, error } = await admin
     .from("commandes")
-    .update({ statut: "payee", payee_le: new Date().toISOString(), stripe_paiement: paiement.id, stripe_charge: charge })
+    .update({
+      statut: "payee",
+      payee_le: new Date().toISOString(),
+      stripe_paiement: paiement.id,
+      stripe_charge: charge,
+      ...(adresse ? { adresse_livraison: { nom: adresse.name, ...adresse.address } } : {}),
+    })
     .eq("id", idCommande)
     .eq("statut", "en_attente")
-    .select("annonce")
+    .select("annonce, offre")
     .maybeSingle();
 
   if (error?.code === "23505") {
@@ -38,5 +45,6 @@ export async function enregistrerPaiement(idCommande: string, idSession: string)
   if (maj?.annonce) {
     await admin.from("annonces").update({ statut: "reservee" }).eq("id", maj.annonce).eq("statut", "publiee");
   }
+  if (maj?.offre) await admin.from("offres").update({ statut: "utilisee" }).eq("id", maj.offre);
   return true;
 }
