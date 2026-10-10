@@ -160,7 +160,7 @@ async function Masquees() {
   const supabase = await creerClientServeur();
   const { data } = await supabase
     .from("annonces")
-    .select("id, titre, modifie_le, profils(pseudo)")
+    .select("id, titre, modifie_le, profils!annonces_vendeur_fkey(pseudo)")
     .eq("moderation", "masquee")
     .order("modifie_le", { ascending: false })
     .limit(100);

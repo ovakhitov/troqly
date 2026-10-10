@@ -37,7 +37,7 @@ async function chargerAnnonce(id: string) {
   const { data } = await supabase
     .from("annonces")
     .select(
-      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, statut, moderation, cree_le, categories(libelle), profils(pseudo, cree_le), photos_annonces(chemin, position)",
+      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, statut, moderation, cree_le, categories(libelle), profils!annonces_vendeur_fkey(pseudo, cree_le), photos_annonces(chemin, position)",
     )
     .eq("id", id)
     .maybeSingle();
