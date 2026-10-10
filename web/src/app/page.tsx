@@ -64,13 +64,18 @@ const questions = [
   },
 ];
 
-export default async function Accueil() {
-  const { categories, annonces } = await chargerAccueil();
+export default async function Accueil({ searchParams }: { searchParams: Promise<{ compte?: string }> }) {
+  const [{ categories, annonces }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
   return (
     <div className="halo min-h-screen">
       <EnTete />
 
       <main className="mx-auto grid max-w-6xl gap-16 px-4 pt-8 pb-20">
+        {compte === "supprime" && (
+          <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
+            Votre compte et toutes ses données ont été supprimés.
+          </p>
+        )}
         {/* Carte d'accroche (héros de Gency) */}
         <section className="grid gap-6 rounded-[32px] border border-ligne bg-surface p-6 sm:p-10">
           <div className="grid max-w-2xl gap-4">

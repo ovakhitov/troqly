@@ -15,7 +15,7 @@ export const libellesStatut: Record<StatutAnnonce, string> = {
 export const SELECTION_CARTE =
   "id, titre, prix_centimes, ville, statut, main_propre, livraison, cree_le, photos_annonces(chemin, position)";
 
-type LigneCarte = {
+export type LigneCarte = {
   id: string;
   titre: string;
   prix_centimes: number;

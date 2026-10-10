@@ -4,10 +4,16 @@ import { notFound } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
+import { contacterVendeur } from "../../messages/actions";
+import { basculerFavori } from "../actions";
 import { Galerie } from "./Galerie";
 import { GestionAnnonce } from "./GestionAnnonce";
+import { Signaler } from "./Signaler";
 
-type Params = { params: Promise<{ id: string }>; searchParams: Promise<{ publiee?: string }> };
+const boutonPrincipal =
+  "block w-full rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]";
+
+type Params = { params: Promise<{ id: string }>; searchParams: Promise<{ publiee?: string; contact?: string }> };
 
 const ID_VALIDE = /^[0-9a-f-]{36}$/;
 
@@ -30,13 +36,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function PageAnnonce({ params, searchParams }: Params) {
-  const [{ id }, { publiee }] = await Promise.all([params, searchParams]);
+  const [{ id }, { publiee, contact }] = await Promise.all([params, searchParams]);
   const annonce = await chargerAnnonce(id);
   if (!annonce) notFound();
 
   const supabase = await creerClientServeur();
   const { data: session } = await supabase.auth.getClaims();
-  const estVendeur = session?.claims?.sub === annonce.vendeur;
+  const idMembre = session?.claims?.sub;
+  const estVendeur = idMembre === annonce.vendeur;
+  const { data: favori } = idMembre
+    ? await supabase.from("favoris").select("annonce").eq("membre", idMembre).eq("annonce", id).maybeSingle()
+    : { data: null };
 
   const photos = [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => urlPhoto(p.chemin));
   const statut = annonce.statut as StatutAnnonce;
@@ -50,6 +60,11 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
         {publiee && (
           <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
             Votre annonce est publiée.
+          </p>
+        )}
+        {contact === "impossible" && (
+          <p role="alert" className="rounded-champ border border-abricot bg-surface px-4 py-3 text-sm text-prune-nuit">
+            Impossible de contacter ce vendeur : l&apos;annonce n&apos;est plus disponible ou l&apos;un de vous a bloqué l&apos;autre.
           </p>
         )}
         {annonce.moderation === "masquee" && (
@@ -92,10 +107,33 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                 {annonce.main_propre && <li>Remise en main propre possible</li>}
                 {annonce.livraison && <li>Livraison possible</li>}
               </ul>
-              {!estVendeur && statut !== "vendue" && (
-                <p className="rounded-champ border border-ligne bg-ivoire px-4 py-3 text-sm text-mauve">
-                  La messagerie et le paiement en ligne arrivent bientôt sur Troqly.
-                </p>
+              {!estVendeur && (
+                <div className="grid gap-3">
+                  {statut !== "vendue" &&
+                    (idMembre ? (
+                      <form action={contacterVendeur.bind(null, annonce.id)}>
+                        <button type="submit" className={boutonPrincipal}>
+                          Contacter le vendeur
+                        </button>
+                      </form>
+                    ) : (
+                      <Link href={`/connexion?suivant=/annonces/${annonce.id}`} className={`${boutonPrincipal} text-center`}>
+                        Se connecter pour contacter
+                      </Link>
+                    ))}
+                  {idMembre && (
+                    <form action={basculerFavori.bind(null, annonce.id, !favori)}>
+                      <button
+                        type="submit"
+                        aria-pressed={Boolean(favori)}
+                        className="w-full rounded-full border border-ligne px-6 py-3 font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune"
+                      >
+                        {favori ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      </button>
+                    </form>
+                  )}
+                  <p className="text-xs text-mauve">Le paiement en ligne arrive bientôt sur Troqly.</p>
+                </div>
               )}
             </div>
 
@@ -111,6 +149,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             )}
 
             {estVendeur && <GestionAnnonce id={annonce.id} statut={statut} />}
+            {idMembre && !estVendeur && <Signaler idAnnonce={annonce.id} />}
 
             <Link href="/annonces" className="text-sm font-semibold text-prune hover:underline">
               Retour aux annonces

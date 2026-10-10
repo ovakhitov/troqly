@@ -151,3 +151,41 @@ export async function retirerPhotoNonPubliee(chemin: string) {
   const { data } = await supabase.from("photos_annonces").select("id").eq("chemin", chemin).maybeSingle();
   if (!data) await supabase.storage.from(BUCKET_PHOTOS).remove([chemin]);
 }
+
+export async function basculerFavori(idAnnonce: string, ajouter: boolean) {
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.auth.getClaims();
+  const id = data?.claims?.sub;
+  if (!id) redirect(`/connexion?suivant=/annonces/${idAnnonce}`);
+
+  if (ajouter) await supabase.from("favoris").insert({ membre: id, annonce: idAnnonce });
+  else await supabase.from("favoris").delete().eq("membre", id).eq("annonce", idAnnonce);
+  revalidatePath(`/annonces/${idAnnonce}`);
+  revalidatePath("/compte/favoris");
+}
+
+const MOTIFS = ["arnaque", "interdit", "contenu_choquant", "doublon", "mauvaise_categorie", "autre"] as const;
+
+export type EtatSignalement = { erreur?: string; succes?: string };
+
+export async function signalerAnnonce(
+  idAnnonce: string,
+  _: EtatSignalement,
+  formData: FormData,
+): Promise<EtatSignalement> {
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.auth.getClaims();
+  const id = data?.claims?.sub;
+  if (!id) redirect(`/connexion?suivant=/annonces/${idAnnonce}`);
+
+  const motif = formData.get("motif");
+  if (typeof motif !== "string" || !(MOTIFS as readonly string[]).includes(motif)) {
+    return { erreur: "Choisissez un motif." };
+  }
+  const details = String(formData.get("details") ?? "").trim().slice(0, 1000) || null;
+
+  const { error } = await supabase.from("signalements").insert({ auteur: id, annonce: idAnnonce, motif, details });
+  if (error?.code === "23505") return { succes: "Vous avez déjà signalé cette annonce. La modération va l'examiner." };
+  if (error) return { erreur: "Le signalement n'a pas pu être envoyé. Réessayez." };
+  return { succes: "Merci. La modération va examiner cette annonce." };
+}
