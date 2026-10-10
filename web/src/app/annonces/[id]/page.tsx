@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { EnTete } from "@/components/EnTete";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
@@ -37,7 +38,8 @@ const ERREURS_ACHAT: Record<string, string> = {
 
 const ID_VALIDE = /^[0-9a-f-]{36}$/;
 
-async function chargerAnnonce(id: string) {
+// cache() : une seule requête partagée entre generateMetadata et la page
+const chargerAnnonce = cache(async (id: string) => {
   if (!ID_VALIDE.test(id)) return null;
   const supabase = await creerClientServeur();
   const { data } = await supabase
@@ -48,7 +50,7 @@ async function chargerAnnonce(id: string) {
     .eq("id", id)
     .maybeSingle();
   return data;
-}
+});
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const annonce = await chargerAnnonce((await params).id);
@@ -64,28 +66,24 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
   const { data: session } = await supabase.auth.getClaims();
   const idMembre = session?.claims?.sub;
   const estVendeur = idMembre === annonce.vendeur;
-  const [{ data: favori }, { data: paiementActif }] = await Promise.all([
+  // Requêtes indépendantes lancées en parallèle
+  const [{ data: favori }, { data: paiementActif }, { data: tarifsData }, { data: offreData }] = await Promise.all([
     idMembre
       ? supabase.from("favoris").select("annonce").eq("membre", idMembre).eq("annonce", id).maybeSingle()
       : Promise.resolve({ data: null }),
     stripeConfigure() ? supabase.rpc("vendeur_paiement_actif", { id_vendeur: annonce.vendeur }) : Promise.resolve({ data: false }),
-  ]);
-  // Tarifs d'envoi selon la taille du colis choisie par le vendeur
-  const { data: tarifsData } =
+    // Tarifs d'envoi selon la taille du colis choisie par le vendeur
     annonce.livraison && annonce.format_colis
-      ? await supabase
+      ? supabase
           .from("tarifs_livraison")
           .select("id, libelle, mode, prix_centimes, delai")
           .eq("format", annonce.format_colis)
           .eq("actif", true)
           .order("ordre")
-      : { data: [] };
-  const tarifs = (tarifsData ?? []) as Tarif[];
-
-  // Négociation en cours de ce membre sur cette annonce
-  const { data: offreData } =
+      : Promise.resolve({ data: [] }),
+    // Négociation en cours de ce membre sur cette annonce
     idMembre && !estVendeur
-      ? await supabase
+      ? supabase
           .from("offres")
           .select(COLONNES_OFFRE)
           .eq("annonce", id)
@@ -93,7 +91,9 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
           .order("cree_le", { ascending: false })
           .limit(1)
           .maybeSingle()
-      : { data: null };
+      : Promise.resolve({ data: null }),
+  ]);
+  const tarifs = (tarifsData ?? []) as Tarif[];
   const offreAcheteur = offreData as Offre | null;
   const offreAcceptee =
     offreAcheteur && offreUtilisable(offreAcheteur)
