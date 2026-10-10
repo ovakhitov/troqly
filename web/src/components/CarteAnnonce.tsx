@@ -1,22 +1,27 @@
+import Image from "next/image";
 import Link from "next/link";
-import { formaterPrix, type Annonce } from "@/lib/exemples";
+import { formaterDateRelative, formaterPrix, libellesStatut, type DonneesCarte } from "@/lib/annonces";
 
-const libellesStatut = {
-  disponible: "Disponible",
-  reserve: "Réservé",
-  vendu: "Vendu",
-} as const;
-
-// Carte opaque pour la lisibilité ; le verre n'apparaît que sur les pastilles posées sur la photo
-export function CarteAnnonce({ annonce }: { annonce: Annonce }) {
+// Carte opaque pour la lisibilité ; le verre n'apparaît que sur la pastille de prix posée sur la photo
+export function CarteAnnonce({ annonce, prioritaire = false }: { annonce: DonneesCarte; prioritaire?: boolean }) {
   return (
-    <article className="group relative grid gap-3 rounded-carte border border-ligne bg-surface p-2.5 transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-0.5 hover:shadow-[var(--ombre)]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-photo">
-        <div className="absolute inset-0" style={{ background: annonce.visuel }} aria-hidden="true" />
+    <article className="group relative grid content-start gap-3 rounded-carte border border-ligne bg-surface p-2.5 transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-0.5 hover:shadow-[var(--ombre)]">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-photo bg-ivoire">
+        {annonce.photo ? (
+          <Image
+            src={annonce.photo}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 270px, (min-width: 640px) 45vw, 92vw"
+            className="object-cover"
+            priority={prioritaire}
+          />
+        ) : (
+          <div className="grid size-full place-items-center text-sm text-mauve">Sans photo</div>
+        )}
         <span className="verre-fort absolute bottom-2.5 left-2.5 rounded-full px-3 py-1 font-titre text-base font-semibold tabular-nums text-prune-nuit">
           {formaterPrix(annonce.prixCentimes)}
         </span>
-        {/* Bouton favori ajouté avec la fonctionnalité favoris (étape Contact et modération) */}
       </div>
 
       <div className="grid gap-1 px-1">
@@ -26,24 +31,20 @@ export function CarteAnnonce({ annonce }: { annonce: Annonce }) {
           </Link>
         </h3>
         <p className="text-[13px] text-mauve">
-          {annonce.ville} · {annonce.publieeLe}
+          {annonce.ville} · {formaterDateRelative(annonce.creeLe)}
         </p>
       </div>
 
       <ul className="flex flex-wrap gap-1.5 px-1 pb-1">
         <li className="inline-flex items-center gap-1.5 rounded-full border border-ligne px-2.5 py-0.5 text-xs font-semibold text-prune-nuit">
-          {annonce.statut === "disponible" && <i className="size-1.5 rounded-full bg-statut" aria-hidden="true" />}
+          {annonce.statut === "publiee" && <i className="size-1.5 rounded-full bg-statut" aria-hidden="true" />}
           {libellesStatut[annonce.statut]}
         </li>
-        {annonce.remise.includes("main-propre") && (
-          <li className="rounded-full border border-ligne px-2.5 py-0.5 text-xs font-semibold text-prune-nuit">
-            Main propre
-          </li>
+        {annonce.mainPropre && (
+          <li className="rounded-full border border-ligne px-2.5 py-0.5 text-xs font-semibold text-prune-nuit">Main propre</li>
         )}
-        {annonce.remise.includes("livraison") && (
-          <li className="rounded-full border border-ligne px-2.5 py-0.5 text-xs font-semibold text-prune-nuit">
-            Livraison
-          </li>
+        {annonce.livraison && (
+          <li className="rounded-full border border-ligne px-2.5 py-0.5 text-xs font-semibold text-prune-nuit">Livraison</li>
         )}
       </ul>
     </article>

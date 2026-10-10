@@ -9,7 +9,25 @@ import {
   IconePourcent,
 } from "@/components/Icones";
 import { TitreSection } from "@/components/TitreSection";
-import { annoncesExemple, categories } from "@/lib/exemples";
+import { SELECTION_CARTE, versCarte } from "@/lib/annonces";
+import { supabaseEnv } from "@/lib/supabase/env";
+import { creerClientServeur } from "@/lib/supabase/serveur";
+
+async function chargerAccueil() {
+  if (!supabaseEnv()) return { categories: [], annonces: [] };
+  const supabase = await creerClientServeur();
+  const [{ data: categories }, { data: annonces }] = await Promise.all([
+    supabase.from("categories").select("slug, libelle").order("ordre"),
+    supabase
+      .from("annonces")
+      .select(SELECTION_CARTE)
+      .eq("moderation", "visible")
+      .neq("statut", "vendue")
+      .order("cree_le", { ascending: false })
+      .limit(8),
+  ]);
+  return { categories: categories ?? [], annonces: (annonces ?? []).map(versCarte) };
+}
 
 // Structure reprise de l'accueil Gency (gency/index.html) :
 // carte d'accroche, compteurs, bandeau, cartes de services, grille, FAQ, pied de page.
@@ -22,7 +40,7 @@ const promesses = [
 ];
 
 const etapes = [
-  { titre: "Déposez votre annonce", texte: "Quelques photos, un prix, votre ville. L'annonce est en ligne après vérification." },
+  { titre: "Déposez votre annonce", texte: "Quelques photos, un prix, votre ville. L'annonce est en ligne aussitôt." },
   { titre: "Échangez avec l'acheteur", texte: "La messagerie Troqly garde vos coordonnées privées jusqu'à la vente." },
   { titre: "Remettez ou expédiez", texte: "En main propre ou par colis. Le paiement est versé sur votre compte bancaire." },
 ];
@@ -46,12 +64,18 @@ const questions = [
   },
 ];
 
-export default function Accueil() {
+export default async function Accueil({ searchParams }: { searchParams: Promise<{ compte?: string }> }) {
+  const [{ categories, annonces }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
   return (
     <div className="halo min-h-screen">
       <EnTete />
 
       <main className="mx-auto grid max-w-6xl gap-16 px-4 pt-8 pb-20">
+        {compte === "supprime" && (
+          <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
+            Votre compte et toutes ses données ont été supprimés.
+          </p>
+        )}
         {/* Carte d'accroche (héros de Gency) */}
         <section className="grid gap-6 rounded-[32px] border border-ligne bg-surface p-6 sm:p-10">
           <div className="grid max-w-2xl gap-4">
@@ -87,12 +111,12 @@ export default function Accueil() {
 
           <ul className="flex flex-wrap gap-2" aria-label="Catégories populaires">
             {categories.map((c) => (
-              <li key={c}>
+              <li key={c.slug}>
                 <Link
-                  href={`/annonces?categorie=${encodeURIComponent(c)}`}
+                  href={`/annonces?categorie=${c.slug}`}
                   className="inline-block rounded-full border border-ligne bg-ivoire px-4 py-1.5 text-sm font-medium text-prune-nuit transition-colors duration-200 hover:border-prune"
                 >
-                  {c}
+                  {c.libelle}
                 </Link>
               </li>
             ))}
@@ -114,12 +138,21 @@ export default function Accueil() {
 
         <section className="grid gap-6">
           <TitreSection titre="Annonces récentes" lien={{ href: "/annonces", libelle: "Voir toutes les annonces" }} />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {annoncesExemple.map((a) => (
-              <CarteAnnonce key={a.id} annonce={a} />
-            ))}
-          </div>
-          <p className="text-sm text-mauve">Annonces d&apos;exemple, en attendant la base de données.</p>
+          {annonces.length ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {annonces.map((a) => (
+                <CarteAnnonce key={a.id} annonce={a} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
+              <p className="font-titre text-lg font-semibold text-prune-nuit">Aucune annonce pour l&apos;instant.</p>
+              <p className="text-mauve">Les premières annonces apparaîtront ici dès leur publication.</p>
+              <Link href="/deposer" className="font-semibold text-prune hover:underline">
+                Déposer la première annonce
+              </Link>
+            </div>
+          )}
         </section>
 
         <section className="grid gap-6">

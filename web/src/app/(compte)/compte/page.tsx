@@ -6,6 +6,7 @@ import { creerClientServeur } from "@/lib/supabase/serveur";
 import { deconnecter } from "../actions";
 import { FormulaireInformations } from "./FormulaireInformations";
 import { FormulaireProfil } from "./FormulaireProfil";
+import { SupprimerCompte } from "./SupprimerCompte";
 
 export const metadata: Metadata = { title: "Mon compte | Troqly" };
 
@@ -73,9 +74,27 @@ export default async function PageCompte({
         />
       </section>
 
-      <Link href="/compte/mot-de-passe" className="border-t border-ligne pt-5 text-sm font-semibold text-prune hover:underline">
-        Changer mon mot de passe
-      </Link>
+      <nav className="flex flex-wrap gap-x-5 gap-y-2 border-t border-ligne pt-5 text-sm font-semibold" aria-label="Mon espace">
+        <Link href="/compte/annonces" className="text-prune hover:underline">
+          Mes annonces
+        </Link>
+        <Link href="/compte/favoris" className="text-prune hover:underline">
+          Mes favoris
+        </Link>
+        <Link href="/messages" className="text-prune hover:underline">
+          Messages
+        </Link>
+        {(role === "moderateur" || role === "administrateur") && (
+          <Link href="/moderation" className="text-prune hover:underline">
+            Modération
+          </Link>
+        )}
+        <Link href="/compte/mot-de-passe" className="text-prune hover:underline">
+          Changer mon mot de passe
+        </Link>
+      </nav>
+
+      <SupprimerCompte />
     </CadreCompte>
   );
 }

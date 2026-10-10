@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { BUCKET_PHOTOS } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import {
   cheminSur,
@@ -200,4 +201,33 @@ export async function enregistrerInformations(
 
   // Recharge la page pour afficher la date de naissance enregistrée
   redirect("/compte?informations=ok");
+}
+
+export async function supprimerMonCompte(_: EtatFormulaire, formData: FormData): Promise<EtatFormulaire> {
+  if (String(formData.get("confirmation") ?? "").trim() !== "SUPPRIMER") {
+    return { erreur: "Tapez SUPPRIMER en majuscules pour confirmer." };
+  }
+
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.auth.getClaims();
+  const id = data?.claims?.sub;
+  if (!id) redirect("/connexion?suivant=/compte");
+
+  const { error } = await supabase.rpc("supprimer_mon_compte");
+  if (error) {
+    return {
+      erreur: error.message.includes("administrateur")
+        ? "Nommez un autre administrateur avant de supprimer ce compte."
+        : "Le compte n'a pas pu être supprimé. Réessayez dans un instant.",
+    };
+  }
+
+  // Les fichiers ne suivent pas la cascade de la base : on vide le dossier de photos.
+  // Le jeton de session reste valable le temps de cette requête.
+  const { data: fichiers } = await supabase.storage.from(BUCKET_PHOTOS).list(id, { limit: 1000 });
+  if (fichiers?.length) {
+    await supabase.storage.from(BUCKET_PHOTOS).remove(fichiers.map((f) => `${id}/${f.name}`));
+  }
+  await supabase.auth.signOut();
+  redirect("/?compte=supprime");
 }
