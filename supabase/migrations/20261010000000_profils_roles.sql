@@ -52,12 +52,11 @@ create trigger profils_modifie_le
   for each row execute function public.horodater_modification();
 
 -- Informations privées ---------------------------------------------------------
--- Visibles uniquement par la personne concernée. Elles ne sont jamais publiées
--- sur les annonces. La clé étrangère est différée pour permettre l'insertion
--- avant celle du compte, dans la même transaction (voir preparer_utilisateur).
+-- Complétées après l'inscription, depuis « Mon compte ». Visibles uniquement par
+-- la personne concernée, jamais publiées sur les annonces.
 
 create table public.informations_privees (
-  id uuid primary key references auth.users (id) on delete cascade deferrable initially deferred,
+  id uuid primary key references auth.users (id) on delete cascade,
   prenom text not null check (char_length(prenom) between 1 and 50),
   nom text not null check (char_length(nom) between 1 and 50),
   date_naissance date not null,
@@ -69,12 +68,19 @@ alter table public.informations_privees enable row level security;
 
 revoke select, insert, update, delete on public.informations_privees from anon, authenticated;
 grant select (id, prenom, nom, date_naissance, telephone) on public.informations_privees to authenticated;
+grant insert (id, prenom, nom, date_naissance, telephone) on public.informations_privees to authenticated;
+-- La date de naissance ne se modifie plus une fois saisie
 grant update (prenom, nom, telephone) on public.informations_privees to authenticated;
 
 create policy "chacun lit ses informations privées"
   on public.informations_privees for select
   to authenticated
   using (id = (select auth.uid()));
+
+create policy "chacun complète ses informations privées"
+  on public.informations_privees for insert
+  to authenticated
+  with check (id = (select auth.uid()));
 
 create policy "chacun modifie ses informations privées"
   on public.informations_privees for update
@@ -86,48 +92,24 @@ create trigger informations_privees_modifie_le
   before update on public.informations_privees
   for each row execute function public.horodater_modification();
 
--- Avant la création du compte : vérifie l'âge, range les informations privées
--- dans leur table et les retire des métadonnées du compte, pour qu'elles ne
--- circulent pas dans les jetons de session.
-create function public.preparer_utilisateur()
+-- Vérifie la majorité côté base, en plus du site
+create function public.verifier_majorite()
 returns trigger
 language plpgsql
-security definer
 set search_path = ''
 as $$
-declare
-  m jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
-  v_prenom text := trim(coalesce(m ->> 'prenom', ''));
-  v_nom text := trim(coalesce(m ->> 'nom', ''));
-  v_telephone text := nullif(trim(coalesce(m ->> 'telephone', '')), '');
-  v_naissance date;
 begin
-  -- Compte créé depuis le tableau de bord Supabase, sans formulaire d'inscription
-  if not (m ? 'prenom' or m ? 'nom' or m ? 'date_naissance') then
-    return new;
-  end if;
-
-  begin
-    v_naissance := (m ->> 'date_naissance')::date;
-  exception when others then
-    v_naissance := null;
-  end;
-
-  if v_naissance is null or v_naissance > (current_date - interval '18 years')::date then
+  if new.date_naissance > (current_date - interval '18 years')::date
+     or new.date_naissance < (current_date - interval '120 years')::date then
     raise exception 'Troqly est réservé aux personnes majeures' using errcode = '22023';
   end if;
-
-  insert into public.informations_privees (id, prenom, nom, date_naissance, telephone)
-  values (new.id, v_prenom, v_nom, v_naissance, v_telephone);
-
-  new.raw_user_meta_data := m - 'prenom' - 'nom' - 'date_naissance' - 'telephone';
   return new;
 end;
 $$;
 
-create trigger avant_creation_utilisateur
-  before insert on auth.users
-  for each row execute function public.preparer_utilisateur();
+create trigger informations_privees_majorite
+  before insert on public.informations_privees
+  for each row execute function public.verifier_majorite();
 
 -- Création automatique du profil à l'inscription. Le rôle n'est jamais lu
 -- depuis les données envoyées par le navigateur : il vaut toujours « utilisateur ».

@@ -71,13 +71,16 @@ export const schemaTelephone = z
   .transform((v) => (v === "" ? "" : `+33${v.slice(-9)}`));
 
 export const schemaInscription = z.object({
-  prenom: schemaPrenom,
-  nom: schemaNom,
-  dateNaissance: schemaDateNaissance,
   pseudo: schemaPseudo,
   email: schemaEmail,
-  telephone: schemaTelephone,
   motDePasse: schemaMotDePasse,
+});
+
+// Informations personnelles, complétées après l'inscription
+export const schemaInformations = z.object({
+  prenom: schemaPrenom,
+  nom: schemaNom,
+  telephone: schemaTelephone,
 });
 
 export const schemaConnexion = z.object({
@@ -86,11 +89,8 @@ export const schemaConnexion = z.object({
 });
 
 export const schemaProfil = z.object({
-  prenom: schemaPrenom,
-  nom: schemaNom,
   pseudo: schemaPseudo,
   ville: schemaVille,
-  telephone: schemaTelephone,
 });
 
 export function premiereErreur(erreur: z.ZodError) {

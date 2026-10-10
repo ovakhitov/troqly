@@ -7,7 +7,9 @@ import {
   cheminSur,
   premiereErreur,
   schemaConnexion,
+  schemaDateNaissance,
   schemaEmail,
+  schemaInformations,
   schemaInscription,
   schemaMotDePasse,
   schemaProfil,
@@ -31,26 +33,18 @@ function texte(formData: FormData, cle: string) {
 }
 
 export async function inscrire(_: EtatFormulaire, formData: FormData): Promise<EtatFormulaire> {
-  const valeurs = {
-    prenom: texte(formData, "prenom"),
-    nom: texte(formData, "nom"),
-    dateNaissance: texte(formData, "dateNaissance"),
-    pseudo: texte(formData, "pseudo"),
-    email: texte(formData, "email"),
-    telephone: texte(formData, "telephone"),
-  };
+  const valeurs = { pseudo: texte(formData, "pseudo"), email: texte(formData, "email") };
   const resultat = schemaInscription.safeParse({ ...valeurs, motDePasse: texte(formData, "motDePasse") });
   if (!resultat.success) return { erreur: premiereErreur(resultat.error), valeurs };
 
-  const { prenom, nom, dateNaissance, pseudo, email, telephone, motDePasse } = resultat.data;
+  const { pseudo, email, motDePasse } = resultat.data;
   const supabase = await creerClientServeur();
-  // Les informations privées sont déplacées dans leur table par la base dès la création du compte
   const { error } = await supabase.auth.signUp({
     email,
     password: motDePasse,
     options: {
       emailRedirectTo: `${await origine()}/auth/confirmer?suivant=/compte`,
-      data: { pseudo, prenom, nom, date_naissance: dateNaissance, telephone: telephone || null },
+      data: { pseudo },
     },
   });
 
@@ -147,13 +141,7 @@ export async function changerMotDePasse(
 }
 
 export async function modifierProfil(_: EtatFormulaire, formData: FormData): Promise<EtatFormulaire> {
-  const valeurs = {
-    prenom: texte(formData, "prenom"),
-    nom: texte(formData, "nom"),
-    pseudo: texte(formData, "pseudo"),
-    ville: texte(formData, "ville"),
-    telephone: texte(formData, "telephone"),
-  };
+  const valeurs = { pseudo: texte(formData, "pseudo"), ville: texte(formData, "ville") };
   const resultat = schemaProfil.safeParse(valeurs);
   if (!resultat.success) return { erreur: premiereErreur(resultat.error), valeurs };
 
@@ -162,14 +150,54 @@ export async function modifierProfil(_: EtatFormulaire, formData: FormData): Pro
   const id = data?.claims?.sub;
   if (!id) redirect("/connexion?suivant=/compte");
 
-  const { prenom, nom, pseudo, ville, telephone } = resultat.data;
-  const [publiques, privees] = await Promise.all([
-    supabase.from("profils").update({ pseudo, ville: ville || null }).eq("id", id),
-    supabase.from("informations_privees").update({ prenom, nom, telephone: telephone || null }).eq("id", id),
-  ]);
-  if (publiques.error || privees.error) {
-    return { erreur: "Le profil n'a pas pu être enregistré. Réessayez.", valeurs };
-  }
+  const { error } = await supabase
+    .from("profils")
+    .update({ pseudo: resultat.data.pseudo, ville: resultat.data.ville || null })
+    .eq("id", id);
+  if (error) return { erreur: "Le profil n'a pas pu être enregistré. Réessayez.", valeurs };
 
   return { succes: "Profil enregistré.", valeurs };
+}
+
+// Première saisie (avec date de naissance) puis modifications (sans elle)
+export async function enregistrerInformations(
+  _: EtatFormulaire,
+  formData: FormData,
+): Promise<EtatFormulaire> {
+  const valeurs = {
+    prenom: texte(formData, "prenom"),
+    nom: texte(formData, "nom"),
+    telephone: texte(formData, "telephone"),
+    dateNaissance: texte(formData, "dateNaissance"),
+  };
+  const resultat = schemaInformations.safeParse(valeurs);
+  if (!resultat.success) return { erreur: premiereErreur(resultat.error), valeurs };
+  const { prenom, nom, telephone } = resultat.data;
+
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.auth.getClaims();
+  const id = data?.claims?.sub;
+  if (!id) redirect("/connexion?suivant=/compte");
+
+  const { data: existantes } = await supabase.from("informations_privees").select("id").eq("id", id).maybeSingle();
+
+  if (existantes) {
+    const { error } = await supabase
+      .from("informations_privees")
+      .update({ prenom, nom, telephone: telephone || null })
+      .eq("id", id);
+    if (error) return { erreur: "Vos informations n'ont pas pu être enregistrées. Réessayez.", valeurs };
+    return { succes: "Informations enregistrées.", valeurs };
+  }
+
+  const naissance = schemaDateNaissance.safeParse(valeurs.dateNaissance);
+  if (!naissance.success) return { erreur: premiereErreur(naissance.error), valeurs };
+
+  const { error } = await supabase
+    .from("informations_privees")
+    .insert({ id, prenom, nom, date_naissance: naissance.data, telephone: telephone || null });
+  if (error) return { erreur: "Vos informations n'ont pas pu être enregistrées. Réessayez.", valeurs };
+
+  // Recharge la page pour afficher la date de naissance enregistrée
+  redirect("/compte?informations=ok");
 }
