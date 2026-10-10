@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { NextResponse, type NextRequest } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { creerClientAdmin } from "@/lib/supabase/admin";
+import { enregistrerPaiement } from "@/lib/synchro-stripe";
 
 // Notifications envoyées par Stripe. La signature est vérifiée avant toute action.
 export async function POST(request: NextRequest) {
@@ -23,26 +24,7 @@ export async function POST(request: NextRequest) {
     case "checkout.session.async_payment_succeeded": {
       const session = evenement.data.object;
       const idCommande = session.metadata?.commande;
-      if (!idCommande || session.payment_status !== "paid") break;
-
-      const paiement = await stripe().paymentIntents.retrieve(session.payment_intent as string);
-      const charge = typeof paiement.latest_charge === "string" ? paiement.latest_charge : paiement.latest_charge?.id;
-
-      const { data: maj, error } = await admin
-        .from("commandes")
-        .update({ statut: "payee", payee_le: new Date().toISOString(), stripe_paiement: paiement.id, stripe_charge: charge })
-        .eq("id", idCommande)
-        .eq("statut", "en_attente")
-        .select("annonce")
-        .maybeSingle();
-
-      if (error?.code === "23505") {
-        // Un autre acheteur a payé la même annonce juste avant : remboursement immédiat
-        await stripe().refunds.create({ payment_intent: paiement.id }, { idempotencyKey: `doublon-${idCommande}` });
-        await admin.from("commandes").update({ statut: "remboursee", stripe_paiement: paiement.id }).eq("id", idCommande);
-      } else if (maj?.annonce) {
-        await admin.from("annonces").update({ statut: "reservee" }).eq("id", maj.annonce).eq("statut", "publiee");
-      }
+      if (idCommande) await enregistrerPaiement(idCommande, session.id);
       break;
     }
 

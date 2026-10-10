@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
 import { formaterPrix } from "@/lib/annonces";
 import { libellesCommande, type StatutCommande } from "@/lib/commandes";
+import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
+import { enregistrerPaiement } from "@/lib/synchro-stripe";
 import { annulerEtRembourser, confirmerReception } from "../actions";
 import { SaisieCode } from "./SaisieCode";
 
@@ -46,8 +48,17 @@ export default async function PageCommande({
     .select("id, annonce, titre, acheteur, vendeur, prix_centimes, frais_service_centimes, total_centimes, mode_remise, statut")
     .eq("id", id)
     .maybeSingle();
-  const c = data as Commande | null;
+  let c = data as Commande | null;
   if (!c) notFound();
+
+  // Retour de Stripe avant la notification (ou sans notification en local) : on vérifie le paiement directement
+  if (c.statut === "en_attente" && c.acheteur === moi && retour.paiement) {
+    const admin = creerClientAdmin();
+    const { data: s } = await admin.from("commandes").select("stripe_session").eq("id", id).single();
+    if (s?.stripe_session && (await enregistrerPaiement(id, s.stripe_session))) {
+      c = { ...c, statut: "payee" };
+    }
+  }
 
   const estAcheteur = c.acheteur === moi;
   const estVendeur = c.vendeur === moi;
