@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
+import { calculerFrais } from "@/lib/frais";
+import { stripeConfigure } from "@/lib/stripe";
+import { acheter } from "../../commandes/actions";
 import { contacterVendeur } from "../../messages/actions";
 import { basculerFavori } from "../actions";
 import { Galerie } from "./Galerie";
@@ -13,7 +16,18 @@ import { Signaler } from "./Signaler";
 const boutonPrincipal =
   "block w-full rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]";
 
-type Params = { params: Promise<{ id: string }>; searchParams: Promise<{ publiee?: string; contact?: string }> };
+type Params = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ publiee?: string; contact?: string; achat?: string }>;
+};
+
+const ERREURS_ACHAT: Record<string, string> = {
+  infos: "Complétez vos informations personnelles dans « Mon compte » avant d'acheter.",
+  indisponible: "Cet objet n'est plus disponible à l'achat.",
+  mode: "Ce mode de remise n'est pas proposé pour cet objet.",
+  vendeur: "Ce vendeur n'a pas encore activé les paiements en ligne. Contactez-le par message.",
+  erreur: "Le paiement n'a pas pu démarrer. Réessayez dans un instant.",
+};
 
 const ID_VALIDE = /^[0-9a-f-]{36}$/;
 
@@ -36,7 +50,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function PageAnnonce({ params, searchParams }: Params) {
-  const [{ id }, { publiee, contact }] = await Promise.all([params, searchParams]);
+  const [{ id }, { publiee, contact, achat }] = await Promise.all([params, searchParams]);
   const annonce = await chargerAnnonce(id);
   if (!annonce) notFound();
 
@@ -44,9 +58,14 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
   const { data: session } = await supabase.auth.getClaims();
   const idMembre = session?.claims?.sub;
   const estVendeur = idMembre === annonce.vendeur;
-  const { data: favori } = idMembre
-    ? await supabase.from("favoris").select("annonce").eq("membre", idMembre).eq("annonce", id).maybeSingle()
-    : { data: null };
+  const [{ data: favori }, { data: paiementActif }] = await Promise.all([
+    idMembre
+      ? supabase.from("favoris").select("annonce").eq("membre", idMembre).eq("annonce", id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    stripeConfigure() ? supabase.rpc("vendeur_paiement_actif", { id_vendeur: annonce.vendeur }) : Promise.resolve({ data: false }),
+  ]);
+  const frais = calculerFrais(annonce.prix_centimes);
+  const achetable = Boolean(paiementActif) && annonce.statut === "publiee" && annonce.moderation === "visible";
 
   const photos = [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => urlPhoto(p.chemin));
   const statut = annonce.statut as StatutAnnonce;
@@ -60,6 +79,11 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
         {publiee && (
           <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
             Votre annonce est publiée.
+          </p>
+        )}
+        {achat && ERREURS_ACHAT[achat] && (
+          <p role="alert" className="rounded-champ border border-abricot bg-surface px-4 py-3 text-sm text-prune-nuit">
+            {ERREURS_ACHAT[achat]}
           </p>
         )}
         {contact === "impossible" && (
@@ -109,16 +133,56 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
               </ul>
               {!estVendeur && (
                 <div className="grid gap-3">
+                  {achetable && idMembre && (
+                    <form action={acheter.bind(null, annonce.id)} className="grid gap-3 rounded-champ border border-ligne bg-ivoire p-4">
+                      {annonce.main_propre && annonce.livraison ? (
+                        <fieldset className="grid gap-1.5">
+                          <legend className="mb-1 text-sm font-semibold text-prune-nuit">Remise</legend>
+                          <label className="flex items-center gap-2 text-sm text-prune-nuit">
+                            <input type="radio" name="mode" value="main_propre" defaultChecked className="size-4 accent-[var(--action)]" />
+                            En main propre
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-prune-nuit">
+                            <input type="radio" name="mode" value="livraison" className="size-4 accent-[var(--action)]" />
+                            Livraison (frais d&apos;envoi à convenir avec le vendeur)
+                          </label>
+                        </fieldset>
+                      ) : (
+                        <input type="hidden" name="mode" value={annonce.livraison ? "livraison" : "main_propre"} />
+                      )}
+                      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-prune-nuit tabular-nums">
+                        <dt>Prix</dt>
+                        <dd className="text-right">{formaterPrix(frais.prixCentimes)}</dd>
+                        <dt>Frais de service</dt>
+                        <dd className="text-right">{formaterPrix(frais.fraisServiceCentimes)}</dd>
+                        <dt className="font-semibold">Total</dt>
+                        <dd className="text-right font-semibold">{formaterPrix(frais.totalCentimes)}</dd>
+                      </dl>
+                      <button type="submit" className={boutonPrincipal}>
+                        Acheter
+                      </button>
+                      <p className="text-xs text-mauve">
+                        Paiement sécurisé par Stripe. Le vendeur n&apos;est payé qu&apos;après la remise de l&apos;objet.
+                      </p>
+                    </form>
+                  )}
                   {statut !== "vendue" &&
                     (idMembre ? (
                       <form action={contacterVendeur.bind(null, annonce.id)}>
-                        <button type="submit" className={boutonPrincipal}>
+                        <button
+                          type="submit"
+                          className={
+                            achetable
+                              ? "w-full rounded-full border border-ligne px-6 py-3 font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune"
+                              : boutonPrincipal
+                          }
+                        >
                           Contacter le vendeur
                         </button>
                       </form>
                     ) : (
                       <Link href={`/connexion?suivant=/annonces/${annonce.id}`} className={`${boutonPrincipal} text-center`}>
-                        Se connecter pour contacter
+                        {achetable ? "Se connecter pour acheter" : "Se connecter pour contacter"}
                       </Link>
                     ))}
                   {idMembre && (
@@ -132,7 +196,6 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                       </button>
                     </form>
                   )}
-                  <p className="text-xs text-mauve">Le paiement en ligne arrive bientôt sur Troqly.</p>
                 </div>
               )}
             </div>
