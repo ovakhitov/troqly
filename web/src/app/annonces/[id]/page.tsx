@@ -60,6 +60,11 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="grid min-w-0 content-start gap-6">
+            {/* Sur mobile, le titre et le prix passent avant la galerie (revue Codex) */}
+            <div className="grid gap-1 lg:hidden">
+              <h1 className="font-titre text-2xl leading-tight font-semibold text-balance text-prune-nuit">{annonce.titre}</h1>
+              <p className="font-titre text-2xl font-semibold tabular-nums text-prune-nuit">{formaterPrix(annonce.prix_centimes)}</p>
+            </div>
             <Galerie photos={photos} titre={annonce.titre} />
             <section className="grid gap-3">
               <h2 className="font-titre text-lg font-semibold text-prune-nuit">Description</h2>
@@ -76,8 +81,10 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                   {libellesStatut[statut]}
                 </span>
               </div>
-              <h1 className="font-titre text-2xl leading-tight font-semibold text-balance text-prune-nuit">{annonce.titre}</h1>
-              <p className="font-titre text-3xl font-semibold tabular-nums text-prune-nuit">{formaterPrix(annonce.prix_centimes)}</p>
+              <div className="hidden gap-4 lg:grid">
+                <h1 className="font-titre text-2xl leading-tight font-semibold text-balance text-prune-nuit">{annonce.titre}</h1>
+                <p className="font-titre text-3xl font-semibold tabular-nums text-prune-nuit">{formaterPrix(annonce.prix_centimes)}</p>
+              </div>
               <p className="text-sm text-mauve">
                 {annonce.ville} ({annonce.code_postal}) · publiée {formaterDateRelative(annonce.cree_le)}
               </p>

@@ -39,8 +39,10 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
   if (q) requete = requete.textSearch("recherche", q, { config: "french", type: "websearch" });
   if (f.categorie) requete = requete.eq("categorie", f.categorie);
 
-  const min = f.prixMin ? prixEnCentimes(f.prixMin) : null;
-  const max = f.prixMax ? prixEnCentimes(f.prixMax) : null;
+  let min = f.prixMin ? prixEnCentimes(f.prixMin) : null;
+  let max = f.prixMax ? prixEnCentimes(f.prixMax) : null;
+  // Minimum et maximum inversés : on les remet dans l'ordre
+  if (min !== null && max !== null && min > max) [min, max] = [max, min];
   if (min !== null) requete = requete.gte("prix_centimes", min);
   if (max !== null) requete = requete.lte("prix_centimes", max);
 
@@ -106,11 +108,11 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
           <div className="grid grid-cols-2 gap-2">
             <div className="grid gap-1">
               <label htmlFor="prixMin" className="text-xs font-semibold text-mauve">Prix min (€)</label>
-              <input id="prixMin" name="prixMin" inputMode="decimal" defaultValue={f.prixMin} className={champ} />
+              <input id="prixMin" name="prixMin" type="number" min="0" step="0.01" defaultValue={f.prixMin} className={champ} />
             </div>
             <div className="grid gap-1">
               <label htmlFor="prixMax" className="text-xs font-semibold text-mauve">Prix max (€)</label>
-              <input id="prixMax" name="prixMax" inputMode="decimal" defaultValue={f.prixMax} className={champ} />
+              <input id="prixMax" name="prixMax" type="number" min="0" step="0.01" defaultValue={f.prixMax} className={champ} />
             </div>
           </div>
           <div className="grid gap-1">
@@ -144,6 +146,11 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
 
         {error ? (
           <p role="alert" className="text-prune-nuit">La recherche n&apos;a pas abouti. Réessayez dans un instant.</p>
+        ) : annonces.length === 0 && page > 1 ? (
+          <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
+            <p className="font-titre text-lg font-semibold text-prune-nuit">Cette page n&apos;existe plus.</p>
+            <Link href={lienPage(1)} className="font-semibold text-prune hover:underline">Revenir à la première page</Link>
+          </div>
         ) : annonces.length === 0 ? (
           <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
             <p className="font-titre text-lg font-semibold text-prune-nuit">Aucune annonce ne correspond.</p>

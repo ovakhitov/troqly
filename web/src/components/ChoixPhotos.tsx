@@ -99,7 +99,8 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
               <button
                 type="button"
                 onClick={() => mettreEnPremier(p.chemin)}
-                className="verre-fort absolute bottom-2 left-2 rounded-full px-2.5 py-0.5 text-xs font-semibold text-prune-nuit"
+                aria-label={`Faire de la photo ${i + 1} la photo principale`}
+                className="verre-fort absolute right-2 bottom-2 left-2 min-h-11 rounded-full px-3 text-xs font-semibold text-prune-nuit"
               >
                 Mettre en premier
               </button>
@@ -108,7 +109,7 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
               type="button"
               onClick={() => retirer(p.chemin)}
               aria-label={`Retirer la photo ${i + 1}`}
-              className="verre-fort absolute top-2 right-2 grid size-8 place-items-center rounded-full text-lg leading-none text-prune-nuit"
+              className="verre-fort absolute top-2 right-2 grid size-11 place-items-center rounded-full text-xl leading-none text-prune-nuit"
             >
               ×
             </button>
@@ -124,26 +125,32 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
         ))}
         {photos.length + envoiEnCours < PHOTOS_MAX && (
           <li>
-            <label
-              htmlFor="ajout-photos"
-              className="grid aspect-square cursor-pointer place-items-center rounded-champ border border-dashed border-prune text-center text-sm font-semibold text-prune transition-colors duration-200 hover:bg-ivoire"
-            >
-              + Ajouter
-            </label>
+            {/* Le champ précède l'étiquette pour que son focus clavier soit visible sur celle-ci */}
             <input
               ref={champ}
               id="ajout-photos"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               multiple
-              className="sr-only"
+              className="peer sr-only"
               onChange={(e) => ajouter(e.target.files)}
             />
+            <label
+              htmlFor="ajout-photos"
+              className="grid aspect-square cursor-pointer place-items-center rounded-champ border border-dashed border-prune text-center text-sm font-semibold text-prune transition-colors duration-200 peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-abricot hover:bg-ivoire"
+            >
+              + Ajouter des photos
+            </label>
           </li>
         )}
       </ul>
 
       <p className="text-xs text-mauve">La première photo apparaît dans les résultats. Les images sont réduites avant l&apos;envoi.</p>
+      <p aria-live="polite" className="sr-only">
+        {envoiEnCours > 0
+          ? `Envoi de ${envoiEnCours} photo${envoiEnCours > 1 ? "s" : ""} en cours.`
+          : `${photos.length} photo${photos.length > 1 ? "s" : ""} sur ${PHOTOS_MAX}.`}
+      </p>
       {erreur && (
         <p role="alert" className="text-sm text-prune-nuit">
           {erreur}
