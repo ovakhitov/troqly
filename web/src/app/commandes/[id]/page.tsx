@@ -6,7 +6,8 @@ import { formaterPrix } from "@/lib/annonces";
 import { libellesCommande, type StatutCommande } from "@/lib/commandes";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
-import { enregistrerPaiement } from "@/lib/synchro-stripe";
+import { montantVendeur } from "@/lib/frais";
+import { enregistrerPaiement, fraisStripe } from "@/lib/synchro-stripe";
 import { annulerEtRembourser, confirmerReception } from "../actions";
 import { SaisieCode } from "./SaisieCode";
 
@@ -67,6 +68,16 @@ export default async function PageCommande({
       ? await supabase.rpc("code_remise_acheteur", { id_commande: id })
       : { data: null };
 
+  // Montant exact pour le vendeur : frais de carte réels connus dès le paiement
+  let pourVendeur: { montant: number; fraisCarte: number } | null = null;
+  if (estVendeur && ["payee", "terminee", "litige"].includes(c.statut)) {
+    const { data: s } = await creerClientAdmin().from("commandes").select("stripe_charge").eq("id", id).single();
+    const fraisCarte = s?.stripe_charge ? await fraisStripe(s.stripe_charge) : null;
+    if (fraisCarte !== null) {
+      pourVendeur = { fraisCarte, montant: montantVendeur(c.total_centimes, c.frais_service_centimes, fraisCarte) };
+    }
+  }
+
   return (
     <div className="halo min-h-screen">
       <EnTete />
@@ -119,10 +130,12 @@ export default async function PageCommande({
                 <dd className="text-right font-semibold">{formaterPrix(c.total_centimes)}</dd>
               </>
             )}
-            {estVendeur && (
+            {estVendeur && pourVendeur && (
               <>
-                <dt className="font-semibold">Vous recevrez</dt>
-                <dd className="text-right font-semibold">{formaterPrix(c.prix_centimes)}</dd>
+                <dt>Frais de paiement par carte</dt>
+                <dd className="text-right">− {formaterPrix(pourVendeur.fraisCarte)}</dd>
+                <dt className="font-semibold">{c.statut === "terminee" ? "Versé sur votre compte" : "Vous recevrez"}</dt>
+                <dd className="text-right font-semibold">{formaterPrix(pourVendeur.montant)}</dd>
               </>
             )}
           </dl>

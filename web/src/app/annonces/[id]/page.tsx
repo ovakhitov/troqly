@@ -153,7 +153,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                       <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-prune-nuit tabular-nums">
                         <dt>Prix</dt>
                         <dd className="text-right">{formaterPrix(frais.prixCentimes)}</dd>
-                        <dt>Frais de service</dt>
+                        <dt>Frais de service (1,25 %)</dt>
                         <dd className="text-right">{formaterPrix(frais.fraisServiceCentimes)}</dd>
                         <dt className="font-semibold">Total</dt>
                         <dd className="text-right font-semibold">{formaterPrix(frais.totalCentimes)}</dd>

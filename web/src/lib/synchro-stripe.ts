@@ -2,6 +2,13 @@ import "server-only";
 import { stripe } from "./stripe";
 import { creerClientAdmin } from "./supabase/admin";
 
+// Frais réellement prélevés par Stripe sur un paiement (connus dès le paiement accepté)
+export async function fraisStripe(idCharge: string) {
+  const charge = await stripe().charges.retrieve(idCharge, { expand: ["balance_transaction"] });
+  const bt = charge.balance_transaction;
+  return bt && typeof bt !== "string" ? bt.fee : null;
+}
+
 // Enregistre le paiement d'une commande à partir de sa session Stripe.
 // Utilisé par les notifications Stripe (webhooks) et, en secours, au retour du paiement :
 // le résultat est le même quel que soit le premier arrivé.

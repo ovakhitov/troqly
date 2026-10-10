@@ -4,7 +4,8 @@ import { randomInt } from "node:crypto";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { calculerFrais } from "@/lib/frais";
+import { calculerFrais, montantVendeur } from "@/lib/frais";
+import { fraisStripe } from "@/lib/synchro-stripe";
 import { stripe } from "@/lib/stripe";
 import { lienActivation } from "@/lib/stripe-connect";
 import { creerClientAdmin } from "@/lib/supabase/admin";
@@ -129,7 +130,7 @@ export async function acheter(idAnnonce: string, formData: FormData) {
           price_data: {
             currency: "eur",
             unit_amount: frais.fraisServiceCentimes,
-            product_data: { name: "Frais de service Troqly" },
+            product_data: { name: "Frais de service Troqly (1,25 %)" },
           },
         },
       ],
@@ -153,7 +154,7 @@ async function verserAuVendeur(idCommande: string) {
   const admin = creerClientAdmin();
   const { data: c } = await admin
     .from("commandes")
-    .select("id, annonce, vendeur, prix_centimes, statut, stripe_charge")
+    .select("id, annonce, vendeur, total_centimes, frais_service_centimes, statut, stripe_charge")
     .eq("id", idCommande)
     .single();
   if (!c || c.statut !== "payee" || !c.stripe_charge || !c.vendeur) return false;
@@ -161,9 +162,14 @@ async function verserAuVendeur(idCommande: string) {
   const { data: compte } = await admin.from("comptes_paiement").select("stripe_compte").eq("membre", c.vendeur).single();
   if (!compte) return false;
 
+  // Le vendeur reçoit le total moins la commission Troqly et les frais de carte réels
+  const frais = await fraisStripe(c.stripe_charge);
+  if (frais === null) return false;
+  const montant = montantVendeur(c.total_centimes, c.frais_service_centimes, frais);
+
   const virement = await stripe().transfers.create(
     {
-      amount: c.prix_centimes,
+      amount: montant,
       currency: "eur",
       destination: compte.stripe_compte,
       source_transaction: c.stripe_charge,
