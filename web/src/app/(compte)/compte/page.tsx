@@ -73,9 +73,14 @@ export default async function PageCompte({
         />
       </section>
 
-      <Link href="/compte/mot-de-passe" className="border-t border-ligne pt-5 text-sm font-semibold text-prune hover:underline">
-        Changer mon mot de passe
-      </Link>
+      <nav className="flex flex-wrap gap-x-5 gap-y-2 border-t border-ligne pt-5 text-sm font-semibold" aria-label="Mon espace">
+        <Link href="/compte/annonces" className="text-prune hover:underline">
+          Mes annonces
+        </Link>
+        <Link href="/compte/mot-de-passe" className="text-prune hover:underline">
+          Changer mon mot de passe
+        </Link>
+      </nav>
     </CadreCompte>
   );
 }
