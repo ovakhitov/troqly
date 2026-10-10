@@ -189,13 +189,19 @@ export default async function PageCommande({
                 <>Le vendeur n&apos;a pas encore expédié le colis ({c.transporteur}).</>
               )}
             </p>
-            <h2 className="font-titre text-lg font-semibold text-prune-nuit">Vous avez reçu l&apos;objet ?</h2>
-            <p className="text-sm text-mauve">Confirmez la réception seulement après avoir vérifié l&apos;objet. Le vendeur est alors payé.</p>
-            <form action={confirmerReception.bind(null, c.id)}>
-              <button type="submit" className={boutonPrincipal}>
-                Confirmer la réception
-              </button>
-            </form>
+            {c.expediee_le && (
+              <>
+                <h2 className="font-titre text-lg font-semibold text-prune-nuit">Vous avez reçu l&apos;objet ?</h2>
+                <p className="text-sm text-mauve">
+                  Confirmez la réception seulement après avoir vérifié l&apos;objet. Le vendeur est alors payé.
+                </p>
+                <form action={confirmerReception.bind(null, c.id)}>
+                  <button type="submit" className={boutonPrincipal}>
+                    Confirmer la réception
+                  </button>
+                </form>
+              </>
+            )}
           </section>
         )}
 

@@ -228,7 +228,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
               </div>
             )}
 
-            {estVendeur && <OffresRecues idAnnonce={annonce.id} />}
+            {estVendeur && <OffresRecues idAnnonce={annonce.id} prixCentimes={annonce.prix_centimes} />}
             {estVendeur && <GestionAnnonce id={annonce.id} statut={statut} />}
             {idMembre && !estVendeur && <Signaler idAnnonce={annonce.id} />}
 

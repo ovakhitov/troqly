@@ -9,8 +9,10 @@ import { creerClientServeur } from "@/lib/supabase/serveur";
 
 export const metadata: Metadata = { title: "Négociations | Troqly" };
 
+const echeance = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Paris" });
+
 type Ligne = Offre & {
-  annonces: { titre: string } | null;
+  annonces: { titre: string; prix_centimes: number } | null;
   acheteur_profil: { pseudo: string } | null;
 };
 
@@ -23,7 +25,7 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
 
   const { data } = await supabase
     .from("offres")
-    .select(`${COLONNES_OFFRE}, annonces(titre), acheteur_profil:profils!offres_acheteur_fkey(pseudo)`)
+    .select(`${COLONNES_OFFRE}, annonces(titre, prix_centimes), acheteur_profil:profils!offres_acheteur_fkey(pseudo)`)
     .or(`acheteur.eq.${moi},vendeur.eq.${moi}`)
     .order("cree_le", { ascending: false })
     .limit(100);
@@ -55,7 +57,7 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
                   </Link>
                   {o.statut === "en_attente" ? (
                     <ul>
-                      <ReponseOffre offre={o} pseudo={o.acheteur_profil?.pseudo ?? "Membre"} />
+                      <ReponseOffre offre={o} pseudo={o.acheteur_profil?.pseudo ?? "Membre"} prixAnnonce={o.annonces?.prix_centimes ?? 0} />
                     </ul>
                   ) : (
                     <p className="text-sm text-mauve">
@@ -83,7 +85,12 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
                     <span className="grid min-w-0 gap-0.5">
                       <span className="truncate font-titre font-semibold text-prune-nuit">{o.annonces?.titre ?? "Annonce"}</span>
                       <span className="text-xs text-mauve">
-                        {o.statut === "acceptee" && !offreUtilisable(o) ? "Expirée" : libellesOffre[o.statut]} ·{" "}
+                        {o.statut === "acceptee" && !offreUtilisable(o)
+                          ? "Expirée"
+                          : o.statut === "acceptee" && o.valable_jusqu_au
+                            ? `Acceptée, à payer avant le ${echeance.format(new Date(o.valable_jusqu_au))}`
+                            : libellesOffre[o.statut]}{" "}
+                        ·{" "}
                         {formaterDateRelative(o.cree_le)}
                       </span>
                     </span>

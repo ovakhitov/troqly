@@ -3,7 +3,7 @@ import { COLONNES_OFFRE, type Offre } from "@/lib/offres";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
 // Offres en attente sur l'annonce, visibles par le vendeur seulement
-export async function OffresRecues({ idAnnonce }: { idAnnonce: string }) {
+export async function OffresRecues({ idAnnonce, prixCentimes }: { idAnnonce: string; prixCentimes: number }) {
   const supabase = await creerClientServeur();
   const { data } = await supabase
     .from("offres")
@@ -21,7 +21,7 @@ export async function OffresRecues({ idAnnonce }: { idAnnonce: string }) {
       </h2>
       <ul className="grid gap-3">
         {offres.map((o) => (
-          <ReponseOffre key={o.id} offre={o} pseudo={o.acheteur_profil?.pseudo ?? "Membre"} />
+          <ReponseOffre key={o.id} offre={o} pseudo={o.acheteur_profil?.pseudo ?? "Membre"} prixAnnonce={prixCentimes} />
         ))}
       </ul>
     </section>

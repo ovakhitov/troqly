@@ -240,8 +240,13 @@ async function verserAuVendeur(idCommande: string) {
 // Livraison : l'acheteur confirme avoir reçu l'objet
 export async function confirmerReception(idCommande: string) {
   const { supabase, id } = await membre(`/commandes/${idCommande}`);
-  const { data: c } = await supabase.from("commandes").select("acheteur, statut").eq("id", idCommande).maybeSingle();
-  if (!c || c.acheteur !== id || c.statut !== "payee") redirect(`/commandes/${idCommande}`);
+  const { data: c } = await supabase
+    .from("commandes")
+    .select("acheteur, statut, expediee_le")
+    .eq("id", idCommande)
+    .maybeSingle();
+  // La réception ne peut être confirmée qu'après l'expédition déclarée par le vendeur
+  if (!c || c.acheteur !== id || c.statut !== "payee" || !c.expediee_le) redirect(`/commandes/${idCommande}`);
 
   await verserAuVendeur(idCommande);
   revalidatePath(`/commandes/${idCommande}`);

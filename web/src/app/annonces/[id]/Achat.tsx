@@ -80,7 +80,8 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, commiss
                 className={champ}
               />
               <p className="text-xs text-mauve">
-                Trouvez un point près de chez vous sur le site du transporteur, puis recopiez son nom et son adresse.
+                Trouvez un point près de chez vous sur le site du transporteur, puis recopiez exactement son nom, son adresse et
+                son code postal : le vendeur enverra le colis à ce point.
               </p>
             </div>
           ) : (

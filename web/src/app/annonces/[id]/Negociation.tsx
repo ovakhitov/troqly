@@ -37,6 +37,9 @@ export function Negociation({ idAnnonce, prixCentimes, offre }: { idAnnonce: str
           </>
         )}
         {offre.statut === "en_attente" && (
+          <p className="text-xs text-mauve">Si le vendeur accepte, vous aurez 48 heures pour acheter à ce prix.</p>
+        )}
+        {offre.statut === "en_attente" && (
           <form action={reponseAcheteur.bind(null, offre.id, idAnnonce, false)}>
             <button type="submit" className={lien}>Retirer mon offre</button>
           </form>

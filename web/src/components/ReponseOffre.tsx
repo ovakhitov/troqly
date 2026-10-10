@@ -3,7 +3,7 @@ import { formaterPrix } from "@/lib/annonces";
 import type { Offre } from "@/lib/offres";
 
 // Boutons du vendeur face à une offre en attente : accepter, refuser ou contre-proposer
-export function ReponseOffre({ offre, pseudo }: { offre: Offre; pseudo: string }) {
+export function ReponseOffre({ offre, pseudo, prixAnnonce }: { offre: Offre; pseudo: string; prixAnnonce: number }) {
   return (
     <li className="grid gap-2 border-t border-ligne pt-3 first:border-t-0 first:pt-0">
       <p className="text-sm text-prune-nuit">
@@ -29,14 +29,19 @@ export function ReponseOffre({ offre, pseudo }: { offre: Offre; pseudo: string }
             name="contre"
             inputMode="decimal"
             required
-            placeholder="Autre prix"
-            className="w-24 rounded-full border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune"
+            placeholder={`${formaterPrix(offre.montant_centimes + 1)} à ${formaterPrix(prixAnnonce - 1)}`}
+            aria-describedby={`contre-aide-${offre.id}`}
+            className="w-40 rounded-full border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune"
           />
           <button type="submit" className="rounded-full border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
             Proposer
           </button>
         </form>
       </div>
+      <p id={`contre-aide-${offre.id}`} className="text-xs text-mauve">
+        Une contre-proposition doit être supérieure à l&apos;offre et inférieure à votre prix ({formaterPrix(prixAnnonce)}). Une
+        offre acceptée laisse 48 heures à l&apos;acheteur pour payer.
+      </p>
     </li>
   );
 }
