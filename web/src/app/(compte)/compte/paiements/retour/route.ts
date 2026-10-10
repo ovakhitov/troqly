@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { etatCompteVendeur, lienActivation } from "@/lib/stripe-connect";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
@@ -24,26 +24,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(destination);
   }
 
-  // Lien expiré : on en génère un nouveau
+  // Lien expiré ou déjà utilisé : on en génère un nouveau pour le même compte
   if (request.nextUrl.searchParams.get("relancer")) {
-    const base = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
-    const lien = await stripe().accountLinks.create({
-      account: ligne.stripe_compte,
-      type: "account_onboarding",
-      refresh_url: `${base}/compte/paiements/retour?relancer=1`,
-      return_url: `${base}/compte/paiements/retour`,
-    });
-    return NextResponse.redirect(lien.url);
+    return NextResponse.redirect(await lienActivation(ligne.stripe_compte, request.nextUrl.origin));
   }
 
-  const compte = await stripe().accounts.retrieve(ligne.stripe_compte);
-  const actif = compte.payouts_enabled === true && compte.capabilities?.transfers === "active";
+  const etat = await etatCompteVendeur(ligne.stripe_compte);
   await admin
     .from("comptes_paiement")
-    .update({ versements_actifs: actif, infos_completes: compte.details_submitted === true })
+    .update({ versements_actifs: etat.actif, infos_completes: etat.infosCompletes })
     .eq("membre", id);
 
   destination.pathname = "/compte";
-  destination.searchParams.set("paiements", actif ? "actifs" : "en-cours");
+  destination.searchParams.set("paiements", etat.actif ? "actifs" : "en-cours");
   return NextResponse.redirect(destination);
 }

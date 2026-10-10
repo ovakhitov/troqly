@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { calculerFrais } from "@/lib/frais";
 import { stripe } from "@/lib/stripe";
+import { lienActivation } from "@/lib/stripe-connect";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
@@ -35,35 +36,24 @@ export async function activerPaiements() {
 
   let compte = existant?.stripe_compte as string | undefined;
   if (!compte) {
-    // Compte Express : Stripe vérifie l'identité et l'IBAN, Troqly ne les voit jamais
-    const cree = await stripe().accounts.create(
+    // Compte destinataire (Accounts v2) avec tableau de bord Express :
+    // Stripe vérifie l'identité et l'IBAN, Troqly ne les voit jamais
+    const cree = await stripe().v2.core.accounts.create(
       {
-        country: "FR",
-        email,
-        business_type: "individual",
-        controller: {
-          fees: { payer: "application" },
-          losses: { payments: "application" },
-          stripe_dashboard: { type: "express" },
-          requirement_collection: "stripe",
-        },
-        capabilities: { transfers: { requested: true } },
+        contact_email: email,
+        dashboard: "express",
+        identity: { country: "FR", entity_type: "individual" },
+        defaults: { responsibilities: { fees_collector: "application", losses_collector: "application" } },
+        configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } } },
         metadata: { membre: id },
       },
-      { idempotencyKey: `compte-${id}` },
+      { idempotencyKey: `compte-v2-${id}` },
     );
     compte = cree.id;
     await admin.from("comptes_paiement").insert({ membre: id, stripe_compte: compte });
   }
 
-  const base = await origine();
-  const lien = await stripe().accountLinks.create({
-    account: compte,
-    type: "account_onboarding",
-    refresh_url: `${base}/compte/paiements/retour?relancer=1`,
-    return_url: `${base}/compte/paiements/retour`,
-  });
-  redirect(lien.url);
+  redirect(await lienActivation(compte, await origine()));
 }
 
 export async function ouvrirTableauStripe() {
