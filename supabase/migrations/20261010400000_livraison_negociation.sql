@@ -81,7 +81,20 @@ alter table public.commandes
   add column expediee_le timestamptz,
   add column offre bigint;
 
-alter table public.commandes drop constraint commandes_total_centimes_check;
+-- Retire l'ancienne règle « total = prix + frais », quel que soit le nom donné par Postgres
+do $$
+declare
+  nom text;
+begin
+  for nom in
+    select conname from pg_constraint
+    where conrelid = 'public.commandes'::regclass and contype = 'c'
+      and pg_get_constraintdef(oid) like '%total_centimes = (prix_centimes + frais_service_centimes)%'
+  loop
+    execute format('alter table public.commandes drop constraint %I', nom);
+  end loop;
+end;
+$$;
 alter table public.commandes
   add constraint commandes_total check (total_centimes = prix_centimes + frais_service_centimes + livraison_centimes);
 
