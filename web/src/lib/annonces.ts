@@ -133,6 +133,7 @@ export function schemaAnnonce(idUtilisateur: string) {
         .regex(/^\d{5}$/, { error: "Le code postal doit compter 5 chiffres." }),
       mainPropre: z.boolean(),
       livraison: z.boolean(),
+      formatColis: z.enum(["", ...FORMATS_COLIS]),
       photos: z
         .array(schemaChemin(idUtilisateur))
         .min(1, { error: "Ajoutez au moins une photo." })
@@ -140,8 +141,20 @@ export function schemaAnnonce(idUtilisateur: string) {
     })
     .refine((a) => a.mainPropre || a.livraison, {
       error: "Choisissez au moins un mode de remise : main propre ou livraison.",
+    })
+    .refine((a) => !a.livraison || a.formatColis !== "", {
+      error: "Choisissez la taille du colis pour proposer la livraison.",
     });
 }
+
+export const FORMATS_COLIS = ["petit", "moyen", "grand"] as const;
+export type FormatColis = (typeof FORMATS_COLIS)[number];
+
+export const libellesFormat: Record<FormatColis, string> = {
+  petit: "Petit colis : moins de 1 kg (vêtement, livre, accessoire)",
+  moyen: "Moyen colis : 1 à 5 kg (chaussures, petit électroménager)",
+  grand: "Grand colis : 5 à 20 kg (lampe, petit meuble démonté)",
+};
 
 export function lireFormulaireAnnonce(formData: FormData) {
   const texte = (cle: string) => {
@@ -157,6 +170,7 @@ export function lireFormulaireAnnonce(formData: FormData) {
     codePostal: texte("codePostal"),
     mainPropre: formData.get("mainPropre") === "on",
     livraison: formData.get("livraison") === "on",
+    formatColis: texte("formatColis"),
     photos: formData.getAll("photos").filter((p): p is string => typeof p === "string"),
   };
 }

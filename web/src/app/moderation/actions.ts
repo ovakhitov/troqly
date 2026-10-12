@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { prixEnCentimes } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
 // Chaque fonction SQL vérifie elle-même le rôle et inscrit l'action au journal.
@@ -56,5 +57,17 @@ export async function changerRole(idMembre: string, formData: FormData) {
   if (role !== "utilisateur" && role !== "moderateur" && role !== "administrateur") terminer(formData);
   const supabase = await creerClientServeur();
   const { error } = await supabase.rpc("definir_role", { cible: idMembre, nouveau: role });
+  terminer(formData, error);
+}
+
+export async function modifierTarif(idTarif: number, formData: FormData) {
+  const prix = prixEnCentimes(String(formData.get("prix") ?? ""));
+  if (prix === null) terminer(formData, { message: "Saisissez un prix en euros, par exemple 4,49." });
+  const supabase = await creerClientServeur();
+  const { error } = await supabase.rpc("modifier_tarif", {
+    id_tarif: idTarif,
+    prix,
+    actif: formData.get("actif") === "on",
+  });
   terminer(formData, error);
 }

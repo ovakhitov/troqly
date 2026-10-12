@@ -36,7 +36,7 @@ const promesses = [
   { Icone: IconeBouclier, titre: "Paiement en ligne", texte: "Via un prestataire agréé, sans partager vos coordonnées bancaires." },
   { Icone: IconeMains, titre: "Main propre", texte: "Rencontrez-vous près de chez vous." },
   { Icone: IconeColis, titre: "Livraison", texte: "Expédiez en point relais ou à domicile." },
-  { Icone: IconePourcent, titre: "Le vendeur touche le prix affiché", texte: "Les frais de service sont payés par l'acheteur." },
+  { Icone: IconePourcent, titre: "1,25 % de frais de service", texte: "Payés par l'acheteur, seulement en cas de paiement en ligne." },
 ];
 
 const etapes = [
@@ -48,7 +48,7 @@ const etapes = [
 const questions = [
   {
     q: "Combien coûte une vente sur Troqly ?",
-    r: "Déposer une annonce et vendre sont gratuits pour le vendeur, qui touche le prix affiché. L'acheteur qui paie en ligne règle des frais de service, indiqués avant le paiement.",
+    r: "Déposer une annonce est gratuit. L'acheteur qui paie en ligne règle 1,25 % de frais de service. Le vendeur reçoit le prix moins les frais de paiement par carte, et le montant exact lui est affiché dans sa vente.",
   },
   {
     q: "Comment se passe une remise en main propre ?",

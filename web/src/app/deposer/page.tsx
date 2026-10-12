@@ -53,6 +53,7 @@ export default async function PageDeposer() {
           codePostal: "",
           mainPropre: true,
           livraison: false,
+          formatColis: "",
           photos: [],
         }}
       />
