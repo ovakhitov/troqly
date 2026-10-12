@@ -4,8 +4,9 @@ import { supabaseEnvObligatoire } from "./env";
 
 // Client Supabase pour les composants serveur, actions serveur et routes
 export async function creerClientServeur() {
-  const { url, cle } = supabaseEnvObligatoire();
+  // cookies() d'abord : la page est ainsi toujours rendue à la demande, jamais à la construction
   const cookieStore = await cookies();
+  const { url, cle } = supabaseEnvObligatoire();
 
   return createServerClient(url, cle, {
     cookies: {
