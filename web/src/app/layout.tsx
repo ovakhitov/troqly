@@ -19,6 +19,10 @@ const inter = Inter({
   display: "swap",
 });
 
+// Chaque page dépend de la session ou de la base : rien n'est pré-généré à la construction,
+// qui n'a donc besoin d'aucune clé Supabase
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Troqly | Achetez et vendez près de chez vous",
   description:
