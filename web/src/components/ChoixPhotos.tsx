@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { retirerPhotoNonPubliee } from "@/app/annonces/actions";
 import { BUCKET_PHOTOS, PHOTOS_MAX, urlPhoto } from "@/lib/annonces";
 import { creerClientNavigateur } from "@/lib/supabase/navigateur";
@@ -67,12 +67,28 @@ async function preparerImage(fichier: File): Promise<{ blob: Blob; extension: "w
   return { blob: jpeg, extension: "jpg" };
 }
 
-export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: string; initiales?: string[] }) {
+export function ChoixPhotos({
+  idUtilisateur,
+  initiales = [],
+  onChange,
+}: {
+  idUtilisateur: string;
+  initiales?: string[];
+  // Informe le formulaire des photos prêtes (pour l'analyse par IA) et des envois en cours
+  onChange?: (chemins: string[], envoiEnCours: number) => void;
+}) {
   const [photos, setPhotos] = useState<Photo[]>(initiales.map((chemin) => ({ chemin, apercu: urlPhoto(chemin) })));
   const [envoiEnCours, setEnvoiEnCours] = useState(0);
   const [erreur, setErreur] = useState<string>();
   const champ = useRef<HTMLInputElement>(null);
   const publiees = useRef(new Set(initiales));
+
+  useEffect(() => {
+    onChange?.(
+      photos.map((p) => p.chemin),
+      envoiEnCours,
+    );
+  }, [photos, envoiEnCours, onChange]);
 
   async function ajouter(fichiers: FileList | null) {
     if (!fichiers?.length) return;

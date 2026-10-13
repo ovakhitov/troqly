@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GENRES } from "./genres";
 
 export const schemaEmail = z
   .string()
@@ -80,6 +81,7 @@ export const schemaInscription = z.object({
 export const schemaInformations = z.object({
   prenom: schemaPrenom,
   nom: schemaNom,
+  genre: z.enum(GENRES, { error: "Indiquez votre genre." }),
   telephone: schemaTelephone,
 });
 
@@ -92,6 +94,39 @@ export const schemaProfil = z.object({
   pseudo: schemaPseudo,
   ville: schemaVille,
 });
+
+// Boutique : nom public obligatoire pour vendre, présentation facultative
+export const schemaBoutique = z.object({
+  nom: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\s+/g, " "))
+    .pipe(
+      z
+        .string()
+        .min(3, { error: "Le nom de la boutique doit faire au moins 3 caractères." })
+        .max(40, { error: "Le nom de la boutique doit faire au plus 40 caractères." })
+        .regex(/^[\p{L}\p{N}][\p{L}\p{N} '’&.,!-]*$/u, {
+          error: "Le nom de la boutique ne peut contenir que des lettres, chiffres, espaces et la ponctuation simple.",
+        }),
+    ),
+  description: z
+    .string()
+    .trim()
+    .max(600, { error: "La présentation doit faire au plus 600 caractères." }),
+});
+
+// « L'Atelier de Léa » → « l-atelier-de-lea »
+export function adresseBoutique(nom: string) {
+  return nom
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50)
+    .replace(/-+$/, "");
+}
 
 export function premiereErreur(erreur: z.ZodError) {
   return erreur.issues[0]?.message ?? "Le formulaire contient une erreur.";

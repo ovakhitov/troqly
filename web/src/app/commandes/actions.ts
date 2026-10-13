@@ -74,7 +74,7 @@ export async function acheter(idAnnonce: string, formData: FormData) {
   const { supabase, id, email } = await membre(`/annonces/${idAnnonce}`);
   const retourErreur: (code: string) => never = (code) => redirect(`/annonces/${idAnnonce}?achat=${code}`);
 
-  const { data: peutAcheter } = await supabase.rpc("peut_publier");
+  const { data: peutAcheter } = await supabase.rpc("peut_acheter");
   if (!peutAcheter) retourErreur("infos");
 
   const { data: annonce } = await supabase

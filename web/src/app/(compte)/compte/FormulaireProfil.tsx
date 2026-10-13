@@ -12,7 +12,16 @@ export function FormulaireProfil({ pseudo, ville }: { pseudo: string; ville: str
   return (
     <form action={action} className="grid gap-4" noValidate>
       <Message erreur={etat.erreur} succes={etat.succes} />
-      <Champ id="pseudo" libelle="Pseudo" required minLength={3} maxLength={30} defaultValue={etat.valeurs?.pseudo} />
+      <Champ
+        id="pseudo"
+        libelle="Pseudo"
+        required
+        minLength={3}
+        maxLength={30}
+        autoComplete="nickname"
+        aide="Votre nom public dans les messages et les offres. Votre vrai nom n'est jamais affiché."
+        defaultValue={etat.valeurs?.pseudo}
+      />
       <Champ
         id="ville"
         libelle="Ville"

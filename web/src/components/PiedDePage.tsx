@@ -5,13 +5,13 @@ import { LogoTroqly } from "./Icones";
 export function PiedDePage() {
   return (
     <footer className="bg-champ text-sur-champ">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-14 pb-10 md:grid-cols-[1.4fr_1fr_1fr]">
-        <div className="grid content-start gap-3">
-          <Link href="/" className="flex items-center gap-2 font-titre text-3xl font-semibold tracking-tight">
-            <LogoTroqly className="size-8" />
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-4 pt-10 pb-8 sm:gap-10 sm:pt-14 sm:pb-10 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="col-span-2 grid content-start gap-3 md:col-span-1">
+          <Link href="/" className="flex w-fit items-center gap-2 font-titre text-2xl font-semibold tracking-tight sm:text-3xl">
+            <LogoTroqly className="size-7 sm:size-8" />
             Troqly
           </Link>
-          <p className="max-w-xs text-sur-champ-doux">
+          <p className="hidden max-w-xs text-sur-champ-doux sm:block">
             Les objets qui dorment chez vous trouvent preneur près de chez vous.
           </p>
         </div>
@@ -21,12 +21,12 @@ export function PiedDePage() {
           <Link href="/compte" className="w-fit hover:underline">Mon compte</Link>
         </nav>
         <nav aria-label="Informations" className="grid content-start gap-2.5 text-[15px]">
-          <Link href="/aide" className="w-fit hover:underline">Aide</Link>
+          <Link href="/#titre-faq" className="w-fit hover:underline">Questions fréquentes</Link>
           <Link href="/cgu" className="w-fit hover:underline">Conditions d&apos;utilisation</Link>
           <Link href="/confidentialite" className="w-fit hover:underline">Confidentialité</Link>
         </nav>
       </div>
-      <div className="mx-auto max-w-6xl border-t border-white/15 px-4 py-6 text-sm text-sur-champ-doux">
+      <div className="mx-auto max-w-6xl border-t border-white/15 px-4 py-5 text-sm text-sur-champ-doux sm:py-6">
         © {new Date().getFullYear()} Troqly · Petites annonces entre particuliers en France
       </div>
     </footer>

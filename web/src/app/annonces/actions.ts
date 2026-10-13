@@ -48,13 +48,17 @@ export async function creerAnnonce(_: EtatAnnonce, formData: FormData): Promise<
       main_propre: a.mainPropre,
       livraison: a.livraison,
       format_colis: a.livraison ? a.formatColis : null,
+      caracteristiques: a.caracteristiques,
     })
     .select("id")
     .single();
 
   if (error || !annonce) {
     if (error?.code === "42501") {
-      return echec("Complétez vos informations personnelles dans « Mon compte » avant de déposer une annonce.", formData);
+      return echec(
+        "Complétez vos informations personnelles et nommez votre boutique dans « Mon compte » avant de déposer une annonce.",
+        formData,
+      );
     }
     return echec("L'annonce n'a pas pu être publiée. Vérifiez les champs puis réessayez.", formData);
   }
@@ -102,6 +106,7 @@ export async function modifierAnnonce(
       main_propre: a.mainPropre,
       livraison: a.livraison,
       format_colis: a.livraison ? a.formatColis : null,
+      caracteristiques: a.caracteristiques,
     })
     .eq("id", idAnnonce)
     .eq("vendeur", id)
@@ -129,7 +134,7 @@ export async function changerStatut(idAnnonce: string, statut: StatutAnnonce) {
   await supabase.from("annonces").update({ statut }).eq("id", idAnnonce).eq("vendeur", id);
   revalidatePath(`/annonces/${idAnnonce}`);
   revalidatePath("/annonces");
-  revalidatePath("/compte/annonces");
+  revalidatePath("/compte/boutique");
 }
 
 export async function supprimerAnnonce(idAnnonce: string) {
@@ -143,7 +148,7 @@ export async function supprimerAnnonce(idAnnonce: string) {
 
   revalidatePath("/");
   revalidatePath("/annonces");
-  redirect("/compte/annonces?supprimee=1");
+  redirect("/compte/boutique?supprimee=1");
 }
 
 // Photo envoyée puis retirée avant publication

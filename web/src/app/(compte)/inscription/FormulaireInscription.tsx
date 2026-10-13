@@ -20,7 +20,7 @@ export function FormulaireInscription() {
         required
         minLength={3}
         maxLength={30}
-        aide="Seul nom visible sur vos annonces. 3 à 30 caractères."
+        aide="Votre nom public sur Troqly, à la place de votre vrai nom. Unique, de 3 à 30 caractères."
         defaultValue={etat.valeurs?.pseudo}
       />
       <Champ id="email" libelle="Adresse e-mail" type="email" autoComplete="email" required defaultValue={etat.valeurs?.email} />

@@ -1,12 +1,15 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { BUCKET_PHOTOS } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import {
+  adresseBoutique,
   cheminSur,
   premiereErreur,
+  schemaBoutique,
   schemaConnexion,
   schemaDateNaissance,
   schemaEmail,
@@ -28,6 +31,11 @@ async function origine() {
   return h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 }
 
+const PSEUDO_PRIS = "Ce pseudo est déjà pris. Choisissez-en un autre.";
+
+// Violation d'unicité renvoyée par PostgreSQL
+const DOUBLON = "23505";
+
 function texte(formData: FormData, cle: string) {
   const v = formData.get(cle);
   return typeof v === "string" ? v : "";
@@ -40,6 +48,9 @@ export async function inscrire(_: EtatFormulaire, formData: FormData): Promise<E
 
   const { pseudo, email, motDePasse } = resultat.data;
   const supabase = await creerClientServeur();
+  const { data: disponible } = await supabase.rpc("pseudo_disponible", { p_pseudo: pseudo });
+  if (disponible === false) return { erreur: PSEUDO_PRIS, valeurs };
+
   const { error } = await supabase.auth.signUp({
     email,
     password: motDePasse,
@@ -155,6 +166,7 @@ export async function modifierProfil(_: EtatFormulaire, formData: FormData): Pro
     .from("profils")
     .update({ pseudo: resultat.data.pseudo, ville: resultat.data.ville || null })
     .eq("id", id);
+  if (error?.code === DOUBLON) return { erreur: PSEUDO_PRIS, valeurs };
   if (error) return { erreur: "Le profil n'a pas pu être enregistré. Réessayez.", valeurs };
 
   return { succes: "Profil enregistré.", valeurs };
@@ -168,12 +180,13 @@ export async function enregistrerInformations(
   const valeurs = {
     prenom: texte(formData, "prenom"),
     nom: texte(formData, "nom"),
+    genre: texte(formData, "genre"),
     telephone: texte(formData, "telephone"),
     dateNaissance: texte(formData, "dateNaissance"),
   };
   const resultat = schemaInformations.safeParse(valeurs);
   if (!resultat.success) return { erreur: premiereErreur(resultat.error), valeurs };
-  const { prenom, nom, telephone } = resultat.data;
+  const { prenom, nom, genre, telephone } = resultat.data;
 
   const supabase = await creerClientServeur();
   const { data } = await supabase.auth.getClaims();
@@ -185,9 +198,10 @@ export async function enregistrerInformations(
   if (existantes) {
     const { error } = await supabase
       .from("informations_privees")
-      .update({ prenom, nom, telephone: telephone || null })
+      .update({ prenom, nom, genre, telephone: telephone || null })
       .eq("id", id);
     if (error) return { erreur: "Vos informations n'ont pas pu être enregistrées. Réessayez.", valeurs };
+    revalidatePath("/compte");
     return { succes: "Informations enregistrées.", valeurs };
   }
 
@@ -196,11 +210,48 @@ export async function enregistrerInformations(
 
   const { error } = await supabase
     .from("informations_privees")
-    .insert({ id, prenom, nom, date_naissance: naissance.data, telephone: telephone || null });
+    .insert({ id, prenom, nom, genre, date_naissance: naissance.data, telephone: telephone || null });
   if (error) return { erreur: "Vos informations n'ont pas pu être enregistrées. Réessayez.", valeurs };
 
   // Recharge la page pour afficher la date de naissance enregistrée
   redirect("/compte?informations=ok");
+}
+
+// Nom (obligatoire pour vendre) et présentation de la boutique. L'adresse publique suit le nom.
+export async function enregistrerBoutique(_: EtatFormulaire, formData: FormData): Promise<EtatFormulaire> {
+  const valeurs = { nom: texte(formData, "nomBoutique"), description: texte(formData, "descriptionBoutique") };
+  const resultat = schemaBoutique.safeParse(valeurs);
+  if (!resultat.success) return { erreur: premiereErreur(resultat.error), valeurs };
+  const { nom, description } = resultat.data;
+
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.auth.getClaims();
+  const id = data?.claims?.sub;
+  if (!id) redirect("/connexion?suivant=/compte/boutique");
+
+  // « Café » et « Cafe » donnent la même adresse : la seconde reçoit un numéro
+  const base = adresseBoutique(nom);
+  let slug = base.length >= 3 ? base : `boutique-${id.slice(0, 8)}`;
+  const { data: prises } = await supabase
+    .from("profils")
+    .select("boutique_slug")
+    .like("boutique_slug", `${slug}%`)
+    .neq("id", id);
+  const occupees = new Set((prises ?? []).map((p) => p.boutique_slug));
+  for (let n = 2; occupees.has(slug); n++) slug = `${base}-${n}`;
+
+  const { error } = await supabase
+    .from("profils")
+    .update({ boutique_nom: nom, boutique_slug: slug, boutique_description: description || null })
+    .eq("id", id);
+  if (error?.code === DOUBLON) return { erreur: "Ce nom de boutique est déjà pris. Choisissez-en un autre.", valeurs };
+  if (error) return { erreur: "La boutique n'a pas pu être enregistrée. Réessayez.", valeurs };
+
+  revalidatePath("/compte");
+  revalidatePath("/compte/boutique");
+  const suivant = formData.get("suivant");
+  if (typeof suivant === "string" && suivant) redirect(cheminSur(suivant, "/compte/boutique"));
+  return { succes: "Boutique enregistrée.", valeurs: { nom, description } };
 }
 
 export async function supprimerMonCompte(_: EtatFormulaire, formData: FormData): Promise<EtatFormulaire> {

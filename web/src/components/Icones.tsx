@@ -177,3 +177,53 @@ export function IconePlus({ className }: Props) {
     </svg>
   );
 }
+
+export function IconeMaison({ className }: Props) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <path
+        d="M3 9.2L10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeBoutique({ className }: Props) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <path
+        d="M3.5 8.5V16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8.5M2.5 5l1.6-2.5h11.8L17.5 5v1.2a2.3 2.3 0 0 1-4.5 0 2.3 2.3 0 0 1-4.6 0 2.3 2.3 0 0 1-4.5 0zM8 17v-4.5h4V17"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeEtincelle({ className }: Props) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <path
+        d="M10 2.5l1.7 4.6 4.8 1.9-4.8 1.9L10 15.5l-1.7-4.6L3.5 9l4.8-1.9zM16 13.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeChevron({ className }: Props) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <path d="M6 3.5L10.5 8 6 12.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
