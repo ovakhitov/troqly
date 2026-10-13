@@ -42,7 +42,7 @@ export function CarteAnnonce({ annonce, prioritaire = false }: { annonce: Donnee
         <p className="truncate text-[13px] text-mauve">
           {annonce.ville} · {formaterDateRelative(annonce.creeLe)}
         </p>
-        {remises && <p className="truncate text-[13px] text-mauve">{remises}</p>}
+        {remises && <p className="hidden truncate text-[13px] text-mauve sm:block">{remises}</p>}
       </div>
     </article>
   );

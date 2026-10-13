@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CadreCompte } from "@/components/CadreCompte";
 import { FormulaireAnnonce } from "@/components/FormulaireAnnonce";
+import { nettoyerReponses } from "@/lib/caracteristiques";
+import { iaConfiguree } from "@/lib/ia";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { modifierAnnonce } from "../../actions";
 
@@ -19,7 +21,7 @@ export default async function PageModifierAnnonce({ params }: { params: Promise<
   const [{ data: annonce }, { data: categories }] = await Promise.all([
     supabase
       .from("annonces")
-      .select("id, vendeur, titre, description, prix_centimes, categorie, ville, code_postal, main_propre, livraison, format_colis, photos_annonces(chemin, position)")
+      .select("id, vendeur, titre, description, prix_centimes, categorie, ville, code_postal, main_propre, livraison, format_colis, caracteristiques, photos_annonces(chemin, position)")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("categories").select("slug, libelle").order("ordre"),
@@ -34,6 +36,7 @@ export default async function PageModifierAnnonce({ params }: { params: Promise<
         action={modifierAnnonce.bind(null, id)}
         idUtilisateur={idUtilisateur}
         categories={categories ?? []}
+        iaDisponible={iaConfiguree()}
         libelleBouton="Enregistrer les modifications"
         initiales={{
           titre: annonce.titre,
@@ -46,6 +49,7 @@ export default async function PageModifierAnnonce({ params }: { params: Promise<
           livraison: annonce.livraison,
           formatColis: annonce.format_colis ?? "",
           photos: [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => p.chemin),
+          caracteristiques: nettoyerReponses(annonce.categorie, annonce.caracteristiques ?? {}),
         }}
       />
     </CadreCompte>

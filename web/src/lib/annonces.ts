@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { lireReponses, questionsDe } from "./caracteristiques";
 
 export const BUCKET_PHOTOS = "photos-annonces";
 export const PHOTOS_MAX = 8;
@@ -138,6 +139,10 @@ export function schemaAnnonce(idUtilisateur: string) {
         .array(schemaChemin(idUtilisateur))
         .min(1, { error: "Ajoutez au moins une photo." })
         .max(PHOTOS_MAX, { error: `Une annonce compte ${PHOTOS_MAX} photos au maximum.` }),
+      caracteristiques: z.record(z.string(), z.string()),
+    })
+    .refine((a) => questionsDe(a.categorie).length === 0 || Boolean(a.caracteristiques.etat), {
+      error: "Indiquez l'état de l'objet.",
     })
     .refine((a) => a.mainPropre || a.livraison, {
       error: "Choisissez au moins un mode de remise : main propre ou livraison.",
@@ -161,16 +166,18 @@ export function lireFormulaireAnnonce(formData: FormData) {
     const v = formData.get(cle);
     return typeof v === "string" ? v : "";
   };
+  const categorie = texte("categorie");
   return {
     titre: texte("titre"),
     description: texte("description"),
     prix: texte("prix"),
-    categorie: texte("categorie"),
+    categorie,
     ville: texte("ville"),
     codePostal: texte("codePostal"),
     mainPropre: formData.get("mainPropre") === "on",
     livraison: formData.get("livraison") === "on",
     formatColis: texte("formatColis"),
     photos: formData.getAll("photos").filter((p): p is string => typeof p === "string"),
+    caracteristiques: lireReponses(formData, categorie),
   };
 }

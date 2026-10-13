@@ -91,13 +91,13 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
       <main id="contenu">
         {/* Aplat prune : la promesse, la recherche et de vrais objets du moment */}
         <section className="bg-champ text-sur-champ">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-8 pb-14 sm:pt-12 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:pb-20">
-            <div className="grid gap-7">
-              <div className="grid gap-4">
-                <h1 className="max-w-[18ch] font-titre text-[2.6rem] leading-[1.02] font-semibold tracking-[-0.035em] text-balance sm:text-6xl lg:text-[4rem]">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-5 pb-9 sm:pt-12 sm:pb-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:pb-20">
+            <div className="grid gap-5 sm:gap-7">
+              <div className="grid gap-3 sm:gap-4">
+                <h1 className="max-w-[18ch] font-titre text-[2.1rem] leading-[1.04] font-semibold tracking-[-0.03em] text-balance sm:text-6xl sm:leading-[1.02] sm:tracking-[-0.035em] lg:text-[4rem]">
                   Ce qui dort au grenier cherche preneur à deux rues d&apos;ici.
                 </h1>
-                <p className="max-w-xl text-lg text-sur-champ-doux">
+                <p className="max-w-xl text-sur-champ-doux sm:text-lg">
                   Achetez et vendez entre particuliers, en main propre ou par colis, partout en France.
                 </p>
               </div>
@@ -105,7 +105,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               <form
                 action="/annonces"
                 role="search"
-                className="verre grid gap-1.5 rounded-[18px] p-1.5 text-prune-nuit sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
+                className="verre grid grid-cols-[minmax(0,1fr)_auto] gap-1.5 rounded-[18px] p-1.5 text-prune-nuit sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
               >
                 <div className="flex h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4">
                   <IconeLoupe className="size-5 shrink-0 text-mauve" />
@@ -120,7 +120,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                     className="w-full min-w-0 bg-transparent text-base outline-none placeholder:text-mauve"
                   />
                 </div>
-                <div className="flex h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4">
+                {/* Sur téléphone, le lieu se choisit dans les filtres de la recherche */}
+                <div className="hidden h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4 sm:flex">
                   <IconeLieu className="size-5 shrink-0 text-mauve" />
                   <label htmlFor="lieu-accueil" className="sr-only">
                     Ville, département ou code postal
@@ -133,13 +134,17 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                     className="w-full min-w-0 bg-transparent text-base outline-none placeholder:text-mauve"
                   />
                 </div>
-                <button type="submit" className="bouton h-13 px-6 text-base">
-                  Rechercher
+                <button type="submit" className="bouton h-13 px-4 text-base sm:px-6">
+                  <span className="sr-only sm:not-sr-only">Rechercher</span>
+                  <IconeLoupe className="size-5 sm:hidden" />
                 </button>
               </form>
 
               {categories.length > 0 && (
-                <nav aria-label="Catégories" className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-[15px]">
+                <nav
+                  aria-label="Catégories"
+                  className="-mx-4 flex gap-x-5 overflow-x-auto px-4 pb-1 text-[15px] whitespace-nowrap [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:items-baseline sm:gap-y-2 sm:overflow-visible sm:px-0 sm:pb-0"
+                >
                   {categories.map((c) => (
                     <Link
                       key={c.slug}
@@ -182,8 +187,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           </div>
         </section>
 
-        <div className="mx-auto grid max-w-6xl gap-24 px-4 pt-14 pb-24">
-          <section aria-labelledby="titre-recentes" className="grid gap-7">
+        <div className="mx-auto grid max-w-6xl gap-16 px-4 pt-9 pb-16 sm:gap-24 sm:pt-14 sm:pb-24">
+          <section aria-labelledby="titre-recentes" className="grid gap-5 sm:gap-7">
             <TitreSection id="titre-recentes" titre="Arrivé ces derniers jours" lien={{ href: "/annonces", libelle: "Toutes les annonces" }} />
             {annonces.length ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">

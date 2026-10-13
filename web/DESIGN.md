@@ -44,8 +44,18 @@ Le papier des étiquettes et du ticket reste clair dans les deux thèmes.
 
 - `bouton` et `bouton-contour` (utilitaires CSS) : hauteur 44 px, rayon 12 px.
 - Rayons : `rounded-champ` 12 px, `rounded-photo` 14 px, `rounded-carte` 18 px.
-- `CarteAnnonce` : photo, étiquette de prix, titre, ville et date, modes de remise.
+- `CarteAnnonce` : photo, étiquette de prix, titre, ville et date, modes de remise (masqués sur téléphone).
 - `EnTete` (variante `surChamp` sur l'accueil), `PiedDePage`, `CadreCompte` pour les formulaires.
+- `Pastilles` : choix unique en pastilles (genre, état, réponses courtes du questionnaire). Au-delà de 6 options, une liste déroulante.
+- `Volet` : section repliable des pages de compte (titre et résumé visibles, formulaire à la demande).
+
+## Téléphone
+
+- Moins de choses à l'écran : sous 640 px, la barre du haut ne garde que le logo et le thème ; Accueil, Rechercher, Déposer, Messages et Compte passent dans la barre d'onglets du bas (`NavigationMobile`, verre opaque, zone sûre de l'iPhone respectée).
+- Le `body` réserve la hauteur de cette barre en bas de page ; rien d'autre ne doit être fixé en bas de l'écran.
+- Accueil : titre plus court, recherche sur une ligne (le lieu se choisit dans les filtres), catégories en une ligne qui défile.
+- Annonce : titre, prix et photos, puis l'encadré d'achat, puis les caractéristiques et la description.
+- « Mon compte » est un sommaire : les raccourcis d'abord, les réglages repliés.
 
 ## Mouvement
 

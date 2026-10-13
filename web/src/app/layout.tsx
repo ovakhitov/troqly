@@ -59,7 +59,8 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptTheme }} />
       </head>
-      <body className={`${generalSans.variable} font-sans antialiased`}>
+      {/* Sur téléphone, la marge du bas laisse la place à la barre d'onglets */}
+      <body className={`${generalSans.variable} pb-[calc(4rem+env(safe-area-inset-bottom,0px))] font-sans antialiased sm:pb-0`}>
         <a
           href="#contenu"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-champ focus:bg-surface focus:px-4 focus:py-2 focus:font-semibold"

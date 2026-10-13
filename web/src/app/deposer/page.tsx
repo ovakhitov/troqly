@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CadreCompte } from "@/components/CadreCompte";
 import { FormulaireAnnonce } from "@/components/FormulaireAnnonce";
+import { iaConfiguree } from "@/lib/ia";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { creerAnnonce } from "../annonces/actions";
 
@@ -14,24 +15,31 @@ export default async function PageDeposer() {
   const id = data?.claims?.sub;
   if (!id) redirect("/connexion?suivant=/deposer");
 
-  const [{ data: peutPublier }, { data: categories }, { data: profil }] = await Promise.all([
+  const [{ data: peutPublier }, { data: categories }, { data: profil }, { data: prive }] = await Promise.all([
     supabase.rpc("peut_publier"),
     supabase.from("categories").select("slug, libelle").order("ordre"),
-    supabase.from("profils").select("ville").eq("id", id).single(),
+    supabase.from("profils").select("ville, boutique_nom").eq("id", id).single(),
+    supabase.from("informations_privees").select("genre").eq("id", id).maybeSingle(),
   ]);
 
   if (!peutPublier) {
+    // Deux étapes possibles avant la première annonce : les informations privées, puis la boutique
+    const etapeInfos = !prive?.genre;
     return (
       <CadreCompte titre="Déposer une annonce">
-        <p className="text-prune-nuit">
-          Avant votre première annonce, complétez vos informations personnelles. Elles restent privées et ne sont jamais
-          affichées.
-        </p>
+        <ol className="grid gap-3 text-prune-nuit">
+          <li className={etapeInfos ? "font-semibold" : "text-mauve"}>
+            {etapeInfos ? "1." : "✓"} Complétez vos informations personnelles. Elles restent privées et ne sont jamais affichées.
+          </li>
+          <li className={profil?.boutique_nom ? "text-mauve" : etapeInfos ? "" : "font-semibold"}>
+            {profil?.boutique_nom ? "✓" : "2."} Nommez votre boutique : vos annonces sont publiées sous ce nom.
+          </li>
+        </ol>
         <Link
-          href="/compte"
+          href={etapeInfos ? "/compte" : "/compte/boutique?suivant=/deposer"}
           className="bouton justify-self-start"
         >
-          Compléter mon compte
+          {etapeInfos ? "Compléter mon compte" : "Nommer ma boutique"}
         </Link>
       </CadreCompte>
     );
@@ -43,6 +51,7 @@ export default async function PageDeposer() {
         action={creerAnnonce}
         idUtilisateur={id}
         categories={categories ?? []}
+        iaDisponible={iaConfiguree()}
         libelleBouton="Publier l'annonce"
         initiales={{
           titre: "",
@@ -55,6 +64,7 @@ export default async function PageDeposer() {
           livraison: false,
           formatColis: "",
           photos: [],
+          caracteristiques: {},
         }}
       />
     </CadreCompte>

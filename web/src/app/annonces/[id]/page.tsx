@@ -5,6 +5,7 @@ import { cache } from "react";
 import { EnTete } from "@/components/EnTete";
 import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
+import { etatSchemaOrg, lignesCaracteristiques } from "@/lib/caracteristiques";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { URL_SITE } from "@/lib/site";
 import { COMMISSION_BPS } from "@/lib/frais";
@@ -29,7 +30,7 @@ type Params = {
 };
 
 const ERREURS_ACHAT: Record<string, string> = {
-  infos: "Complétez vos informations personnelles dans « Mon compte » avant d'acheter.",
+  infos: "Complétez vos informations personnelles (genre compris) dans « Mon compte » avant d'acheter.",
   indisponible: "Cet objet n'est plus disponible à l'achat.",
   mode: "Ce mode de remise n'est pas proposé pour cet objet.",
   vendeur: "Ce vendeur n'a pas encore activé les paiements en ligne. Contactez-le par message.",
@@ -47,7 +48,7 @@ const chargerAnnonce = cache(async (id: string) => {
   const { data } = await supabase
     .from("annonces")
     .select(
-      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, format_colis, statut, moderation, cree_le, categories(libelle), profils!annonces_vendeur_fkey(pseudo, cree_le), photos_annonces(chemin, position)",
+      "id, vendeur, titre, description, prix_centimes, ville, code_postal, main_propre, livraison, format_colis, statut, moderation, cree_le, categorie, caracteristiques, categories(libelle), profils!annonces_vendeur_fkey(pseudo, cree_le, boutique_nom, boutique_slug), photos_annonces(chemin, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -125,8 +126,15 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
 
   const photos = [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position).map((p) => urlPhoto(p.chemin));
   const statut = annonce.statut as StatutAnnonce;
-  const vendeur = annonce.profils as unknown as { pseudo: string; cree_le: string } | null;
+  const vendeur = annonce.profils as unknown as {
+    pseudo: string;
+    cree_le: string;
+    boutique_nom: string | null;
+    boutique_slug: string | null;
+  } | null;
   const categorie = annonce.categories as unknown as { libelle: string } | null;
+  const caracteristiques = lignesCaracteristiques(annonce.categorie, annonce.caracteristiques);
+  const reponses = (annonce.caracteristiques ?? {}) as Record<string, string>;
 
   // Données structurées : l'objet et son prix, pour les résultats enrichis des moteurs de recherche
   const jsonLd = {
@@ -136,7 +144,9 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
     description: annonce.description,
     image: photos.length ? photos : undefined,
     category: categorie?.libelle,
-    itemCondition: "https://schema.org/UsedCondition",
+    itemCondition: etatSchemaOrg(reponses.etat),
+    brand: reponses.marque ? { "@type": "Brand", name: reponses.marque } : undefined,
+    color: reponses.couleur,
     offers: {
       "@type": "Offer",
       url: `${URL_SITE}/annonces/${annonce.id}`,
@@ -149,7 +159,11 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             ? "https://schema.org/LimitedAvailability"
             : "https://schema.org/SoldOut",
       areaServed: { "@type": "Country", name: "FR" },
-      seller: vendeur ? { "@type": "Person", name: vendeur.pseudo } : undefined,
+      seller: vendeur
+        ? vendeur.boutique_nom
+          ? { "@type": "Organization", name: vendeur.boutique_nom, url: `${URL_SITE}/boutique/${vendeur.boutique_slug}` }
+          : { "@type": "Person", name: vendeur.pseudo }
+        : undefined,
     },
   };
 
@@ -197,21 +211,38 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
           </ol>
         </nav>
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-12">
-          <div className="grid min-w-0 content-start gap-8">
+        {/* Sur téléphone : titre et prix, photos, puis l'encadré d'achat avant le détail de l'objet */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-8">
+          <div className="order-1 grid min-w-0 content-start gap-5 lg:col-start-1 lg:row-start-1">
             {/* Sur mobile, le titre et le prix passent avant la galerie (revue Codex) */}
             <div className="grid justify-items-start gap-3 lg:hidden">
-              <h1 className="font-titre text-[1.75rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
+              <h1 className="font-titre text-[1.6rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
               <p className="etiquette -rotate-2 text-2xl">{formaterPrix(annonce.prix_centimes)}</p>
             </div>
             <Galerie photos={photos} titre={annonce.titre} />
+          </div>
+
+          <div className="order-3 grid min-w-0 content-start gap-8 lg:col-start-1 lg:row-start-2">
+            {caracteristiques.length > 0 && (
+              <section className="grid gap-3 border-t border-ligne pt-6">
+                <h2 className="font-titre text-xl font-semibold text-prune-nuit">Caractéristiques</h2>
+                <dl className="grid max-w-2xl grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-2 text-[15px]">
+                  {caracteristiques.map((c) => (
+                    <div key={c.libelle} className="contents">
+                      <dt className="text-mauve">{c.libelle}</dt>
+                      <dd className="font-semibold text-prune-nuit">{c.valeur}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
             <section className="grid gap-3 border-t border-ligne pt-6">
               <h2 className="font-titre text-xl font-semibold text-prune-nuit">Description</h2>
               <p className="max-w-[68ch] text-[17px] leading-relaxed whitespace-pre-line text-prune-nuit">{annonce.description}</p>
             </section>
           </div>
 
-          <aside className="grid content-start gap-4 lg:sticky lg:top-24 lg:self-start">
+          <aside className="order-2 grid content-start gap-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-5 sm:p-6">
               <div className="flex flex-wrap gap-1.5 text-xs font-semibold text-prune-nuit">
                 {categorie && <span className="rounded-full border border-ligne px-2.5 py-0.5">{categorie.libelle}</span>}
@@ -281,19 +312,29 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             </div>
 
             {vendeur && (
-              <div className="flex items-center gap-3 rounded-carte border border-ligne bg-surface p-5">
+              <div className="relative flex items-center gap-3 rounded-carte border border-ligne bg-surface p-5">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-champ font-titre text-lg font-semibold text-sur-champ uppercase ring-1 ring-ligne" aria-hidden="true">
-                  {vendeur.pseudo.slice(0, 1)}
+                  {(vendeur.boutique_nom ?? vendeur.pseudo).slice(0, 1)}
                 </span>
-                <span className="grid gap-0.5">
-                <span className="font-titre text-lg leading-tight font-semibold text-prune-nuit">
-                  <span className="sr-only">Vendeur : </span>
-                  {vendeur.pseudo}
-                </span>
-                <span className="text-sm text-mauve">
-                  Membre depuis{" "}
-                  {new Date(vendeur.cree_le).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "Europe/Paris" })}
-                </span>
+                <span className="grid min-w-0 gap-0.5">
+                  <span className="font-titre text-lg leading-tight font-semibold text-prune-nuit">
+                    <span className="sr-only">Vendu par : </span>
+                    {vendeur.boutique_nom && vendeur.boutique_slug ? (
+                      <Link
+                        href={`/boutique/${vendeur.boutique_slug}`}
+                        className="after:absolute after:inset-0 after:rounded-carte hover:underline"
+                      >
+                        {vendeur.boutique_nom}
+                      </Link>
+                    ) : (
+                      vendeur.pseudo
+                    )}
+                  </span>
+                  <span className="text-sm text-mauve">
+                    {vendeur.boutique_nom ? `${vendeur.pseudo} · ` : ""}
+                    membre depuis{" "}
+                    {new Date(vendeur.cree_le).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "Europe/Paris" })}
+                  </span>
                 </span>
               </div>
             )}
