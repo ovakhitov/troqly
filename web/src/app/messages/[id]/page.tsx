@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterPrix } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { bloquerMembre } from "../actions";
 import { Envoi } from "./Envoi";
 
-export const metadata: Metadata = { title: "Conversation | Troqly" };
+export const metadata: Metadata = { title: "Conversation" };
 
 type Conversation = {
   id: string;
@@ -63,9 +64,9 @@ export default async function PageConversation({ params }: { params: Promise<{ i
       : undefined;
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-3xl gap-4 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-3xl gap-4 px-4 pt-8 pb-20">
         <Link href="/messages" className="text-sm font-semibold text-prune hover:underline">
           Toutes les conversations
         </Link>
@@ -114,6 +115,7 @@ export default async function PageConversation({ params }: { params: Promise<{ i
 
         <Envoi idConversation={id} desactive={raisonDesactivation} />
       </main>
+      <PiedDePage />
     </div>
   );
 }

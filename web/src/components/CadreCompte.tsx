@@ -1,6 +1,7 @@
 import { EnTete } from "./EnTete";
+import { PiedDePage } from "./PiedDePage";
 
-// Mise en page des pages de compte : une carte centrée sur le halo de marque
+// Mise en page des pages de compte et des formulaires : titre en tête, contenu sur une surface unie
 export function CadreCompte({
   titre,
   intro,
@@ -13,15 +14,21 @@ export function CadreCompte({
   children: React.ReactNode;
 }) {
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className={`mx-auto grid gap-6 px-4 pt-10 pb-20 ${large ? "max-w-2xl" : "max-w-md"}`}>
+      <main
+        id="contenu"
+        className={`mx-auto grid w-full flex-1 content-start gap-7 px-4 pt-10 pb-24 sm:pt-14 ${large ? "max-w-2xl" : "max-w-md"}`}
+      >
         <div className="grid gap-2">
-          <h1 className="font-titre text-3xl font-semibold tracking-tight text-balance text-prune-nuit">{titre}</h1>
-          {intro && <p className="text-mauve">{intro}</p>}
+          <h1 className="font-titre text-[2rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit sm:text-[2.5rem]">
+            {titre}
+          </h1>
+          {intro && <p className="text-lg text-mauve">{intro}</p>}
         </div>
-        <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-6">{children}</div>
+        <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-5 sm:p-7">{children}</div>
       </main>
+      <PiedDePage />
     </div>
   );
 }

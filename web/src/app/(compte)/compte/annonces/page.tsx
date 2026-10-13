@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CarteAnnonce } from "@/components/CarteAnnonce";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { SELECTION_CARTE, versCarte } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Mes annonces | Troqly" };
+export const metadata: Metadata = { title: "Mes annonces" };
 
 export default async function PageMesAnnonces({ searchParams }: { searchParams: Promise<{ supprimee?: string }> }) {
   const { supprimee } = await searchParams;
@@ -24,9 +25,9 @@ export default async function PageMesAnnonces({ searchParams }: { searchParams: 
   const annonces = data ?? [];
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-6xl gap-6 px-4 pt-8 pb-20">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Mes annonces</h1>
           <Link href="/compte" className="text-sm font-semibold text-prune hover:underline">
@@ -45,7 +46,7 @@ export default async function PageMesAnnonces({ searchParams }: { searchParams: 
             <p className="font-titre text-lg font-semibold text-prune-nuit">Vous n&apos;avez pas encore d&apos;annonce.</p>
             <Link
               href="/deposer"
-              className="rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
+              className="bouton"
             >
               Déposer une annonce
             </Link>
@@ -63,6 +64,7 @@ export default async function PageMesAnnonces({ searchParams }: { searchParams: 
           </div>
         )}
       </main>
+      <PiedDePage />
     </div>
   );
 }

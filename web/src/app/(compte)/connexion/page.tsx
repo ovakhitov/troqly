@@ -3,7 +3,7 @@ import { CadreCompte } from "@/components/CadreCompte";
 import { cheminSur } from "@/lib/validation";
 import { FormulaireConnexion } from "./FormulaireConnexion";
 
-export const metadata: Metadata = { title: "Se connecter | Troqly" };
+export const metadata: Metadata = { title: "Se connecter" };
 
 export default async function PageConnexion({
   searchParams,

@@ -107,7 +107,7 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, commiss
 
       <button
         type="submit"
-        className="block w-full rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
+        className="bouton w-full"
       >
         {offre ? `Acheter à ${formaterPrix(prix)}` : "Acheter"}
       </button>

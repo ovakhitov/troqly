@@ -8,18 +8,18 @@ export function Galerie({ photos, titre }: { photos: string[]; titre: string }) 
 
   if (!photos.length) {
     return (
-      <div className="grid aspect-[4/3] place-items-center rounded-carte border border-ligne bg-surface text-mauve">Sans photo</div>
+      <div className="grid aspect-[4/3] place-items-center rounded-carte bg-creux text-mauve">Sans photo</div>
     );
   }
 
   return (
     <div className="grid gap-3">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-carte border border-ligne bg-surface">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-carte bg-creux">
         <Image
           src={photos[active]}
           alt={`${titre}, photo ${active + 1} sur ${photos.length}`}
           fill
-          sizes="(min-width: 1024px) 640px, 100vw"
+          sizes="(min-width: 1152px) 720px, (min-width: 1024px) 60vw, 100vw"
           className="object-contain"
           priority
         />
@@ -33,7 +33,7 @@ export function Galerie({ photos, titre }: { photos: string[]; titre: string }) 
                 onClick={() => setActive(i)}
                 aria-label={`Voir la photo ${i + 1}`}
                 aria-current={i === active}
-                className={`relative block size-16 overflow-hidden rounded-xl border-2 transition-colors duration-200 ${
+                className={`relative block size-16 overflow-hidden rounded-[10px] border-2 transition-colors duration-200 ${
                   i === active ? "border-prune" : "border-transparent"
                 }`}
               >

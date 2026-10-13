@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import {
@@ -13,7 +14,7 @@ import {
   supprimerAnnonceModeration,
 } from "./actions";
 
-export const metadata: Metadata = { title: "Modération | Troqly" };
+export const metadata: Metadata = { title: "Modération" };
 
 const ONGLETS = [
   ["signalements", "Signalements"],
@@ -37,10 +38,10 @@ const MOTIFS: Record<string, string> = {
 const ROLES: Record<string, string> = { utilisateur: "Membre", moderateur: "Modérateur", administrateur: "Administrateur" };
 
 const bouton =
-  "rounded-full border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune";
-const boutonFort = "rounded-full bg-action px-3 py-1.5 text-xs font-semibold text-sur-action";
+  "rounded-[10px] border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune";
+const boutonFort = "rounded-[10px] bg-action px-3 py-1.5 text-xs font-semibold text-sur-action transition-colors duration-150 hover:bg-action-survol";
 const champMotif =
-  "min-w-0 flex-1 rounded-full border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune";
+  "min-w-0 flex-1 rounded-[10px] border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune";
 
 type Signalement = {
   id: number;
@@ -69,9 +70,9 @@ export default async function PageModeration({
   if (RESERVES_ADMIN.includes(onglet) && !estAdmin) notFound();
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-5xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-5xl gap-6 px-4 pt-8 pb-20">
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Modération</h1>
 
         <nav className="flex flex-wrap gap-2" aria-label="Sections">
@@ -80,7 +81,7 @@ export default async function PageModeration({
               key={o}
               href={`/moderation?onglet=${o}`}
               aria-current={o === onglet ? "page" : undefined}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              className={`rounded-[10px] px-4 py-2 text-sm font-semibold ${
                 o === onglet ? "bg-action text-sur-action" : "border border-ligne bg-surface text-prune-nuit"
               }`}
             >
@@ -101,6 +102,7 @@ export default async function PageModeration({
         {onglet === "livraison" && <Tarifs />}
         {onglet === "journal" && <Journal />}
       </main>
+      <PiedDePage />
     </div>
   );
 }

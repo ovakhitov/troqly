@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
+import { URL_SITE } from "@/lib/site";
 import { COMMISSION_BPS } from "@/lib/frais";
 import { COLONNES_OFFRE, offreUtilisable, prixConvenu, type Offre } from "@/lib/offres";
 import { stripeConfigure } from "@/lib/stripe";
@@ -19,7 +21,7 @@ import { GestionAnnonce } from "./GestionAnnonce";
 import { Signaler } from "./Signaler";
 
 const boutonPrincipal =
-  "block w-full rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]";
+  "bouton w-full";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -54,7 +56,24 @@ const chargerAnnonce = cache(async (id: string) => {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const annonce = await chargerAnnonce((await params).id);
-  return { title: annonce ? `${annonce.titre} | Troqly` : "Annonce introuvable | Troqly" };
+  if (!annonce) return { title: "Annonce introuvable", robots: { index: false } };
+  const prix = formaterPrix(annonce.prix_centimes);
+  const description = `${prix} à ${annonce.ville}. ${annonce.description}`.replace(/\s+/g, " ").slice(0, 160);
+  const premiere = [...(annonce.photos_annonces ?? [])].sort((a, b) => a.position - b.position)[0];
+  const indexable = annonce.moderation === "visible" && annonce.statut !== "vendue";
+  return {
+    title: `${annonce.titre} à ${annonce.ville}`,
+    description,
+    alternates: { canonical: `/annonces/${annonce.id}` },
+    robots: indexable ? undefined : { index: false, follow: true },
+    openGraph: {
+      type: "website",
+      title: `${annonce.titre} · ${prix}`,
+      description,
+      url: `/annonces/${annonce.id}`,
+      images: premiere ? [{ url: urlPhoto(premiere.chemin), alt: annonce.titre }] : undefined,
+    },
+  };
 }
 
 export default async function PageAnnonce({ params, searchParams }: Params) {
@@ -109,10 +128,38 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
   const vendeur = annonce.profils as unknown as { pseudo: string; cree_le: string } | null;
   const categorie = annonce.categories as unknown as { libelle: string } | null;
 
+  // Données structurées : l'objet et son prix, pour les résultats enrichis des moteurs de recherche
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: annonce.titre,
+    description: annonce.description,
+    image: photos.length ? photos : undefined,
+    category: categorie?.libelle,
+    itemCondition: "https://schema.org/UsedCondition",
+    offers: {
+      "@type": "Offer",
+      url: `${URL_SITE}/annonces/${annonce.id}`,
+      price: (annonce.prix_centimes / 100).toFixed(2),
+      priceCurrency: "EUR",
+      availability:
+        statut === "publiee"
+          ? "https://schema.org/InStock"
+          : statut === "reservee"
+            ? "https://schema.org/LimitedAvailability"
+            : "https://schema.org/SoldOut",
+      areaServed: { "@type": "Country", name: "FR" },
+      seller: vendeur ? { "@type": "Person", name: vendeur.pseudo } : undefined,
+    },
+  };
+
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
+      {annonce.moderation === "visible" && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      )}
       <EnTete />
-      <main className="mx-auto grid max-w-6xl gap-8 px-4 pt-8 pb-20">
+      <main id="contenu" className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-6 px-4 pt-6 pb-24">
         {publiee && (
           <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
             Votre annonce est publiée.
@@ -134,22 +181,38 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
           </p>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="grid min-w-0 content-start gap-6">
+        <nav aria-label="Fil d'Ariane" className="text-sm text-mauve">
+          <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <li>
+              <Link href="/annonces" className="hover:text-prune-nuit hover:underline">Annonces</Link>
+            </li>
+            {categorie && (
+              <>
+                <li aria-hidden="true">/</li>
+                <li>{categorie.libelle}</li>
+              </>
+            )}
+            <li aria-hidden="true">/</li>
+            <li>{annonce.ville}</li>
+          </ol>
+        </nav>
+
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-12">
+          <div className="grid min-w-0 content-start gap-8">
             {/* Sur mobile, le titre et le prix passent avant la galerie (revue Codex) */}
-            <div className="grid gap-1 lg:hidden">
-              <h1 className="font-titre text-2xl leading-tight font-semibold text-balance text-prune-nuit">{annonce.titre}</h1>
-              <p className="font-titre text-2xl font-semibold tabular-nums text-prune-nuit">{formaterPrix(annonce.prix_centimes)}</p>
+            <div className="grid justify-items-start gap-3 lg:hidden">
+              <h1 className="font-titre text-[1.75rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
+              <p className="etiquette -rotate-2 text-2xl">{formaterPrix(annonce.prix_centimes)}</p>
             </div>
             <Galerie photos={photos} titre={annonce.titre} />
-            <section className="grid gap-3">
-              <h2 className="font-titre text-lg font-semibold text-prune-nuit">Description</h2>
-              <p className="whitespace-pre-line text-prune-nuit">{annonce.description}</p>
+            <section className="grid gap-3 border-t border-ligne pt-6">
+              <h2 className="font-titre text-xl font-semibold text-prune-nuit">Description</h2>
+              <p className="max-w-[68ch] text-[17px] leading-relaxed whitespace-pre-line text-prune-nuit">{annonce.description}</p>
             </section>
           </div>
 
-          <aside className="grid content-start gap-4">
-            <div className="grid gap-4 rounded-carte border border-ligne bg-surface p-5">
+          <aside className="grid content-start gap-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-5 sm:p-6">
               <div className="flex flex-wrap gap-1.5 text-xs font-semibold text-prune-nuit">
                 {categorie && <span className="rounded-full border border-ligne px-2.5 py-0.5">{categorie.libelle}</span>}
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-ligne px-2.5 py-0.5">
@@ -157,9 +220,9 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                   {libellesStatut[statut]}
                 </span>
               </div>
-              <div className="hidden gap-4 lg:grid">
-                <h1 className="font-titre text-2xl leading-tight font-semibold text-balance text-prune-nuit">{annonce.titre}</h1>
-                <p className="font-titre text-3xl font-semibold tabular-nums text-prune-nuit">{formaterPrix(annonce.prix_centimes)}</p>
+              <div className="hidden justify-items-start gap-4 lg:grid">
+                <h1 className="font-titre text-[1.75rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
+                <p className="etiquette -rotate-2 text-[1.75rem]">{formaterPrix(annonce.prix_centimes)}</p>
               </div>
               <p className="text-sm text-mauve">
                 {annonce.ville} ({annonce.code_postal}) · publiée {formaterDateRelative(annonce.cree_le)}
@@ -190,7 +253,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                           type="submit"
                           className={
                             achetable
-                              ? "w-full rounded-full border border-ligne px-6 py-3 font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune"
+                              ? "w-full bouton-contour"
                               : boutonPrincipal
                           }
                         >
@@ -207,7 +270,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                       <button
                         type="submit"
                         aria-pressed={Boolean(favori)}
-                        className="w-full rounded-full border border-ligne px-6 py-3 font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune"
+                        className="w-full bouton-contour"
                       >
                         {favori ? "Retirer des favoris" : "Ajouter aux favoris"}
                       </button>
@@ -218,12 +281,19 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             </div>
 
             {vendeur && (
-              <div className="grid gap-1 rounded-carte border border-ligne bg-surface p-5">
-                <span className="text-xs font-semibold tracking-wider text-mauve uppercase">Vendeur</span>
-                <span className="font-titre text-lg font-semibold text-prune-nuit">{vendeur.pseudo}</span>
+              <div className="flex items-center gap-3 rounded-carte border border-ligne bg-surface p-5">
+                <span className="grid size-11 shrink-0 place-items-center rounded-full bg-champ font-titre text-lg font-semibold text-sur-champ uppercase ring-1 ring-ligne" aria-hidden="true">
+                  {vendeur.pseudo.slice(0, 1)}
+                </span>
+                <span className="grid gap-0.5">
+                <span className="font-titre text-lg leading-tight font-semibold text-prune-nuit">
+                  <span className="sr-only">Vendeur : </span>
+                  {vendeur.pseudo}
+                </span>
                 <span className="text-sm text-mauve">
                   Membre depuis{" "}
                   {new Date(vendeur.cree_le).toLocaleDateString("fr-FR", { month: "long", year: "numeric", timeZone: "Europe/Paris" })}
+                </span>
                 </span>
               </div>
             )}
@@ -232,12 +302,10 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             {estVendeur && <GestionAnnonce id={annonce.id} statut={statut} />}
             {idMembre && !estVendeur && <Signaler idAnnonce={annonce.id} />}
 
-            <Link href="/annonces" className="text-sm font-semibold text-prune hover:underline">
-              Retour aux annonces
-            </Link>
           </aside>
         </div>
       </main>
+      <PiedDePage />
     </div>
   );
 }

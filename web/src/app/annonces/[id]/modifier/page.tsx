@@ -5,7 +5,7 @@ import { FormulaireAnnonce } from "@/components/FormulaireAnnonce";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { modifierAnnonce } from "../../actions";
 
-export const metadata: Metadata = { title: "Modifier l'annonce | Troqly" };
+export const metadata: Metadata = { title: "Modifier l'annonce" };
 
 export default async function PageModifierAnnonce({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

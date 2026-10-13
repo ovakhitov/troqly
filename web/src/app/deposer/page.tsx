@@ -6,7 +6,7 @@ import { FormulaireAnnonce } from "@/components/FormulaireAnnonce";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { creerAnnonce } from "../annonces/actions";
 
-export const metadata: Metadata = { title: "Déposer une annonce | Troqly" };
+export const metadata: Metadata = { title: "Déposer une annonce" };
 
 export default async function PageDeposer() {
   const supabase = await creerClientServeur();
@@ -29,7 +29,7 @@ export default async function PageDeposer() {
         </p>
         <Link
           href="/compte"
-          className="justify-self-start rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
+          className="bouton justify-self-start"
         >
           Compléter mon compte
         </Link>

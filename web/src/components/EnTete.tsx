@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
+import { ChoixTheme } from "./ChoixTheme";
 import { IconeBulle, IconeLoupe, IconePersonne, LogoTroqly } from "./Icones";
 
 async function etatMembre() {
@@ -12,68 +13,83 @@ async function etatMembre() {
   return { connecte: true, nonLus: typeof nonLus === "number" ? nonLus : 0 };
 }
 
-// Reprend la barre de navigation en pilules de Gency, en verre et collante
-export async function EnTete() {
+// Barre de verre collante. Sur l'accueil, elle flotte sur l'aplat prune (variante « surChamp »).
+export async function EnTete({ surChamp = false, recherche = true }: { surChamp?: boolean; recherche?: boolean }) {
   const { connecte, nonLus } = await etatMembre();
+  const lien = surChamp
+    ? "text-sur-champ hover:bg-white/10"
+    : "text-prune-nuit hover:bg-creux";
   return (
-    <header className="sticky top-[env(safe-area-inset-top,0px)] z-20 px-4 pt-4">
-      <div className="verre mx-auto flex max-w-6xl items-center gap-3 rounded-full py-2 pr-2 pl-5">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2 font-titre text-xl font-semibold text-prune-nuit"
-        >
-          <LogoTroqly className="size-6" />
-          Troqly
-        </Link>
+    <header
+      className={`sticky top-0 z-30 ${surChamp ? "bg-champ" : ""}`}
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
+      <div className={surChamp ? "" : "verre border-x-0 border-t-0 shadow-none"}>
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
+          <Link
+            href="/"
+            className={`-ml-1 flex shrink-0 items-center gap-2 rounded-champ px-1 font-titre text-[1.375rem] font-semibold tracking-tight ${
+              surChamp ? "text-sur-champ" : "text-prune-nuit"
+            }`}
+          >
+            <LogoTroqly className={`size-6 ${surChamp ? "text-sur-champ" : "text-prune"}`} />
+            Troqly
+          </Link>
 
-        <form
-          action="/annonces"
-          role="search"
-          className="hidden min-w-0 flex-1 items-center gap-2 rounded-full border border-ligne bg-surface px-4 py-2 text-mauve md:flex"
-        >
-          <IconeLoupe className="size-4 shrink-0" />
-          <label htmlFor="recherche-entete" className="sr-only">
-            Rechercher une annonce
-          </label>
-          <input
-            id="recherche-entete"
-            name="q"
-            type="search"
-            placeholder="Vélo, canapé, appareil photo…"
-            className="w-full min-w-0 bg-transparent text-sm text-prune-nuit outline-none placeholder:text-mauve"
-          />
-        </form>
-
-        <nav className="ml-auto flex items-center gap-2" aria-label="Compte">
-          {connecte && (
-            <Link
-              href="/messages"
-              className="relative inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface sm:px-3"
+          {recherche && (
+            <form
+              action="/annonces"
+              role="search"
+              className="hidden h-11 min-w-0 flex-1 items-center gap-2 rounded-champ border border-ligne bg-surface px-3.5 text-mauve md:flex lg:max-w-md"
             >
-              <IconeBulle className="size-5 sm:hidden" />
-              <span className="sr-only sm:not-sr-only">Messages</span>
-              {nonLus > 0 && (
-                <span className="inline-grid min-w-5 place-items-center rounded-full bg-action px-1.5 text-xs text-sur-action">
-                  <span className="sr-only">, non lus : </span>
-                  {nonLus > 99 ? "99+" : nonLus}
-                </span>
-              )}
-            </Link>
+              <IconeLoupe className="size-4 shrink-0" />
+              <label htmlFor="recherche-entete" className="sr-only">
+                Rechercher une annonce
+              </label>
+              <input
+                id="recherche-entete"
+                name="q"
+                type="search"
+                placeholder="Vélo, canapé, appareil photo…"
+                className="w-full min-w-0 bg-transparent text-[15px] text-prune-nuit outline-none placeholder:text-mauve"
+              />
+            </form>
           )}
-          <Link
-            href={connecte ? "/compte" : "/connexion"}
-            className="inline-flex min-h-11 items-center rounded-full px-2.5 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:bg-surface sm:px-4"
-          >
-            <IconePersonne className="size-5 sm:hidden" />
-            <span className="sr-only sm:not-sr-only">{connecte ? "Mon compte" : "Se connecter"}</span>
-          </Link>
-          <Link
-            href="/deposer"
-            className="inline-flex min-h-11 items-center rounded-full bg-action px-4 text-sm font-semibold whitespace-nowrap text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
-          >
-            Déposer<span className="sr-only sm:not-sr-only">&nbsp;une annonce</span>
-          </Link>
-        </nav>
+
+          <nav className="ml-auto flex items-center gap-0.5 sm:gap-1" aria-label="Compte">
+            {connecte && (
+              <Link
+                href="/messages"
+                className={`relative inline-flex h-11 items-center gap-1.5 rounded-champ px-2.5 text-sm font-semibold transition-colors duration-150 sm:px-3 ${lien}`}
+              >
+                <IconeBulle className="size-5 sm:hidden" />
+                <span className="sr-only sm:not-sr-only">Messages</span>
+                {nonLus > 0 && (
+                  <span className="inline-grid min-w-5 place-items-center rounded-full bg-abricot px-1.5 text-xs font-bold text-white tabular-nums">
+                    <span className="sr-only">, non lus : </span>
+                    {nonLus > 99 ? "99+" : nonLus}
+                  </span>
+                )}
+              </Link>
+            )}
+            <Link
+              href={connecte ? "/compte" : "/connexion"}
+              className={`inline-flex h-11 items-center rounded-champ px-2.5 text-sm font-semibold transition-colors duration-150 sm:px-3 ${lien}`}
+            >
+              <IconePersonne className="size-5 sm:hidden" />
+              <span className="sr-only sm:not-sr-only">{connecte ? "Mon compte" : "Se connecter"}</span>
+            </Link>
+            <ChoixTheme className={lien} />
+            <Link
+              href="/deposer"
+              className={`ml-1 inline-flex h-11 items-center rounded-champ px-4 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
+                surChamp ? "bg-papier text-encre-papier hover:bg-white" : "bg-action text-sur-action hover:bg-action-survol"
+              }`}
+            >
+              Déposer<span className="sr-only sm:not-sr-only">&nbsp;une annonce</span>
+            </Link>
+          </nav>
+        </div>
       </div>
     </header>
   );

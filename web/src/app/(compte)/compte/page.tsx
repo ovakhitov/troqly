@@ -10,7 +10,7 @@ import { FormulaireInformations } from "./FormulaireInformations";
 import { FormulaireProfil } from "./FormulaireProfil";
 import { SupprimerCompte } from "./SupprimerCompte";
 
-export const metadata: Metadata = { title: "Mon compte | Troqly" };
+export const metadata: Metadata = { title: "Mon compte" };
 
 const libellesRole = {
   utilisateur: "Membre",
@@ -42,7 +42,7 @@ export default async function PageCompte({
   return (
     <CadreCompte titre="Mon compte" intro={typeof claims.email === "string" ? claims.email : undefined}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="rounded-full border border-ligne px-3 py-1 text-xs font-semibold text-prune-nuit">
+        <span className="rounded-[10px] border border-ligne px-3 py-1 text-xs font-semibold text-prune-nuit">
           {libellesRole[(role ?? "utilisateur") as keyof typeof libellesRole] ?? "Membre"}
         </span>
         <form action={deconnecter}>
@@ -105,7 +105,7 @@ export default async function PageCompte({
               <form action={activerPaiements}>
                 <button
                   type="submit"
-                  className="rounded-full bg-action px-5 py-2.5 text-sm font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
+                  className="bouton text-sm"
                 >
                   {comptePaiement ? "Terminer l'activation" : "Activer les paiements"}
                 </button>

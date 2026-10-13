@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { ReponseOffre } from "@/components/ReponseOffre";
 import { formaterDateRelative, formaterPrix } from "@/lib/annonces";
 import { COLONNES_OFFRE, libellesOffre, offreUtilisable, prixConvenu, type Offre } from "@/lib/offres";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Négociations | Troqly" };
+export const metadata: Metadata = { title: "Négociations" };
 
 const echeance = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Paris" });
 
@@ -34,9 +35,9 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
   const envoyees = offres.filter((o) => o.acheteur === moi);
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-3xl gap-8 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-3xl gap-8 px-4 pt-8 pb-20">
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Négociations</h1>
         {erreur && (
           <p role="alert" className="rounded-champ border border-abricot bg-surface px-4 py-3 text-sm text-prune-nuit">
@@ -102,6 +103,7 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
           )}
         </section>
       </main>
+      <PiedDePage />
     </div>
   );
 }

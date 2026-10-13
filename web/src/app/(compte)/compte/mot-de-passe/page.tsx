@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CadreCompte } from "@/components/CadreCompte";
 import { FormulaireMotDePasse } from "./FormulaireMotDePasse";
 
-export const metadata: Metadata = { title: "Changer de mot de passe | Troqly" };
+export const metadata: Metadata = { title: "Changer de mot de passe" };
 
 export default function PageMotDePasse() {
   return (
