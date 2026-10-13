@@ -40,44 +40,53 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
   const page = Math.max(1, Number.parseInt(f.page ?? "1", 10) || 1);
   const supabase = await creerClientServeur();
 
-  let requete = supabase
-    .from("annonces")
-    .select(SELECTION_CARTE, { count: "exact" })
-    .eq("moderation", "visible")
-    .neq("statut", "vendue");
-
   const q = f.q?.trim();
-  if (q) requete = requete.textSearch("recherche", q, { config: "french", type: "websearch" });
-  if (f.categorie) requete = requete.eq("categorie", f.categorie);
-
+  const lieu = f.lieu?.trim();
   let min = f.prixMin ? prixEnCentimes(f.prixMin) : null;
   let max = f.prixMax ? prixEnCentimes(f.prixMax) : null;
   // Minimum et maximum inversés : on les remet dans l'ordre
   if (min !== null && max !== null && min > max) [min, max] = [max, min];
-  if (min !== null) requete = requete.gte("prix_centimes", min);
-  if (max !== null) requete = requete.lte("prix_centimes", max);
 
-  const lieu = f.lieu?.trim();
-  if (lieu) {
-    if (/^\d{5}$/.test(lieu)) requete = requete.eq("code_postal", lieu);
-    else if (/^\d{2}$/.test(lieu)) requete = requete.like("code_postal", `${lieu}%`);
-    else requete = requete.ilike("ville", `%${echapperMotif(lieu)}%`);
-  }
+  // Mêmes filtres pour les résultats et pour les annonces boostées affichées en tête
+  const filtrer = (options?: { count: "exact" }) => {
+    let requete = supabase
+      .from("annonces")
+      .select(SELECTION_CARTE, options)
+      .eq("moderation", "visible")
+      .neq("statut", "vendue");
+    if (q) requete = requete.textSearch("recherche", q, { config: "french", type: "websearch" });
+    if (f.categorie) requete = requete.eq("categorie", f.categorie);
+    if (min !== null) requete = requete.gte("prix_centimes", min);
+    if (max !== null) requete = requete.lte("prix_centimes", max);
+    if (lieu) {
+      if (/^\d{5}$/.test(lieu)) requete = requete.eq("code_postal", lieu);
+      else if (/^\d{2}$/.test(lieu)) requete = requete.like("code_postal", `${lieu}%`);
+      else requete = requete.ilike("ville", `%${echapperMotif(lieu)}%`);
+    }
+    if (f.remise === "main-propre") requete = requete.eq("main_propre", true);
+    if (f.remise === "livraison") requete = requete.eq("livraison", true);
+    return requete;
+  };
 
-  if (f.remise === "main-propre") requete = requete.eq("main_propre", true);
-  if (f.remise === "livraison") requete = requete.eq("livraison", true);
-
+  let requete = filtrer({ count: "exact" });
   if (f.tri === "prix-croissant") requete = requete.order("prix_centimes", { ascending: true });
   else if (f.tri === "prix-decroissant") requete = requete.order("prix_centimes", { ascending: false });
   else requete = requete.order("cree_le", { ascending: false });
 
+  // Les annonces boostées passent en tête de la première page, sauf si l'on trie par prix
+  const avecBoostees = page === 1 && !f.tri;
   const debut = (page - 1) * PAR_PAGE;
-  const [{ data, count, error }, { data: categories }] = await Promise.all([
+  const [{ data, count, error }, { data: categories }, { data: boostees }] = await Promise.all([
     requete.range(debut, debut + PAR_PAGE - 1),
     supabase.from("categories").select("slug, libelle").order("ordre"),
+    avecBoostees
+      ? filtrer().gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4)
+      : Promise.resolve({ data: null }),
   ]);
 
-  const annonces = (data ?? []).map(versCarte);
+  const enTete = (boostees ?? []).map(versCarte);
+  const dejaAffichees = new Set(enTete.map((a) => a.id));
+  const annonces = [...enTete, ...(data ?? []).map(versCarte).filter((a) => !dejaAffichees.has(a.id))];
   const total = count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAR_PAGE));
 

@@ -14,7 +14,7 @@ export const libellesStatut: Record<StatutAnnonce, string> = {
 
 // Colonnes nécessaires aux cartes de résultats
 export const SELECTION_CARTE =
-  "id, titre, prix_centimes, ville, statut, main_propre, livraison, cree_le, photos_annonces(chemin, position)";
+  "id, titre, prix_centimes, ville, statut, main_propre, livraison, cree_le, boost_jusqua, photos_annonces(chemin, position)";
 
 export type LigneCarte = {
   id: string;
@@ -25,6 +25,7 @@ export type LigneCarte = {
   main_propre: boolean;
   livraison: boolean;
   cree_le: string;
+  boost_jusqua: string | null;
   photos_annonces: { chemin: string; position: number }[] | null;
 };
 
@@ -37,6 +38,7 @@ export type DonneesCarte = {
   mainPropre: boolean;
   livraison: boolean;
   creeLe: string;
+  boostee: boolean;
   photo: string | null;
 };
 
@@ -51,11 +53,19 @@ export function versCarte(l: LigneCarte): DonneesCarte {
     mainPropre: l.main_propre,
     livraison: l.livraison,
     creeLe: l.cree_le,
+    boostee: estBoostee(l.boost_jusqua),
     photo: premiere ? urlPhoto(premiere.chemin) : null,
   };
 }
 
+// Une annonce est boostée tant que la date de fin du boost n'est pas passée
+export function estBoostee(jusqua: string | null, maintenant = Date.now()) {
+  return jusqua !== null && Date.parse(jusqua) > maintenant;
+}
+
 export function urlPhoto(chemin: string) {
+  // Les photos des annonces de démonstration sont servies par le site lui-même (public/demo)
+  if (chemin.startsWith("demo/")) return `/${chemin}`;
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET_PHOTOS}/${chemin}`;
 }
 

@@ -142,7 +142,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
     "@type": "Product",
     name: annonce.titre,
     description: annonce.description,
-    image: photos.length ? photos : undefined,
+    image: photos.length ? photos.map((p) => new URL(p, URL_SITE).href) : undefined,
     category: categorie?.libelle,
     itemCondition: etatSchemaOrg(reponses.etat),
     brand: reponses.marque ? { "@type": "Brand", name: reponses.marque } : undefined,

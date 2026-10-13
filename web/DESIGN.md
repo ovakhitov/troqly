@@ -5,7 +5,7 @@ Ce fichier sert de référence à Claude Code et à Codex avant toute modificati
 
 ## Principes
 
-- Les objets d'abord : la photo porte l'annonce, sans cadre ni bordure autour.
+- Les objets d'abord : la photo porte l'annonce, sans cadre ni bordure autour. Seule exception : les annonces boostées (voir `BordureNeon`).
 - Les prix sont écrits sur une étiquette de papier (`etiquette`) : bout taillé, trou de ficelle, légèrement inclinée.
 - Un seul grand aplat prune (`bg-champ`) : le haut de l'accueil et le pied de page.
 - Le verre (Liquid Glass) est réservé à ce qui flotte : barre du haut sur les pages intérieures, recherche de l'accueil.
@@ -49,6 +49,7 @@ Le papier des étiquettes et du ticket reste clair dans les deux thèmes.
 - `EnTete` (variante `surChamp` sur l'accueil), `PiedDePage`, `CadreCompte` pour les formulaires.
 - `Pastilles` : choix unique en pastilles (genre, état, réponses courtes du questionnaire). Au-delà de 6 options, une liste déroulante.
 - `Volet` : section repliable des pages de compte (titre et résumé visibles, formulaire à la demande).
+- `BordureNeon` : réservée aux annonces boostées, autour de la photo de `CarteAnnonce`, toujours avec la mention « Boostée » (obligatoire quand un classement n'est pas seulement chronologique). D'après le composant Neon Border d'Originkit : une lumière abricot fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs, sinon elle ne distingue plus rien.
 
 ## Téléphone
 
@@ -61,7 +62,14 @@ Le papier des étiquettes et du ticket reste clair dans les deux thèmes.
 ## Mouvement
 
 Transitions courtes (150 à 500 ms, courbe `ease-verre`), seulement au survol et au clic.
-Tout est neutralisé quand l'appareil demande moins d'animations (`prefers-reduced-motion`).
+Seule animation continue : la lumière de `BordureNeon` (une rotation, calculée par la carte graphique).
+Tout est neutralisé quand l'appareil demande moins d'animations (`prefers-reduced-motion`) : la bordure néon reste alors allumée, sans bouger.
+
+## Annonces de démonstration
+
+`supabase/demo/annonces-demo.sql` vide les annonces et crée 6 boutiques fictives et 20 annonces, dont 4 boostées.
+Leurs photos sont des dégradés sans objet, servis par le site depuis `public/demo` (chemins `demo/…`, voir `urlPhoto`).
+`supabase/demo/retirer-demo.sql` les retire avant l'ouverture au public.
 
 ## Référencement
 

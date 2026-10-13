@@ -276,3 +276,77 @@ a {
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
 }
+
+/* Bordure néon des annonces boostées (composant BordureNeon).
+   Une lumière à traîne fait le tour de la photo : deux halos flous derrière, un trait net devant.
+   Seule une rotation est animée, ce qui reste léger pour le téléphone. */
+.neon {
+  --neon: var(--abricot);
+  --neon-trait: 3px;
+  position: relative;
+  border-radius: var(--radius-photo);
+}
+/* Anneau : la bande de largeur --neon-trait le long du bord, arrondis compris */
+.neon-anneau {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  padding: var(--neon-trait);
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* Halos : le même anneau, plus large et flouté, pour une lumière qui s'étale autour de la photo */
+.neon-halo {
+  --neon-flou: 8px;
+  position: absolute;
+  inset: -4px;
+  border-radius: calc(var(--radius-photo) + 4px);
+  pointer-events: none;
+  filter: blur(var(--neon-flou));
+}
+.neon-halo-large {
+  --neon-flou: 22px;
+  opacity: 0.7;
+}
+.neon-halo > .neon-anneau {
+  z-index: auto;
+  padding: calc(var(--neon-trait) * 3);
+}
+/* Carré deux fois plus grand que la photo, pour couvrir les coins pendant la rotation.
+   Un cœur presque blanc en tête, puis une traîne qui s'éteint sur un demi-tour. */
+.neon-lumiere {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    transparent 0turn 0.5turn,
+    color-mix(in oklab, var(--neon) 45%, transparent) 0.78turn,
+    var(--neon) 0.96turn,
+    color-mix(in oklab, var(--neon) 45%, white) 0.995turn,
+    transparent 1turn
+  );
+  transform: translate(-50%, -50%);
+  animation: neon-tour 5s linear infinite;
+  animation-delay: var(--neon-depart, 0s);
+}
+@keyframes neon-tour {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+/* Sans animation, l'anneau entier reste allumé */
+@media (prefers-reduced-motion: reduce) {
+  .neon-lumiere {
+    animation: none;
+    background: var(--neon);
+  }
+  .neon-halo {
+    opacity: 0.45;
+  }
+}
