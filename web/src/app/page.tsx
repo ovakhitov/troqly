@@ -12,19 +12,23 @@ import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
 async function chargerAccueil() {
-  if (!supabaseEnv()) return { categories: [], annonces: [] };
+  if (!supabaseEnv()) return { categories: [], annonces: [], boostees: [] };
   const supabase = await creerClientServeur();
-  const [{ data: categories }, { data: annonces }] = await Promise.all([
+  const visibles = () =>
+    supabase.from("annonces").select(SELECTION_CARTE).eq("moderation", "visible").neq("statut", "vendue");
+  const [{ data: categories }, { data: recentes }, { data: boostees }] = await Promise.all([
     supabase.from("categories").select("slug, libelle").order("ordre"),
-    supabase
-      .from("annonces")
-      .select(SELECTION_CARTE)
-      .eq("moderation", "visible")
-      .neq("statut", "vendue")
-      .order("cree_le", { ascending: false })
-      .limit(8),
+    visibles().order("cree_le", { ascending: false }).limit(12),
+    visibles().gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4),
   ]);
-  return { categories: categories ?? [], annonces: (annonces ?? []).map(versCarte) };
+  // Une annonce boostée n'apparaît qu'une fois sur l'accueil
+  const enAvant = (boostees ?? []).map(versCarte);
+  const dejaAffichees = new Set(enAvant.map((a) => a.id));
+  return {
+    categories: categories ?? [],
+    annonces: (recentes ?? []).map(versCarte).filter((a) => !dejaAffichees.has(a.id)).slice(0, 8),
+    boostees: enAvant,
+  };
 }
 
 const etapes = [
@@ -78,7 +82,7 @@ const pile = [
 ];
 
 export default async function Accueil({ searchParams }: { searchParams: Promise<{ compte?: string }> }) {
-  const [{ categories, annonces }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
+  const [{ categories, annonces, boostees }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
   const vitrine = annonces.filter((a) => a.photo).slice(0, 3);
   const exemple = calculerFrais(10_000);
   const taux = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(COMMISSION_BPS / 100);
@@ -189,6 +193,17 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
         </section>
 
         <div className="mx-auto grid max-w-6xl gap-16 px-4 pt-9 pb-16 sm:gap-24 sm:pt-14 sm:pb-24">
+          {boostees.length > 0 && (
+            <section aria-labelledby="titre-boostees" className="grid gap-5 sm:gap-7">
+              <TitreSection id="titre-boostees" titre="Annonces boostées" />
+              <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+                {boostees.map((a, i) => (
+                  <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 2} />
+                ))}
+              </div>
+            </section>
+          )}
+
           <section aria-labelledby="titre-recentes" className="grid gap-5 sm:gap-7">
             <TitreSection id="titre-recentes" titre="Arrivé ces derniers jours" lien={{ href: "/annonces", libelle: "Toutes les annonces" }} />
             {annonces.length ? (
