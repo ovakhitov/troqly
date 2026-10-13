@@ -91,9 +91,10 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
       <main id="contenu">
         {/* Aplat prune : la promesse, la recherche et de vrais objets du moment */}
         <section className="bg-champ text-sur-champ">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-5 pb-9 sm:pt-12 sm:pb-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:pb-20">
-            <div className="grid gap-5 sm:gap-7">
-              <div className="grid gap-3 sm:gap-4">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-3 pb-6 sm:pt-12 sm:pb-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:pb-20">
+            <div className="grid gap-4 sm:gap-7">
+              {/* Sur téléphone, la recherche suffit : le texte reste lu par les lecteurs d'écran et les moteurs */}
+              <div className="sr-only sm:not-sr-only sm:grid sm:gap-4">
                 <h1 className="max-w-[18ch] font-titre text-[2.1rem] leading-[1.04] font-semibold tracking-[-0.03em] text-balance sm:text-6xl sm:leading-[1.02] sm:tracking-[-0.035em] lg:text-[4rem]">
                   Ce qui dort au grenier cherche preneur à deux rues d&apos;ici.
                 </h1>
@@ -107,7 +108,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                 role="search"
                 className="verre grid grid-cols-[minmax(0,1fr)_auto] gap-1.5 rounded-[18px] p-1.5 text-prune-nuit sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
               >
-                <div className="flex h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4">
+                <div className="flex h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4 focus-within:shadow-[inset_0_0_0_2px_var(--prune)]">
                   <IconeLoupe className="size-5 shrink-0 text-mauve" />
                   <label htmlFor="recherche-accueil" className="sr-only">
                     Que recherchez-vous ?
@@ -121,7 +122,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   />
                 </div>
                 {/* Sur téléphone, le lieu se choisit dans les filtres de la recherche */}
-                <div className="hidden h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4 sm:flex">
+                <div className="hidden h-13 min-w-0 items-center gap-3 rounded-champ bg-surface px-4 focus-within:shadow-[inset_0_0_0_2px_var(--prune)] sm:flex">
                   <IconeLieu className="size-5 shrink-0 text-mauve" />
                   <label htmlFor="lieu-accueil" className="sr-only">
                     Ville, département ou code postal

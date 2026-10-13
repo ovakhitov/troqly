@@ -43,7 +43,7 @@ export async function EnTete({ surChamp = false, recherche = true }: { surChamp?
               <form
                 action="/annonces"
                 role="search"
-                className="hidden h-11 min-w-0 flex-1 items-center gap-2 rounded-champ border border-ligne bg-surface px-3.5 text-mauve md:flex lg:max-w-md"
+                className="hidden h-11 min-w-0 flex-1 items-center gap-2 rounded-champ border border-ligne bg-surface px-3.5 text-mauve focus-within:border-prune md:flex lg:max-w-md"
               >
                 <IconeLoupe className="size-4 shrink-0" />
                 <label htmlFor="recherche-entete" className="sr-only">
