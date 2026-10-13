@@ -2,10 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CarteAnnonce } from "@/components/CarteAnnonce";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { prixEnCentimes, SELECTION_CARTE, versCarte } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Annonces | Troqly" };
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Filtres> }): Promise<Metadata> {
+  const f = await searchParams;
+  const q = f.q?.trim();
+  return {
+    title: q ? `« ${q} » : annonces` : "Toutes les annonces",
+    description: "Objets d'occasion vendus par des particuliers près de chez vous : main propre ou livraison, paiement sécurisé.",
+    alternates: { canonical: f.categorie ? `/annonces?categorie=${encodeURIComponent(f.categorie)}` : "/annonces" },
+    // Les pages de recherche libre ne sont pas indexées : elles dupliquent les annonces
+    robots: q ? { index: false, follow: true } : undefined,
+  };
+}
 
 const PAR_PAGE = 24;
 
@@ -77,106 +88,129 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
   };
 
   const champ =
-    "w-full min-w-0 rounded-champ border border-ligne bg-surface px-3 py-2.5 text-sm text-prune-nuit outline-none focus:border-prune";
+    "h-11 w-full min-w-0 rounded-champ border border-ligne bg-surface px-3 text-[15px] text-prune-nuit outline-none transition-colors duration-150 focus:border-prune";
+  const etiquetteChamp = "text-[13px] font-semibold text-mauve";
+  const nbFiltres = [f.categorie, lieu, f.prixMin, f.prixMax, f.remise].filter(Boolean).length;
+
+  const filtres = (suffixe: string) => (
+    <form action="/annonces" className="grid gap-4">
+      <div className="grid gap-1.5">
+        <label htmlFor={`q${suffixe}`} className={etiquetteChamp}>Recherche</label>
+        <input id={`q${suffixe}`} name="q" type="search" defaultValue={q} placeholder="Vélo, canapé, appareil photo…" className={champ} />
+      </div>
+      <div className="grid gap-1.5">
+        <label htmlFor={`categorie${suffixe}`} className={etiquetteChamp}>Catégorie</label>
+        <select id={`categorie${suffixe}`} name="categorie" defaultValue={f.categorie ?? ""} className={champ}>
+          <option value="">Toutes</option>
+          {(categories ?? []).map((c) => (
+            <option key={c.slug} value={c.slug}>{c.libelle}</option>
+          ))}
+        </select>
+      </div>
+      <div className="grid gap-1.5">
+        <label htmlFor={`lieu${suffixe}`} className={etiquetteChamp}>Ville, département ou code postal</label>
+        <input id={`lieu${suffixe}`} name="lieu" defaultValue={lieu} placeholder="Lyon, 69 ou 69007" className={champ} />
+      </div>
+      <fieldset className="grid grid-cols-2 gap-2">
+        <legend className={`${etiquetteChamp} mb-1.5`}>Prix (€)</legend>
+        <div className="grid gap-1">
+          <label htmlFor={`prixMin${suffixe}`} className="sr-only">Prix minimum en euros</label>
+          <input id={`prixMin${suffixe}`} name="prixMin" type="number" inputMode="decimal" min="0" step="0.01" placeholder="Min" defaultValue={f.prixMin} className={champ} />
+        </div>
+        <div className="grid gap-1">
+          <label htmlFor={`prixMax${suffixe}`} className="sr-only">Prix maximum en euros</label>
+          <input id={`prixMax${suffixe}`} name="prixMax" type="number" inputMode="decimal" min="0" step="0.01" placeholder="Max" defaultValue={f.prixMax} className={champ} />
+        </div>
+      </fieldset>
+      <div className="grid gap-1.5">
+        <label htmlFor={`remise${suffixe}`} className={etiquetteChamp}>Remise</label>
+        <select id={`remise${suffixe}`} name="remise" defaultValue={f.remise ?? ""} className={champ}>
+          <option value="">Main propre ou livraison</option>
+          <option value="main-propre">Main propre</option>
+          <option value="livraison">Livraison</option>
+        </select>
+      </div>
+      <div className="grid gap-1.5">
+        <label htmlFor={`tri${suffixe}`} className={etiquetteChamp}>Trier par</label>
+        <select id={`tri${suffixe}`} name="tri" defaultValue={f.tri ?? ""} className={champ}>
+          <option value="">Plus récentes</option>
+          <option value="prix-croissant">Prix croissant</option>
+          <option value="prix-decroissant">Prix décroissant</option>
+        </select>
+      </div>
+      <div className="flex items-center gap-4 pt-1">
+        <button type="submit" className="bouton flex-1">Filtrer</button>
+        <Link href="/annonces" className="text-sm font-semibold text-prune hover:underline">Effacer</Link>
+      </div>
+    </form>
+  );
 
   return (
-    <div className="halo min-h-screen">
+    <>
       <EnTete />
-      <main className="mx-auto grid max-w-6xl gap-8 px-4 pt-8 pb-20">
-        <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">
-          {q ? `Résultats pour « ${q} »` : "Toutes les annonces"}
-        </h1>
+      <main id="contenu" className="mx-auto grid max-w-6xl gap-8 px-4 pt-8 pb-24 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
+        <div className="grid gap-1 lg:col-span-2">
+          <h1 className="font-titre text-[2rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit sm:text-[2.5rem]">
+            {q ? `Résultats pour « ${q} »` : "Toutes les annonces"}
+          </h1>
+          {!error && total > 0 && (
+            <p className="text-mauve">
+              {total} annonce{total > 1 ? "s" : ""}
+              {lieu ? ` · ${lieu}` : ""}
+            </p>
+          )}
+        </div>
 
-        <form action="/annonces" className="grid gap-3 rounded-carte border border-ligne bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="grid gap-1 sm:col-span-2">
-            <label htmlFor="q" className="text-xs font-semibold text-mauve">Recherche</label>
-            <input id="q" name="q" type="search" defaultValue={q} placeholder="Vélo, canapé, appareil photo…" className={champ} />
-          </div>
-          <div className="grid gap-1">
-            <label htmlFor="categorie" className="text-xs font-semibold text-mauve">Catégorie</label>
-            <select id="categorie" name="categorie" defaultValue={f.categorie ?? ""} className={champ}>
-              <option value="">Toutes</option>
-              {(categories ?? []).map((c) => (
-                <option key={c.slug} value={c.slug}>{c.libelle}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid gap-1">
-            <label htmlFor="lieu" className="text-xs font-semibold text-mauve">Ville, département ou code postal</label>
-            <input id="lieu" name="lieu" defaultValue={lieu} placeholder="Lyon, 69 ou 69007" className={champ} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="grid gap-1">
-              <label htmlFor="prixMin" className="text-xs font-semibold text-mauve">Prix min (€)</label>
-              <input id="prixMin" name="prixMin" type="number" min="0" step="0.01" defaultValue={f.prixMin} className={champ} />
-            </div>
-            <div className="grid gap-1">
-              <label htmlFor="prixMax" className="text-xs font-semibold text-mauve">Prix max (€)</label>
-              <input id="prixMax" name="prixMax" type="number" min="0" step="0.01" defaultValue={f.prixMax} className={champ} />
-            </div>
-          </div>
-          <div className="grid gap-1">
-            <label htmlFor="remise" className="text-xs font-semibold text-mauve">Remise</label>
-            <select id="remise" name="remise" defaultValue={f.remise ?? ""} className={champ}>
-              <option value="">Main propre ou livraison</option>
-              <option value="main-propre">Main propre</option>
-              <option value="livraison">Livraison</option>
-            </select>
-          </div>
-          <div className="grid gap-1">
-            <label htmlFor="tri" className="text-xs font-semibold text-mauve">Trier par</label>
-            <select id="tri" name="tri" defaultValue={f.tri ?? ""} className={champ}>
-              <option value="">Plus récentes</option>
-              <option value="prix-croissant">Prix croissant</option>
-              <option value="prix-decroissant">Prix décroissant</option>
-            </select>
-          </div>
-          <div className="flex items-end gap-3">
-            <button
-              type="submit"
-              className="rounded-full bg-action px-6 py-2.5 text-sm font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]"
-            >
-              Filtrer
-            </button>
-            <Link href="/annonces" className="py-2.5 text-sm font-semibold text-prune hover:underline">
-              Effacer
-            </Link>
-          </div>
-        </form>
+        {/* Filtres : colonne fixe sur grand écran, volet repliable sur mobile */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-24">{filtres("")}</div>
+        </aside>
+        <details className="group rounded-carte border border-ligne bg-surface lg:hidden">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 font-semibold text-prune-nuit [&::-webkit-details-marker]:hidden">
+            <span>
+              Filtres et tri
+              {nbFiltres > 0 && <span className="ml-2 rounded-full bg-action px-2 py-0.5 text-xs text-sur-action">{nbFiltres}</span>}
+            </span>
+            <span className="text-sm text-prune group-open:hidden">Afficher</span>
+            <span className="hidden text-sm text-prune group-open:inline">Masquer</span>
+          </summary>
+          <div className="border-t border-ligne p-4">{filtres("-mobile")}</div>
+        </details>
 
+        <div className="grid content-start gap-8">
         {error ? (
           <p role="alert" className="text-prune-nuit">La recherche n&apos;a pas abouti. Réessayez dans un instant.</p>
         ) : annonces.length === 0 && page > 1 ? (
-          <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
-            <p className="font-titre text-lg font-semibold text-prune-nuit">Cette page n&apos;existe plus.</p>
+          <div className="grid justify-items-start gap-3 border-y border-ligne py-10">
+            <p className="font-titre text-xl font-semibold text-prune-nuit">Cette page n&apos;existe plus.</p>
             <Link href={lienPage(1)} className="font-semibold text-prune hover:underline">Revenir à la première page</Link>
           </div>
         ) : annonces.length === 0 ? (
-          <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
-            <p className="font-titre text-lg font-semibold text-prune-nuit">Aucune annonce ne correspond.</p>
+          <div className="grid justify-items-start gap-3 border-y border-ligne py-10">
+            <p className="font-titre text-xl font-semibold text-prune-nuit">Aucune annonce ne correspond.</p>
             <p className="text-mauve">Élargissez la recherche, ou soyez la première personne à proposer cet objet.</p>
-            <Link href="/deposer" className="font-semibold text-prune hover:underline">Déposer une annonce</Link>
+            <Link href="/deposer" className="bouton mt-2">Déposer une annonce</Link>
           </div>
         ) : (
           <>
-            <p className="text-sm text-mauve">
-              {total} annonce{total > 1 ? "s" : ""}
-            </p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <h2 className="sr-only">Résultats</h2>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
               {annonces.map((a, i) => (
                 <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 4} />
               ))}
             </div>
             {pages > 1 && (
-              <nav className="flex items-center justify-center gap-4 text-sm font-semibold" aria-label="Pages">
-                {page > 1 && <Link href={lienPage(page - 1)} className="text-prune hover:underline">Précédente</Link>}
-                <span className="text-mauve">Page {page} sur {pages}</span>
-                {page < pages && <Link href={lienPage(page + 1)} className="text-prune hover:underline">Suivante</Link>}
+              <nav className="flex items-center justify-center gap-3 text-sm font-semibold" aria-label="Pages">
+                {page > 1 && <Link href={lienPage(page - 1)} rel="prev" className="bouton-contour">Précédente</Link>}
+                <span className="px-2 text-mauve tabular-nums">Page {page} sur {pages}</span>
+                {page < pages && <Link href={lienPage(page + 1)} rel="next" className="bouton-contour">Suivante</Link>}
               </nav>
             )}
           </>
         )}
+        </div>
       </main>
-    </div>
+      <PiedDePage />
+    </>
   );
 }

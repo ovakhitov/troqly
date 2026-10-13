@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CarteAnnonce } from "@/components/CarteAnnonce";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { SELECTION_CARTE, versCarte, type LigneCarte } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Mes favoris | Troqly" };
+export const metadata: Metadata = { title: "Mes favoris" };
 
 export default async function PageFavoris() {
   const supabase = await creerClientServeur();
@@ -27,9 +28,9 @@ export default async function PageFavoris() {
     .map(versCarte);
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-6xl gap-6 px-4 pt-8 pb-20">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Mes favoris</h1>
           <Link href="/compte" className="text-sm font-semibold text-prune hover:underline">
@@ -49,6 +50,7 @@ export default async function PageFavoris() {
           </div>
         )}
       </main>
+      <PiedDePage />
     </div>
   );
 }

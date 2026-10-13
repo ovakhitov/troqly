@@ -146,7 +146,7 @@ export function ChoixPhotos({ idUtilisateur, initiales = [] }: { idUtilisateur: 
                 type="button"
                 onClick={() => mettreEnPremier(p.chemin)}
                 aria-label={`Faire de la photo ${i + 1} la photo principale`}
-                className="verre-fort absolute right-2 bottom-2 left-2 min-h-11 rounded-full px-3 text-xs font-semibold text-prune-nuit"
+                className="verre-fort absolute right-2 bottom-2 left-2 min-h-11 rounded-[10px] px-3 text-xs font-semibold text-prune-nuit"
               >
                 Mettre en premier
               </button>

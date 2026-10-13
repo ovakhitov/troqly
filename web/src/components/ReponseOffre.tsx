@@ -11,12 +11,12 @@ export function ReponseOffre({ offre, pseudo, prixAnnonce }: { offre: Offre; pse
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <form action={repondreOffre.bind(null, offre.id, offre.annonce, "accepter")}>
-          <button type="submit" className="rounded-full bg-action px-3 py-1.5 text-xs font-semibold text-sur-action">
+          <button type="submit" className="rounded-[10px] bg-action px-3 py-1.5 text-xs font-semibold text-sur-action transition-colors duration-150 hover:bg-action-survol">
             Accepter
           </button>
         </form>
         <form action={repondreOffre.bind(null, offre.id, offre.annonce, "refuser")}>
-          <button type="submit" className="rounded-full border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
+          <button type="submit" className="rounded-[10px] border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
             Refuser
           </button>
         </form>
@@ -31,9 +31,9 @@ export function ReponseOffre({ offre, pseudo, prixAnnonce }: { offre: Offre; pse
             required
             placeholder={`${formaterPrix(offre.montant_centimes + 1)} à ${formaterPrix(prixAnnonce - 1)}`}
             aria-describedby={`contre-aide-${offre.id}`}
-            className="w-40 rounded-full border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune"
+            className="w-40 rounded-[10px] border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune"
           />
-          <button type="submit" className="rounded-full border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
+          <button type="submit" className="rounded-[10px] border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
             Proposer
           </button>
         </form>

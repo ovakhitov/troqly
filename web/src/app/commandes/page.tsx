@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative, formaterPrix } from "@/lib/annonces";
 import { libellesCommande, type StatutCommande } from "@/lib/commandes";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Achats et ventes | Troqly" };
+export const metadata: Metadata = { title: "Achats et ventes" };
 
 type Ligne = {
   id: string;
@@ -36,13 +37,14 @@ export default async function PageCommandes() {
   const ventes = commandes.filter((c) => c.acheteur !== moi);
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-3xl gap-8 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-3xl gap-8 px-4 pt-8 pb-20">
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Achats et ventes</h1>
         <Liste titre="Mes achats" commandes={achats} montant={(c) => c.total_centimes} vide="Aucun achat pour l'instant." />
         <Liste titre="Mes ventes" commandes={ventes} montant={(c) => c.prix_centimes} vide="Aucune vente payée en ligne pour l'instant." />
       </main>
+      <PiedDePage />
     </div>
   );
 }

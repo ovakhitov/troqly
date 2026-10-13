@@ -12,7 +12,7 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
   const [ouvert, setOuvert] = useState(false);
 
   const bouton =
-    "rounded-full border border-ligne px-4 py-2 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune disabled:opacity-60";
+    "rounded-[10px] border border-ligne px-4 py-2 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune disabled:opacity-60";
 
   return (
     <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-5" aria-label="Gérer mon annonce">
@@ -62,7 +62,7 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
                 type="button"
                 disabled={enCours}
                 onClick={() => demarrer(() => supprimerAnnonce(id))}
-                className="rounded-full bg-action px-4 py-2 text-sm font-semibold text-sur-action disabled:opacity-60"
+                className="rounded-[10px] bg-action px-4 py-2 text-sm font-semibold text-sur-action transition-colors duration-150 hover:bg-action-survol disabled:opacity-60"
               >
                 {enCours ? "Suppression…" : "Supprimer"}
               </button>

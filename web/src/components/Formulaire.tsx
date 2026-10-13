@@ -37,7 +37,7 @@ export function BoutonEnvoyer({ children, enCours }: { children: React.ReactNode
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow,opacity] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)] disabled:translate-y-0 disabled:opacity-60"
+      className="bouton"
     >
       {pending ? enCours : children}
     </button>

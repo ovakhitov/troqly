@@ -3,10 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative, urlPhoto } from "@/lib/annonces";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
-export const metadata: Metadata = { title: "Messages | Troqly" };
+export const metadata: Metadata = { title: "Messages" };
 
 type Conversation = {
   id: string;
@@ -57,9 +58,9 @@ export default async function PageMessages() {
   }
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-3xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-3xl gap-6 px-4 pt-8 pb-20">
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Messages</h1>
 
         {conversations.length === 0 ? (
@@ -108,6 +109,7 @@ export default async function PageMessages() {
           </ul>
         )}
       </main>
+      <PiedDePage />
     </div>
   );
 }

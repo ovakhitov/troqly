@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
+import { PiedDePage } from "@/components/PiedDePage";
 import { formaterPrix } from "@/lib/annonces";
 import { libellesCommande, type StatutCommande } from "@/lib/commandes";
 import { creerClientAdmin } from "@/lib/supabase/admin";
@@ -12,7 +13,7 @@ import { annulerEtRembourser, confirmerReception } from "../actions";
 import { EnvoiColis } from "./EnvoiColis";
 import { SaisieCode } from "./SaisieCode";
 
-export const metadata: Metadata = { title: "Commande | Troqly" };
+export const metadata: Metadata = { title: "Commande" };
 
 type Commande = {
   id: string;
@@ -39,7 +40,7 @@ function adresseEnLignes(a: Record<string, string | null>) {
 }
 
 const boutonPrincipal =
-  "rounded-full bg-action px-6 py-3 font-semibold text-sur-action transition-[transform,box-shadow] duration-200 ease-verre hover:-translate-y-px hover:shadow-[var(--ombre)]";
+  "bouton";
 
 export default async function PageCommande({
   params,
@@ -93,9 +94,9 @@ export default async function PageCommande({
   }
 
   return (
-    <div className="halo min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main className="mx-auto grid max-w-xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-xl gap-6 px-4 pt-8 pb-20">
         <Link href="/commandes" className="text-sm font-semibold text-prune hover:underline">
           Achats et ventes
         </Link>
@@ -250,6 +251,7 @@ export default async function PageCommande({
           <p className="text-xs text-mauve">Un problème ? Écrivez à l&apos;autre membre depuis vos messages.</p>
         )}
       </main>
+      <PiedDePage />
     </div>
   );
 }
