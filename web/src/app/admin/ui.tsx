@@ -12,34 +12,73 @@ export const boutonDanger =
 export const champ =
   "min-w-0 rounded-[10px] border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune";
 
-export const SECTIONS = [
-  ["apercu", "Vue d'ensemble"],
-  ["argent", "Argent"],
-  ["membres", "Comptes"],
-  ["annonces", "Annonces"],
-] as const;
+// Teintes des pastilles et des points : un fond léger de la couleur, le texte dans la couleur pleine
+export const TEINTES = {
+  prune: { puce: "bg-prune/12 text-prune", point: "bg-prune" },
+  info: { puce: "bg-info/12 text-info", point: "bg-info" },
+  alerte: { puce: "bg-alerte/12 text-alerte", point: "bg-alerte" },
+  statut: { puce: "bg-statut/12 text-statut", point: "bg-statut" },
+  abricot: { puce: "bg-abricot/12 text-abricot", point: "bg-abricot" },
+  neutre: { puce: "bg-mauve/12 text-mauve", point: "bg-mauve" },
+} as const;
 
-export type Section = (typeof SECTIONS)[number][0];
+export type Teinte = keyof typeof TEINTES;
 
-export function Onglets({ actif }: { actif: Section | null }) {
-  const classe = (courant: boolean) =>
-    `rounded-[10px] px-4 py-2 text-sm font-semibold whitespace-nowrap ${
-      courant ? "bg-action text-sur-action" : "border border-ligne bg-surface text-prune-nuit hover:border-prune"
-    }`;
+const jourLong = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" });
+
+// Titre de page : fil d'Ariane avec la date du jour, grand titre, badge éventuel (mode test)
+export function EnTetePage({ titre, badge, children }: { titre: string; badge?: string; children?: ReactNode }) {
   return (
-    <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Sections de l'administration">
-      {SECTIONS.map(([s, libelle]) => (
-        <Link key={s} href={s === "apercu" ? "/admin" : `/admin?section=${s}`} aria-current={s === actif ? "page" : undefined} className={classe(s === actif)}>
-          {libelle}
-        </Link>
-      ))}
-      <Link href="/moderation" className={classe(false)}>
-        Modération
-      </Link>
-      <Link href="/moderation?onglet=journal" className={classe(false)}>
-        Journal
-      </Link>
-    </nav>
+    <header className="flex flex-wrap items-end justify-between gap-4">
+      <div className="grid gap-1">
+        <p className="text-sm text-mauve">Administration · {jourLong.format(new Date())}</p>
+        <h1 className="flex flex-wrap items-center gap-3 font-titre text-3xl font-semibold tracking-tight text-balance text-prune-nuit sm:text-4xl">
+          {titre}
+          {badge && (
+            <span className="rounded-full border border-info/40 bg-info/12 px-2.5 py-0.5 font-sans text-xs font-bold tracking-wider text-info uppercase">
+              {badge}
+            </span>
+          )}
+        </h1>
+      </div>
+      {children}
+    </header>
+  );
+}
+
+// Carte chiffrée : pastille de couleur, grand montant, précision en dessous
+export function CarteChiffre({ libelle, valeur, detail, teinte, href }: { libelle: string; valeur: string; detail: string; teinte: Teinte; href?: string }) {
+  const contenu = (
+    <>
+      <span className={`justify-self-start rounded-full px-2.5 py-1 text-xs font-semibold ${TEINTES[teinte].puce}`}>{libelle}</span>
+      <span className="mt-2 font-titre text-2xl font-semibold tracking-tight text-prune-nuit tabular-nums sm:text-3xl">{valeur}</span>
+      <span className="text-xs text-mauve">{detail}</span>
+    </>
+  );
+  const classe = "grid min-w-0 content-start gap-1 rounded-carte border border-ligne bg-surface p-4 sm:p-5";
+  return href ? (
+    <Link href={href} className={`${classe} transition-colors duration-150 hover:border-prune`}>
+      {contenu}
+    </Link>
+  ) : (
+    <div className={classe}>{contenu}</div>
+  );
+}
+
+export function RangeeChiffres({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{children}</div>;
+}
+
+// Carte de contenu avec son titre et une indication à droite
+export function Carte({ titre, indication, children, className = "" }: { titre: string; indication?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <section className={`grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-4 rounded-carte border border-ligne bg-surface p-5 ${className}`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-titre text-lg font-semibold tracking-tight text-prune-nuit">{titre}</h2>
+        {indication && <span className="text-xs text-mauve">{indication}</span>}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -99,7 +138,7 @@ export function Filtres({ options, actif, base }: { options: readonly (readonly 
       {options.map(([v, l]) => (
         <Link
           key={v}
-          href={`${base}&filtre=${v}`}
+          href={`${base}${base.includes("?") ? "&" : "?"}filtre=${v}`}
           aria-current={v === actif ? "true" : undefined}
           className={`rounded-full px-3 py-1 text-xs font-semibold ${
             v === actif ? "bg-prune-nuit text-ivoire" : "border border-ligne text-prune-nuit hover:border-prune"

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { estBoostee, formaterDateRelative, formaterPrix, libellesStatut, type StatutAnnonce } from "@/lib/annonces";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { boosterAnnonce, masquerAnnonce, supprimerAnnonce } from "./actions";
-import { bouton, boutonDanger, boutonFort, champ, Confirmer, dateCourte, Filtres, Gerer, Retour, Vide } from "./ui";
+import { bouton, boutonDanger, boutonFort, CarteChiffre, champ, Confirmer, dateCourte, Filtres, Gerer, RangeeChiffres, Retour, Vide } from "./ui";
 
 const FILTRES = [
   ["toutes", "Toutes"],
@@ -41,21 +41,34 @@ export async function Annonces({ filtre, recherche }: { filtre?: string; recherc
   if (actif === "vendues") requete = requete.eq("statut", "vendue");
   if (q) requete = requete.ilike("titre", `%${q.replace(/[%_]/g, " ")}%`);
 
-  const { data } = await requete;
+  const admin = creerClientAdmin();
+  const compter = (r: PromiseLike<{ count: number | null }>) => r.then((x) => x.count ?? 0);
+  const [{ data }, enLigne, boosteesActives, masquees, vendues] = await Promise.all([
+    requete,
+    compter(admin.from("annonces").select("id", { count: "exact", head: true }).eq("moderation", "visible").neq("statut", "vendue")),
+    compter(admin.from("annonces").select("id", { count: "exact", head: true }).gt("boost_jusqua", new Date().toISOString())),
+    compter(admin.from("annonces").select("id", { count: "exact", head: true }).eq("moderation", "masquee")),
+    compter(admin.from("annonces").select("id", { count: "exact", head: true }).eq("statut", "vendue")),
+  ]);
   const annonces = (data ?? []) as unknown as Annonce[];
-  const retour = `/admin?section=annonces&filtre=${actif}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const retour = `/admin/annonces?filtre=${actif}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
 
   return (
     <div className="grid gap-4">
-      <form action="/admin" className="flex gap-2">
-        <input type="hidden" name="section" value="annonces" />
+      <RangeeChiffres>
+        <CarteChiffre libelle="En ligne" valeur={String(enLigne)} detail="visibles sur le site" teinte="statut" href="/admin/annonces?filtre=en_ligne" />
+        <CarteChiffre libelle="Boostées" valeur={String(boosteesActives)} detail="en tête des résultats" teinte="abricot" href="/admin/annonces?filtre=boostees" />
+        <CarteChiffre libelle="Masquées" valeur={String(masquees)} detail="par la modération" teinte="alerte" href="/admin/annonces?filtre=masquees" />
+        <CarteChiffre libelle="Vendues" valeur={String(vendues)} detail="depuis l'ouverture" teinte="info" href="/admin/annonces?filtre=vendues" />
+      </RangeeChiffres>
+      <form action="/admin/annonces" className="flex gap-2">
         <input type="hidden" name="filtre" value={actif} />
         <label htmlFor="q" className="sr-only">Rechercher dans les titres</label>
         <input id="q" name="q" type="search" defaultValue={q} placeholder="Rechercher dans les titres" className={`${champ} flex-1 py-2.5 text-sm`} />
         <button type="submit" className={boutonFort}>Rechercher</button>
       </form>
 
-      <Filtres options={FILTRES} actif={actif} base={`/admin?section=annonces${q ? `&q=${encodeURIComponent(q)}` : ""}`} />
+      <Filtres options={FILTRES} actif={actif} base={`/admin/annonces${q ? `?q=${encodeURIComponent(q)}` : ""}`} />
 
       {!annonces.length ? (
         <Vide texte="Aucune annonce ici." />
@@ -78,11 +91,11 @@ export async function Annonces({ filtre, recherche }: { filtre?: string; recherc
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
                   <span className="font-titre font-semibold text-prune-nuit tabular-nums">{formaterPrix(a.prix_centimes)}</span>
-                  <span className="rounded-full border border-ligne px-2 py-0.5 text-xs text-mauve">{libellesStatut[a.statut]}</span>
+                  <span className="rounded-full bg-mauve/12 px-2.5 py-0.5 text-xs font-semibold text-mauve">{libellesStatut[a.statut]}</span>
                   {a.moderation === "masquee" && (
-                    <span className="rounded-full border border-abricot px-2 py-0.5 text-xs text-abricot">Masquée</span>
+                    <span className="rounded-full bg-alerte/12 px-2.5 py-0.5 text-xs font-semibold text-alerte">Masquée</span>
                   )}
-                  {boostee && <span className="rounded-full border border-prune px-2 py-0.5 text-xs text-prune">Boostée</span>}
+                  {boostee && <span className="rounded-full bg-prune/12 px-2.5 py-0.5 text-xs font-semibold text-prune">Boostée</span>}
                 </div>
 
                 <Gerer>

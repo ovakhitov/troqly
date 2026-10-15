@@ -5,7 +5,7 @@ import { libellesCommande, type StatutCommande } from "@/lib/commandes";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { basculerLitige, debloquerCode, rembourserCommande, verserCommande } from "./actions";
 import { soldeStripe } from "./argent-stripe";
-import { bouton, boutonDanger, boutonFort, champ, Confirmer, dateCourte, Filtres, Gerer, Retour, Vide } from "./ui";
+import { bouton, boutonDanger, boutonFort, CarteChiffre, champ, Confirmer, dateCourte, Filtres, Gerer, RangeeChiffres, Retour, TEINTES, type Teinte, Vide } from "./ui";
 
 const FILTRES = [
   ["toutes", "Toutes"],
@@ -50,37 +50,55 @@ export async function Argent({ filtre }: { filtre?: string }) {
     .limit(100);
   if (actif !== "toutes") requete = requete.eq("statut", actif);
 
-  const [{ data }, solde, { data: terminees }] = await Promise.all([
+  const [{ data }, solde, { data: sommes }] = await Promise.all([
     requete,
     soldeStripe(),
-    admin.from("commandes").select("frais_service_centimes").eq("statut", "terminee"),
+    admin.from("commandes").select("statut, total_centimes, frais_service_centimes").in("statut", ["payee", "litige", "terminee"]),
   ]);
   const commandes = (data ?? []) as unknown as Commande[];
-  const commissions = (terminees ?? []).reduce((t, c) => t + c.frais_service_centimes, 0);
-  const retour = `/admin?section=argent&filtre=${actif}`;
+  const total = (statut: string, champ: "total_centimes" | "frais_service_centimes") =>
+    (sommes ?? []).filter((c) => c.statut === statut).reduce((t, c) => t + c[champ], 0);
+  const nombre = (statut: string) => (sommes ?? []).filter((c) => c.statut === statut).length;
+  const commissions = total("terminee", "frais_service_centimes");
+  const retour = `/admin/argent?filtre=${actif}`;
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-3 rounded-carte border border-ligne bg-surface p-4 text-sm text-prune-nuit sm:grid-cols-[1fr_auto] sm:items-center">
+      <RangeeChiffres>
+        <CarteChiffre libelle="Commissions encaissées" valeur={formaterPrix(commissions)} detail={`sur ${nombre("terminee")} vente(s) terminée(s)`} teinte="prune" />
+        <CarteChiffre
+          libelle="Solde Stripe"
+          valeur={solde ? formaterPrix(solde.disponible) : "—"}
+          detail={solde ? `disponible · ${formaterPrix(solde.aVenir)} à venir` : "Stripe n'est pas joignable"}
+          teinte="statut"
+        />
+        <CarteChiffre
+          libelle="En attente de remise"
+          valeur={formaterPrix(total("payee", "total_centimes"))}
+          detail={`${nombre("payee")} commande(s) payée(s)`}
+          teinte="info"
+          href="/admin/argent?filtre=payee"
+        />
+        <CarteChiffre
+          libelle="En litige"
+          valeur={formaterPrix(total("litige", "total_centimes"))}
+          detail={nombre("litige") ? `${nombre("litige")} à régler` : "aucun litige"}
+          teinte="alerte"
+          href="/admin/argent?filtre=litige"
+        />
+      </RangeeChiffres>
+
+      <div className="grid gap-3 rounded-carte border border-ligne bg-surface p-5 text-sm text-prune-nuit sm:grid-cols-[1fr_auto] sm:items-center">
         <p>
           Chaque paiement arrive sur le compte Stripe de Troqly. À la fin d&apos;une vente, seule la part du vendeur lui est
-          virée : les commissions (<strong className="tabular-nums">{formaterPrix(commissions)}</strong> à ce jour) restent dans
-          le solde Stripe
-          {solde && (
-            <>
-              {" "}
-              (<strong className="tabular-nums">{formaterPrix(solde.disponible)}</strong> disponible,{" "}
-              <span className="tabular-nums">{formaterPrix(solde.aVenir)}</span> à venir)
-            </>
-          )}
-          .
+          virée : les commissions restent dans le solde Stripe, d&apos;où elles partent vers ton compte bancaire.
         </p>
         <a href={lienStripe("balance/overview")} target="_blank" rel="noreferrer" className={`${bouton} justify-self-start`}>
           Ouvrir Stripe
         </a>
       </div>
 
-      <Filtres options={FILTRES} actif={actif} base="/admin?section=argent" />
+      <Filtres options={FILTRES} actif={actif} base="/admin/argent" />
 
       {!commandes.length ? (
         <Vide texte="Aucune commande ici." />
@@ -201,7 +219,6 @@ function Detail({ libelle, valeur }: { libelle: string; valeur: string }) {
 }
 
 export function Statut({ statut }: { statut: StatutCommande }) {
-  const couleur =
-    statut === "litige" ? "border-abricot text-abricot" : statut === "terminee" ? "border-statut text-statut" : "border-ligne text-mauve";
-  return <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${couleur}`}>{libellesCommande[statut]}</span>;
+  const teinte: Teinte = statut === "litige" ? "alerte" : statut === "terminee" ? "statut" : statut === "payee" ? "info" : "neutre";
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${TEINTES[teinte].puce}`}>{libellesCommande[statut]}</span>;
 }

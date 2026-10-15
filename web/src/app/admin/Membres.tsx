@@ -2,7 +2,7 @@ import Link from "next/link";
 import { emailsDesMembres } from "@/lib/admin";
 import { formaterDateRelative } from "@/lib/annonces";
 import { creerClientAdmin } from "@/lib/supabase/admin";
-import { boutonFort, champ, Filtres, ROLES, Vide } from "./ui";
+import { boutonFort, CarteChiffre, champ, Filtres, RangeeChiffres, ROLES, Vide } from "./ui";
 
 const FILTRES = [
   ["tous", "Tous"],
@@ -48,7 +48,14 @@ export async function Membres({ filtre, recherche }: { filtre?: string; recherch
     );
   }
 
-  const [{ data }, { data: annonces }] = await Promise.all([requete, admin.from("annonces").select("vendeur").neq("statut", "vendue")]);
+  const compter = (r: PromiseLike<{ count: number | null }>) => r.then((x) => x.count ?? 0);
+  const [{ data }, { data: annonces }, total, nouveaux, bloques] = await Promise.all([
+    requete,
+    admin.from("annonces").select("vendeur").neq("statut", "vendue"),
+    compter(admin.from("profils").select("id", { count: "exact", head: true })),
+    compter(admin.from("profils").select("id", { count: "exact", head: true }).gte("cree_le", new Date(Date.now() - 7 * 86_400_000).toISOString())),
+    compter(admin.from("profils").select("id", { count: "exact", head: true }).eq("bloque", true)),
+  ]);
   const nbAnnonces = new Map<string, number>();
   for (const a of annonces ?? []) nbAnnonces.set(a.vendeur, (nbAnnonces.get(a.vendeur) ?? 0) + 1);
 
@@ -56,15 +63,20 @@ export async function Membres({ filtre, recherche }: { filtre?: string; recherch
 
   return (
     <div className="grid gap-4">
-      <form action="/admin" className="flex gap-2">
-        <input type="hidden" name="section" value="membres" />
+      <RangeeChiffres>
+        <CarteChiffre libelle="Membres" valeur={String(total)} detail="comptes inscrits" teinte="prune" href="/admin/membres" />
+        <CarteChiffre libelle="Nouveaux" valeur={String(nouveaux)} detail="ces 7 derniers jours" teinte="info" />
+        <CarteChiffre libelle="Vendeurs payables" valeur={String(payables.size)} detail="paiements Stripe activés" teinte="statut" href="/admin/membres?filtre=vendeurs" />
+        <CarteChiffre libelle="Bloqués" valeur={String(bloques)} detail="par la modération" teinte="alerte" href="/admin/membres?filtre=bloques" />
+      </RangeeChiffres>
+      <form action="/admin/membres" className="flex gap-2">
         <input type="hidden" name="filtre" value={actif} />
         <label htmlFor="q" className="sr-only">Rechercher un pseudo, une boutique ou un e-mail</label>
         <input id="q" name="q" type="search" defaultValue={q} placeholder="Pseudo, boutique ou e-mail" className={`${champ} flex-1 py-2.5 text-sm`} />
         <button type="submit" className={boutonFort}>Rechercher</button>
       </form>
 
-      <Filtres options={FILTRES} actif={actif} base={`/admin?section=membres${q ? `&q=${encodeURIComponent(q)}` : ""}`} />
+      <Filtres options={FILTRES} actif={actif} base={`/admin/membres${q ? `?q=${encodeURIComponent(q)}` : ""}`} />
 
       {!membres.length ? (
         <Vide texte="Aucun compte trouvé." />
@@ -80,9 +92,9 @@ export async function Membres({ filtre, recherche }: { filtre?: string; recherch
                     <span className="flex flex-wrap items-center gap-2 font-titre font-semibold text-prune-nuit">
                       {m.pseudo}
                       {m.role !== "utilisateur" && (
-                        <span className="rounded-full border border-prune px-2 py-0.5 text-xs text-prune">{ROLES[m.role]}</span>
+                        <span className="rounded-full bg-prune/12 px-2.5 py-0.5 text-xs font-semibold text-prune">{ROLES[m.role]}</span>
                       )}
-                      {m.bloque && <span className="rounded-full border border-abricot px-2 py-0.5 text-xs text-abricot">Bloqué</span>}
+                      {m.bloque && <span className="rounded-full bg-alerte/12 px-2.5 py-0.5 text-xs font-semibold text-alerte">Bloqué</span>}
                     </span>
                     <span className="text-xs break-all text-mauve">
                       {compte?.email ?? "e-mail inconnu"}

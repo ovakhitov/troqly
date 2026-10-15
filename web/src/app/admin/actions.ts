@@ -173,6 +173,6 @@ export async function supprimerMembre(idMembre: string, formData: FormData) {
   const { error } = await admin.auth.admin.deleteUser(idMembre);
   if (error) retour(formData, { erreur: error.message });
 
-  formData.set("retour", "/admin?section=membres");
+  formData.set("retour", "/admin/membres");
   retour(formData, { ok: `Le compte « ${p.pseudo} » a été supprimé.` });
 }
