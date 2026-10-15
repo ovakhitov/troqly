@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EnTete } from "@/components/EnTete";
-import { PiedDePage } from "@/components/PiedDePage";
 import { exigerAdmin, lienStripe } from "@/lib/admin";
 import { formaterDateRelative, formaterPrix, libellesStatut, type StatutAnnonce } from "@/lib/annonces";
 import type { StatutCommande } from "@/lib/commandes";
 import { libellesGenre, type Genre } from "@/lib/genres";
 import { bloquerMembre, changerRoleMembre, supprimerMembre } from "../../actions";
 import { Statut } from "../../Argent";
-import { bouton, boutonDanger, boutonFort, champ, Confirmer, dateCourte, Messages, Onglets, Retour, ROLES, Vide } from "../../ui";
+import { bouton, boutonDanger, boutonFort, champ, Confirmer, dateCourte, Messages, Retour, ROLES, Vide } from "../../ui";
 
-export const metadata: Metadata = { title: "Compte membre", robots: { index: false } };
+export const metadata: Metadata = { title: "Compte membre" };
 
 export default async function PageMembreAdmin({
   params,
@@ -53,20 +51,17 @@ export default async function PageMembreAdmin({
   const date = (iso?: string | null) => (iso ? dateCourte.format(new Date(iso)) : "—");
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <EnTete recherche={false} />
-      <main id="contenu" className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-6 px-4 pt-8 pb-20">
-        <Onglets actif="membres" />
+    <>
         <div className="grid gap-1">
-          <Link href="/admin?section=membres" className="text-sm text-prune hover:underline">
+          <Link href="/admin/membres" className="text-sm text-prune hover:underline">
             ‹ Tous les comptes
           </Link>
           <h1 className="flex flex-wrap items-center gap-3 font-titre text-3xl font-semibold tracking-tight text-prune-nuit">
             {profil.pseudo}
             {profil.role !== "utilisateur" && (
-              <span className="rounded-full border border-prune px-2.5 py-0.5 text-sm text-prune">{ROLES[profil.role]}</span>
+              <span className="rounded-full bg-prune/12 px-3 py-1 font-sans text-sm font-semibold text-prune">{ROLES[profil.role]}</span>
             )}
-            {profil.bloque && <span className="rounded-full border border-abricot px-2.5 py-0.5 text-sm text-abricot">Bloqué</span>}
+            {profil.bloque && <span className="rounded-full bg-alerte/12 px-3 py-1 font-sans text-sm font-semibold text-alerte">Bloqué</span>}
           </h1>
         </div>
         <Messages ok={ok} erreur={erreur} />
@@ -219,15 +214,13 @@ export default async function PageMembreAdmin({
             <Vide texte="Aucune commande." />
           )}
         </section>
-      </main>
-      <PiedDePage />
-    </div>
+    </>
   );
 }
 
 function Panneau({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <section className="grid content-start gap-3 rounded-carte border border-ligne bg-surface p-4">
+    <section className="grid content-start gap-3 rounded-carte border border-ligne bg-surface p-5">
       <h2 className="font-titre text-lg font-semibold tracking-tight text-prune-nuit">{titre}</h2>
       {children}
     </section>

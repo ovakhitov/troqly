@@ -16,6 +16,9 @@
   --mauve: #66566a;
   --abricot: #b8461f;
   --statut: #1f7a4d;
+  /* Tableau de bord : argent en cours (bleu) et litiges (rouge) */
+  --info: #2f6bd8;
+  --alerte: #c23a2f;
   --action: #5a2a5a;
   --action-survol: #431d45;
   --sur-action: #ffffff;
@@ -43,6 +46,8 @@
   --mauve: #b4a3b6;
   --abricot: #ff8a5b;
   --statut: #5fd39a;
+  --info: #5b8def;
+  --alerte: #e85a4f;
   --action: #e7c3e8;
   --action-survol: #f3dcf3;
   --sur-action: #1f1421;
@@ -69,6 +74,8 @@
     --mauve: #b4a3b6;
     --abricot: #ff8a5b;
     --statut: #5fd39a;
+    --info: #5b8def;
+    --alerte: #e85a4f;
     --action: #e7c3e8;
     --action-survol: #f3dcf3;
     --sur-action: #1f1421;
@@ -95,6 +102,8 @@
   --color-mauve: var(--mauve);
   --color-abricot: var(--abricot);
   --color-statut: var(--statut);
+  --color-info: var(--info);
+  --color-alerte: var(--alerte);
   --color-action: var(--action);
   --color-action-survol: var(--action-survol);
   --color-sur-action: var(--sur-action);

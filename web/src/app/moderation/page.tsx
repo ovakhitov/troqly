@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { EnTete } from "@/components/EnTete";
 import { PiedDePage } from "@/components/PiedDePage";
 import { formaterDateRelative } from "@/lib/annonces";
+import { ACTIONS } from "@/lib/journal";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import {
   bloquerCompte,
@@ -273,26 +274,6 @@ async function Membres({ recherche, estAdmin }: { recherche?: string; estAdmin: 
   );
 }
 
-const ACTIONS: Record<string, string> = {
-  premier_administrateur: "Premier administrateur nommé",
-  changement_role: "Rôle modifié",
-  annonce_masquee: "Annonce masquée",
-  annonce_reaffichee: "Annonce réaffichée",
-  annonce_supprimee: "Annonce supprimée",
-  signalement_traite: "Signalement traité",
-  signalement_rejete: "Signalement rejeté",
-  membre_bloque: "Membre bloqué",
-  membre_debloque: "Membre débloqué",
-  compte_supprime: "Compte supprimé par son titulaire",
-  compte_supprime_admin: "Compte supprimé par l'administration",
-  commande_remboursee: "Commande remboursée",
-  commande_versee: "Vente terminée et versée au vendeur",
-  commande_litige: "Commande gelée en litige",
-  commande_litige_levee: "Litige levé",
-  code_debloque: "Essais de code redonnés",
-  annonce_boostee: "Annonce boostée",
-  boost_arrete: "Boost arrêté",
-};
 
 async function Journal() {
   const supabase = await creerClientServeur();

@@ -65,6 +65,19 @@ Transitions courtes (150 à 500 ms, courbe `ease-verre`), seulement au survol et
 Seule animation continue : la lumière de `BordureNeon` (une rotation, calculée par la carte graphique).
 Tout est neutralisé quand l'appareil demande moins d'animations (`prefers-reduced-motion`) : la bordure néon reste alors allumée, sans bouger.
 
+## Tableau de bord administrateur
+
+`/admin` (réservé aux administrateurs) a sa propre coque, sur le modèle choisi par Ouva le 15/10/2026 :
+barre latérale d'icônes à gauche (ordinateur), onglets dans une pilule de verre en haut, contenu en cartes `rounded-carte`.
+Ce sont les seules pages où l'on trouve des grilles de cartes chiffrées et un surtitre (« Administration · date ») :
+c'est un outil de travail, pas une vitrine. Les règles de la vitrine ci-dessus ne s'y appliquent pas.
+
+- `CarteChiffre` : pastille teintée, grand montant, précision. Teintes de `TEINTES` (prune, info, alerte, statut, abricot, neutre).
+- Couleurs propres au tableau de bord : `info` (argent en cours, bleu) et `alerte` (litiges, rouge), déclinées en clair et en sombre.
+- Graphiques en SVG dessinés côté serveur (`admin/graphiques.tsx`) : anneau « Où en est l'argent » avec sa légende en liens,
+  barres des commissions sur 6 mois. Une seule série par graphique, étiquettes en couleur de texte, jamais en couleur de série.
+- Toute grille qui contient du texte tronqué commence par `grid-cols-[minmax(0,1fr)]`, sinon la page déborde sur téléphone.
+
 ## Annonces de démonstration
 
 `supabase/demo/annonces-demo.sql` vide les annonces et crée 6 boutiques fictives et 20 annonces, dont 4 boostées.
