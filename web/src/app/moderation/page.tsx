@@ -73,7 +73,14 @@ export default async function PageModeration({
     <div className="flex min-h-screen flex-col">
       <EnTete />
       <main id="contenu" className="w-full flex-1 mx-auto grid max-w-5xl gap-6 px-4 pt-8 pb-20">
-        <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Modération</h1>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Modération</h1>
+          {estAdmin && (
+            <Link href="/admin" className="text-sm font-semibold text-prune hover:underline">
+              Tableau de bord administrateur
+            </Link>
+          )}
+        </div>
 
         <nav className="flex flex-wrap gap-2" aria-label="Sections">
           {ONGLETS.filter(([o]) => !RESERVES_ADMIN.includes(o) || estAdmin).map(([o, libelle]) => (
@@ -277,6 +284,14 @@ const ACTIONS: Record<string, string> = {
   membre_bloque: "Membre bloqué",
   membre_debloque: "Membre débloqué",
   compte_supprime: "Compte supprimé par son titulaire",
+  compte_supprime_admin: "Compte supprimé par l'administration",
+  commande_remboursee: "Commande remboursée",
+  commande_versee: "Vente terminée et versée au vendeur",
+  commande_litige: "Commande gelée en litige",
+  commande_litige_levee: "Litige levé",
+  code_debloque: "Essais de code redonnés",
+  annonce_boostee: "Annonce boostée",
+  boost_arrete: "Boost arrêté",
 };
 
 async function Journal() {

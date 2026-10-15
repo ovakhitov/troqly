@@ -60,6 +60,7 @@ export default async function PageCompte({
     { href: "/offres", libelle: "Négociations" },
     { href: "/messages", libelle: "Messages" },
     { href: "/compte/favoris", libelle: "Mes favoris" },
+    ...(role === "administrateur" ? [{ href: "/admin", libelle: "Administration" }] : []),
     ...(moderation ? [{ href: "/moderation", libelle: "Modération" }] : []),
   ];
 
