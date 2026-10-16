@@ -12,7 +12,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   const initiales = (profil?.pseudo ?? "ad").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2) || "ad";
 
   return (
-    <div className="mx-auto flex w-full max-w-[96rem] gap-5 px-3 py-3 sm:px-4 lg:py-4">
+    <div className="coque-admin mx-auto flex w-full max-w-[96rem] gap-5 px-3 py-3 sm:px-4 lg:py-4">
       <BarreLaterale initiales={initiales} />
       <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)] content-start gap-6">
         <OngletsAdmin />

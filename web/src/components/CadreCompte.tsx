@@ -26,7 +26,7 @@ export function CadreCompte({
           </h1>
           {intro && <p className="text-lg text-mauve">{intro}</p>}
         </div>
-        <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-5 sm:p-7">{children}</div>
+        <div className="grid gap-5 carte p-5 sm:p-7">{children}</div>
       </main>
       <PiedDePage />
     </div>

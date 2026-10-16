@@ -173,7 +173,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       )}
       <EnTete />
-      <main id="contenu" className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-6 px-4 pt-6 pb-24">
+      <main id="contenu" className="mx-auto grid w-full max-w-[75rem] flex-1 content-start gap-6 px-4 pt-6 pb-24">
         {publiee && (
           <p role="status" className="rounded-champ border border-statut bg-surface px-4 py-3 text-sm text-prune-nuit">
             Votre annonce est publiée.
@@ -217,7 +217,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             {/* Sur mobile, le titre et le prix passent avant la galerie (revue Codex) */}
             <div className="grid justify-items-start gap-3 lg:hidden">
               <h1 className="font-titre text-[1.6rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
-              <p className="etiquette -rotate-2 text-2xl">{formaterPrix(annonce.prix_centimes)}</p>
+              <p className="text-[1.75rem] leading-none font-semibold tracking-[-0.04em] text-prune-nuit tabular-nums">{formaterPrix(annonce.prix_centimes)}</p>
             </div>
             <Galerie photos={photos} titre={annonce.titre} />
           </div>
@@ -243,7 +243,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
           </div>
 
           <aside className="order-2 grid content-start gap-4 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
-            <div className="grid gap-5 rounded-carte border border-ligne bg-surface p-5 sm:p-6">
+            <div className="grid gap-5 carte p-5 sm:p-6">
               <div className="flex flex-wrap gap-1.5 text-xs font-semibold text-prune-nuit">
                 {categorie && <span className="rounded-full border border-ligne px-2.5 py-0.5">{categorie.libelle}</span>}
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-ligne px-2.5 py-0.5">
@@ -253,7 +253,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
               </div>
               <div className="hidden justify-items-start gap-4 lg:grid">
                 <h1 className="font-titre text-[1.75rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit">{annonce.titre}</h1>
-                <p className="etiquette -rotate-2 text-[1.75rem]">{formaterPrix(annonce.prix_centimes)}</p>
+                <p className="text-[2rem] leading-none font-semibold tracking-[-0.045em] text-prune-nuit tabular-nums">{formaterPrix(annonce.prix_centimes)}</p>
               </div>
               <p className="text-sm text-mauve">
                 {annonce.ville} ({annonce.code_postal}) · publiée {formaterDateRelative(annonce.cree_le)}
@@ -312,7 +312,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
             </div>
 
             {vendeur && (
-              <div className="relative flex items-center gap-3 rounded-carte border border-ligne bg-surface p-5">
+              <div className="relative flex items-center gap-3 carte p-5">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-champ font-titre text-lg font-semibold text-sur-champ uppercase ring-1 ring-ligne" aria-hidden="true">
                   {(vendeur.boutique_nom ?? vendeur.pseudo).slice(0, 1)}
                 </span>

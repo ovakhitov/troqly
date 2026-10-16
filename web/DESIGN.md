@@ -1,16 +1,19 @@
 # Design de Troqly
 
-Direction « étiquette de vide-grenier » (refonte du 13/10/2026). Le prune reste la couleur de marque.
+Direction « vitrine flottante » (refonte du 16/10/2026), d'après la référence « Shop — Style Reference » donnée par Ouva
+et le skill `premium-3d-glass`. Elle remplace la direction « étiquette de vide-grenier » du 13/10/2026.
 Ce fichier sert de référence à Claude Code et à Codex avant toute modification d'interface.
 
 ## Principes
 
-- Les objets d'abord : la photo porte l'annonce, sans cadre ni bordure autour. Seule exception : les annonces boostées (voir `BordureNeon`).
-- Les prix sont écrits sur une étiquette de papier (`etiquette`) : bout taillé, trou de ficelle, légèrement inclinée.
-- Un seul grand aplat prune (`bg-champ`) : le haut de l'accueil et le pied de page.
-- Le verre (Liquid Glass) est réservé à ce qui flotte : barre du haut sur les pages intérieures, recherche de l'accueil.
-- Pas de grilles de cartes « icône + titre + texte », pas de surtitre au-dessus des titres, pas de dégradé décoratif.
-- Les frais sont montrés sur un exemple chiffré (le ticket de l'accueil), calculé depuis `lib/frais.ts`.
+- Les objets d'abord : la photo carrée porte l'annonce. L'interface reste achromatique, ce sont les photos qui apportent la couleur.
+- Tout est doux : cartes à 28 px (`rounded-carte`), photos à 20 px dedans (`rounded-photo`), pilules pour les boutons, recherches, catégories et pastilles.
+- Les cartes flottent par l'ombre seule (`carte` : surface blanche + double ombre douce), sans bordure, sur un fond gris très clair.
+- Une seule couleur vive : la prune de Troqly (choisie par Ouva le 16/10/2026 à la place du violet de la référence). Elle sert au logo, au bouton principal et au bouton de recherche, dont l'ombre est teintée de prune (`shadow-action`). Ne pas ajouter de deuxième couleur vive.
+- Le verre est réservé à ce qui flotte : barre du haut en pilule, barre d'onglets du téléphone, objet 3D de l'accueil.
+- Pas de dégradé décoratif, pas d'illustration, pas de grille « icône + titre + texte », pas de surtitre.
+- Rythme : 12 à 16 px entre les cartes, 64 à 80 px entre les grandes sections.
+- Les frais sont montrés sur un exemple chiffré (encadré de l'accueil), calculé depuis `lib/frais.ts`.
 
 ## Thème clair et sombre
 
@@ -18,56 +21,70 @@ Les couleurs sont des variables CSS dans `src/app/globals.css`, déclinées troi
 sombre choisi (`[data-theme="dark"]`) et sombre du système (`prefers-color-scheme`).
 Le bouton `ChoixTheme` enregistre le choix dans `localStorage` ; un petit script dans `layout.tsx`
 l'applique avant l'affichage pour éviter un éclair de la mauvaise couleur.
-Le papier des étiquettes et du ticket reste clair dans les deux thèmes.
+Les noms des variables viennent de l'ancienne direction et sont gardés pour ne rien casser : lire la colonne « Rôle ».
 
 | Rôle | Classe Tailwind | Clair | Sombre |
 |---|---|---|---|
-| Fond de page | `bg-ivoire` | #f2f0f3 | #141016 |
-| Surface (panneaux, champs) | `bg-surface` | #ffffff | #1d171f |
-| Creux (fond des photos) | `bg-creux` | #e9e5ea | #262028 |
-| Filets | `border-ligne` | #ddd6de | #372d39 |
-| Texte | `text-prune-nuit` | #1f1421 | #f2eaf2 |
-| Texte secondaire | `text-mauve` | #66566a | #b4a3b6 |
-| Liens, marque | `text-prune` | #5a2a5a | #e4b9e4 |
-| Action principale | `bg-action` / `text-sur-action` | #5a2a5a / blanc | #e7c3e8 / #1f1421 |
-| Aplat de marque | `bg-champ` / `text-sur-champ` | #3b1840 | #29132d |
-| Accent (focus, numéros) | `text-abricot` | #b8461f | #ff8a5b |
-| Papier d'étiquette | `bg-papier` | #fffaf1 | #f4ecdf |
+| Fond de page | `bg-ivoire` | #f2f4f5 | #0e0f10 |
+| Surface (cartes, champs) | `bg-surface` | #ffffff | #18191b |
+| Creux (fond des photos, puces) | `bg-creux` | #e8eaec | #232427 |
+| Filets | `border-ligne` | #ebebeb | #2b2c2f |
+| Bord des champs de saisie | automatique sur `input.border-ligne` | #a9a7a6 | #5c5a5a |
+| Texte (encre) | `text-prune-nuit` | #0f0f10 | #f3f3f4 |
+| Texte secondaire | `text-mauve` | #6b6867 | #a3a09f |
+| Liens, marque | `text-prune` | #5a2a5a | #dcb0de |
+| Action principale | `bg-action` / `text-sur-action` | #5a2a5a / blanc | #e2bde3 / #1a0f1b |
+| Accent (focus, « Boostée ») | `text-abricot` | #7b3a7d | #e3a6e5 |
+| Bande du pied de page | `bg-champ` / `text-sur-champ` | #111112 | #050506 |
+| Pastille de prix | `etiquette` | blanc translucide, encre | idem |
+
+Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules), `shadow-large` (survol, éléments qui flottent), `shadow-action` (bouton prune).
 
 ## Typographie
 
-- Titres : General Sans 500/600 (`font-titre`), serrés (`tracking-tight`), équilibrés (`text-balance`).
-- Texte courant : police du système (`font-sans`), aucune police à télécharger.
+- Une seule famille partout : Hanken Grotesk (Google Fonts, servie par Next.js depuis le site), en 400, 500 et 600. Elle remplace GT Standard, payante. `font-titre` et `font-sans` pointent toutes deux dessus.
+- La hiérarchie passe par la taille et l'approche, pas par le gras : jamais de 700. Texte 16 px à -0,011 em, titres serrés (-0,025 à -0,055 em selon la taille), libellés en 500.
+- Rien sous 12 px, sauf les compteurs des badges.
 - Chiffres des prix en `tabular-nums`.
 
 ## Composants
 
-- `bouton` et `bouton-contour` (utilitaires CSS) : hauteur 44 px, rayon 12 px.
-- Champs de saisie : pas de contour orange au focus ; le bord passe en prune et s'épaissit (`globals.css`). Le contour orange reste pour les liens et boutons au clavier.
-- Rayons : `rounded-champ` 12 px, `rounded-photo` 14 px, `rounded-carte` 18 px.
-- `CarteAnnonce` : photo, étiquette de prix, titre, ville et date, modes de remise (masqués sur téléphone).
-- `EnTete` (variante `surChamp` sur l'accueil), `PiedDePage`, `CadreCompte` pour les formulaires.
+- `carte` (utilitaire CSS) : surface + rayon 28 + double ombre. À utiliser pour tout panneau (formulaires, encadrés, FAQ).
+- `bouton` et `bouton-contour` : pilules de 44 px de haut, texte en 500. `pilule` : catégories, liens « tout voir », filtres.
+- `etiquette` : pastille de prix posée en bas à gauche d'une photo. Sur une fiche d'annonce, le prix est un grand chiffre, pas une pastille.
+- Champs de saisie : bord gris lisible ; au focus, il passe en prune et s'épaissit (`globals.css`). Le contour de focus du clavier reste pour les liens et boutons.
+- `CarteAnnonce` : carte blanche avec 6 à 8 px de marge autour de la photo carrée, prix sur la photo, titre en 500, ville et date, modes de remise (masqués sur téléphone). Au survol, la carte monte de 2 px.
+- `TitreSection` : titre de 22 à 26 px serré, lien « tout voir » en pilule avec chevron.
+- `EnTete` : pilule de verre collée en haut, logo, recherche en pilule avec bouton rond prune, liens, thème, « Déposer une annonce ».
+- `PiedDePage` : bande sombre avec colonnes de liens.
 - `Pastilles` : choix unique en pastilles (genre, état, réponses courtes du questionnaire). Au-delà de 6 options, une liste déroulante.
 - `Volet` : section repliable des pages de compte (titre et résumé visibles, formulaire à la demande).
-- `BordureNeon` : réservée aux annonces boostées, autour de la photo de `CarteAnnonce`, toujours avec la mention « Boostée » (obligatoire quand un classement n'est pas seulement chronologique). D'après le composant Neon Border d'Originkit : une lumière abricot fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs, sinon elle ne distingue plus rien.
+- `BordureNeon` : réservée aux annonces boostées, autour de la photo de `CarteAnnonce`, toujours avec la mention « Boostée » (obligatoire quand un classement n'est pas seulement chronologique). D'après le composant Neon Border d'Originkit : une lumière prune vive fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs.
+
+## Accueil
+
+- Vitrine : quatre vraies annonces (boostées d'abord) flottent en constellation autour d'une étiquette de prix en verre 3D, puis le titre centré, la recherche en pilule (quoi | où | bouton prune) et les catégories en pilules.
+- `ObjetVerre` reprend le matériau du skill `premium-3d-glass` (verre en transmission totale, dispersion, irisation, studio de panneaux lumineux) sur une seule forme : une étiquette percée, devant le logo Troqly qu'elle réfracte. Three.js n'est chargé que sur l'accueil, au repos, après l'affichage ; l'image s'arrête hors écran et en onglet caché ; une image fixe si l'appareil demande moins d'animations ; rien sans WebGL 2. Le fond et la couleur du logo suivent le thème.
+- Sur téléphone, ni constellation ni grand titre (gardé pour les lecteurs d'écran et les moteurs) : la recherche et les catégories d'abord.
+- Puis les annonces boostées, les dernières annonces, l'encadré des frais et la FAQ, chacun dans sa carte.
 
 ## Téléphone
 
-- Moins de choses à l'écran : sous 640 px, la barre du haut ne garde que le logo et le thème ; Accueil, Rechercher, Déposer, Messages et Compte passent dans la barre d'onglets du bas (`NavigationMobile`, verre opaque, zone sûre de l'iPhone respectée).
+- Moins de choses à l'écran : sous 640 px, la barre du haut ne garde que le logo et le thème ; Accueil, Rechercher, Déposer, Messages et Compte passent dans la barre d'onglets du bas (`NavigationMobile`, verre, coins hauts arrondis, onglet actif sur une pilule grise, zone sûre de l'iPhone respectée).
 - Le `body` réserve la hauteur de cette barre en bas de page ; rien d'autre ne doit être fixé en bas de l'écran.
-- Accueil : pas de grand titre ni d'accroche visibles (gardés pour les lecteurs d'écran et les moteurs), recherche sur une ligne (le lieu se choisit dans les filtres), catégories en une ligne qui défile.
 - Annonce : titre, prix et photos, puis l'encadré d'achat, puis les caractéristiques et la description.
 - « Mon compte » est un sommaire : les raccourcis d'abord, les réglages repliés.
 
 ## Mouvement
 
-Transitions courtes (150 à 500 ms, courbe `ease-verre`), seulement au survol et au clic.
-Seule animation continue : la lumière de `BordureNeon` (une rotation, calculée par la carte graphique).
-Tout est neutralisé quand l'appareil demande moins d'animations (`prefers-reduced-motion`) : la bordure néon reste alors allumée, sans bouger.
+Transitions courtes (150 à 500 ms, courbe `ease-verre`), au survol et au clic.
+Animations continues, toutes douces et coupées si l'appareil demande moins d'animations (`prefers-reduced-motion`) :
+la lumière de `BordureNeon` (elle reste alors allumée sans bouger), le flottement des cartes de la constellation (`flotte`, 10 px sur 7 s)
+et la respiration de l'objet en verre (une image fixe à la place).
 
 ## Tableau de bord administrateur
 
-`/admin` (réservé aux administrateurs) a sa propre coque, sur le modèle choisi par Ouva le 15/10/2026 :
+`/admin` (réservé aux administrateurs) a sa propre coque (classe `coque-admin`, qui lui rend ses rayons de 18 px et son orange), sur le modèle choisi par Ouva le 15/10/2026 :
 barre latérale d'icônes à gauche (ordinateur), onglets dans une pilule de verre en haut, contenu en cartes `rounded-carte`.
 Ce sont les seules pages où l'on trouve des grilles de cartes chiffrées et un surtitre (« Administration · date ») :
 c'est un outil de travail, pas une vitrine. Les règles de la vitrine ci-dessus ne s'y appliquent pas.
