@@ -33,6 +33,19 @@ export function IconeLoupe({ className }: Props) {
   );
 }
 
+export function IconeCoeur({ className }: Props) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <path
+        d="M8 13.5S2 10 2 6a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 4-6 7.5-6 7.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
 export function IconeFleche({ className }: Props) {
   return (
     <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
