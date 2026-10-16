@@ -77,8 +77,8 @@ export function Processus({ photos }: { photos: string[] }) {
     });
     ligne.current!.style.opacity = p > 0.37 ? "0" : "1";
 
-    // Le compteur défile pendant que les étapes se relaient, jamais deux lisibles ensemble : chaque étape
-    // tient un moment, puis passe le relais. Elles n'apparaissent qu'une fois le rideau retiré de leur côté.
+    // Le compteur défile pendant que les étapes se relaient : chaque étape tient un moment, puis s'efface
+    // avant que la suivante apparaisse, jamais deux à la fois. Rien n'apparaît avant que le rideau soit retiré.
     const brut = tranche(p, 0.46, 0.84) * (ETAPES.length - 1);
     const palier = Math.min(Math.floor(brut), ETAPES.length - 2);
     const suite = palier + tranche(brut - palier, 0.55, 1, douce);
@@ -87,7 +87,7 @@ export function Processus({ photos }: { photos: string[] }) {
     rouleau.current!.style.transform = `translateY(${(-suite).toFixed(4)}em)`;
     s.querySelectorAll<HTMLElement>("[data-etape]").forEach((etape, i) => {
       const d = suite - i;
-      const vu = d >= 0 ? borner(1 - d / 0.35) : borner((d + 0.75) / 0.4);
+      const vu = d >= 0 ? borner(1 - d / 0.35) : borner((d + 0.65) / 0.3);
       etape.style.opacity = (vu * porte).toFixed(3);
       etape.style.transform = `translateY(calc(-50% + ${(-d * 96).toFixed(1)}px))`;
     });
