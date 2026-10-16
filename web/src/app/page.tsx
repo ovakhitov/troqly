@@ -6,6 +6,9 @@ import { EnTete } from "@/components/EnTete";
 import { ChampAnneau } from "@/components/accueil/ChampAnneau";
 import { Defilement } from "@/components/accueil/Defilement";
 import { Vitrine } from "@/components/accueil/Vitrine";
+import { Manifeste } from "@/components/immersif/Manifeste";
+import { Objections } from "@/components/immersif/Objections";
+import { Processus } from "@/components/immersif/Processus";
 import { IconeChevron, IconeFleche, IconeLieu, IconeLoupe, IconePlus } from "@/components/Icones";
 import { PiedDePage } from "@/components/PiedDePage";
 import { TitreSection } from "@/components/TitreSection";
@@ -100,6 +103,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
     .filter((a) => a.photo)
     .slice(0, 5)
     .map((a) => ({ id: a.id, titre: a.titre, prix: formaterPrix(a.prixCentimes), ville: a.ville, photo: a.photo! }));
+  // Photos des annonces du moment, pour la mosaïque des étapes et la traînée sous la souris
+  const photos = [...new Set([...boostees, ...annonces, ...rayons.flatMap((r) => r.annonces)].flatMap((a) => (a.photo ? [a.photo] : [])))];
   const exemple = calculerFrais(10_000);
   const taux = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(COMMISSION_BPS / 100);
 
@@ -108,7 +113,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <EnTete recherche={false} />
 
-      <main id="contenu">
+      <main id="contenu" className="overflow-x-clip">
         {/* Bandeau sombre en haut de la feuille, comme celui de la référence Shop */}
         <Link
           href="/deposer"
@@ -253,7 +258,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           {boostees.length > 0 && (
             <section aria-labelledby="titre-boostees" className="revele grid gap-5 sm:gap-6">
               <TitreSection id="titre-boostees" titre="Annonces boostées" />
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+              <div className="grille-arrivee grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 {boostees.map((a, i) => (
                   <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 2} />
                 ))}
@@ -264,7 +269,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           <section aria-labelledby="titre-recentes" className="revele grid gap-5 sm:gap-6">
             <TitreSection id="titre-recentes" titre="Arrivé ces derniers jours" lien={{ href: "/annonces", libelle: "Toutes les annonces" }} />
             {annonces.length ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+              <div className="grille-arrivee grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 {annonces.map((a) => (
                   <CarteAnnonce key={a.id} annonce={a} />
                 ))}
@@ -279,6 +284,10 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               </div>
             )}
           </section>
+
+          {/* Scènes épinglées au défilement (skill site-immersif-skill) : l'idée, puis les trois étapes d'une vente */}
+          <Manifeste />
+          <Processus photos={photos.slice(0, 4)} />
 
           {/* Les frais montrés sur un exemple chiffré plutôt qu'annoncés */}
           <section
@@ -356,6 +365,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               ))}
             </div>
           </section>
+
+          <Objections photos={photos.slice(0, 12)} />
 
           {/* Dernier appel : un champ de capsules que l'anneau du pointeur allume (d'après Originkit Cursor Ring Field) */}
           <section

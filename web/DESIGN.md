@@ -58,7 +58,7 @@ Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules
 - `CarteAnnonce` : carte blanche avec 6 à 8 px de marge autour de la photo carrée, prix sur la photo, titre en 500, ville et date, modes de remise (masqués sur téléphone). Au survol, la carte monte de 2 px.
 - `TitreSection` : titre de 22 à 26 px serré, lien « tout voir » en pilule avec chevron.
 - `EnTete` : pilule de verre collée en haut, logo, recherche en pilule avec bouton rond prune, liens, thème, « Déposer une annonce ».
-- `PiedDePage` : bande sombre avec colonnes de liens.
+- `PiedDePage` : bande sombre avec colonnes de liens, puis le nom géant « troqly » en lilas (`NomGeant`) dont les lettres montent en rideau à son arrivée.
 - `Pastilles` : choix unique en pastilles (genre, état, réponses courtes du questionnaire). Au-delà de 6 options, une liste déroulante.
 - `Volet` : section repliable des pages de compte (titre et résumé visibles, formulaire à la demande).
 - `BordureNeon` : réservée aux annonces boostées, autour de la photo de `CarteAnnonce`, toujours avec la mention « Boostée » (obligatoire quand un classement n'est pas seulement chronologique). D'après le composant Neon Border d'Originkit : une lumière prune vive fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs.
@@ -69,9 +69,11 @@ Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules
 (cartes et photos en perspective 3D qui suivent la souris, étiquette de verre au centre), grand lettrage « troqly »
 en prune (`.lettrage`, le vrai titre reste pour les lecteurs d'écran), recherche, catégories en pilules avec une
 pastille photo de la catégorie, rayons par catégorie (mosaïque 2 × 2 de photos dans une rangée qui défile avec
-flèches rondes, `Defilement`), annonces boostées, dernières annonces, frais dans une grande carte sombre avec le
-ticket blanc incliné, FAQ, puis l'appel final « Un placard qui déborde ? » sur une bande sombre animée par le champ
-d'anneau (`ChampAnneau`, voir plus bas) avec un `bouton-clair` vers `/deposer`.
+flèches rondes, `Defilement`), annonces boostées, dernières annonces, le manifeste et les trois étapes (scènes
+épinglées, voir « Scènes immersives »), frais dans une grande carte sombre avec le ticket blanc incliné, FAQ, les
+objections, puis l'appel final « Un placard qui déborde ? » sur une bande sombre animée par le champ d'anneau
+(`ChampAnneau`, voir plus bas) avec un `bouton-clair` vers `/deposer`. Les scènes viennent après les annonces :
+l'acheteur trouve d'abord la recherche et les objets.
 
 - Vitrine : quatre vraies annonces (boostées d'abord) flottent en constellation autour d'une étiquette de prix en verre 3D, puis le titre centré, la recherche en pilule (quoi | où | bouton prune) et les catégories en pilules.
 - `ObjetVerre` reprend le matériau du skill `premium-3d-glass` (verre en transmission totale, dispersion, irisation, studio de panneaux lumineux) sur une seule forme : une étiquette percée, devant le logo Troqly qu'elle réfracte. Three.js n'est chargé que sur l'accueil, au repos, après l'affichage ; l'image s'arrête hors écran et en onglet caché ; une image fixe si l'appareil demande moins d'animations ; rien sans WebGL 2. Le fond et la couleur du logo suivent le thème.
@@ -115,6 +117,23 @@ refaits à la main d'après leur page car la commande `originkit add` ne passe p
   les pousse et les allume en prune puis lilas. Sans souris, l'anneau se promène seul. Il s'arrête hors écran et en onglet caché, et sans
   WebGL la bande reste simplement sombre. Un voile sombre derrière le texte garde le contraste : ne jamais poser de texte long ni de
   formulaire dessus, et ne pas en mettre un deuxième sur la même page.
+
+## Scènes immersives
+
+D'après le skill `site-immersif-skill` (ajouté le 16/10/2026 à la demande d'Ouva). Le skill produit à l'origine un site
+vitrine d'une page dont on ne doit pas toucher le moteur ; sur Troqly, on n'en reprend que les scènes, refaites en
+composants React dans `src/components/immersif/`, avec le défilement normal du navigateur (pas de défilement détourné),
+aux couleurs et à la typographie de Troqly. Une scène est une section haute dont le contenu reste épinglé
+(`position: sticky`) pendant qu'on la traverse ; `useScene` (`scene.ts`) donne sa progression, lissée, et ne tourne
+qu'à l'écran.
+
+- `Manifeste` : trois phrases s'encrent lettre après lettre ; un ovale tracé à la main entoure « tout près » quand l'encre l'atteint. Entre `[[…]]` du modèle : deux ou trois mots au plus.
+- `Processus` : « Une annonce, [mosaïque de 4 photos d'annonces] trois étapes. » La mosaïque naît entre les mots et grandit jusqu'à une grande carte de 28 px de rayon ; un rideau de 7 lames prune la couvre puis se retire de droite à gauche ; les étapes se relaient (chacune tient un moment) à côté d'un numéro géant en filigrane qui défile comme un compteur ; l'appel « Déposer une annonce → » se dessine d'un ovale. Sur téléphone, le numéro passe au-dessus du texte.
+- `Objections` : « Pas d'abonnement. Pas de frais pour déposer. Pas d'appli à installer. Juste vous, et (votre prix.) » s'encrent une à une ; à la souris, une traînée de photos d'annonces surgit sous le pointeur puis s'efface.
+- Cartes d'annonces de l'accueil (`grille-arrivee`) : elles arrivent décalées et penchées, puis se posent au fil du défilement (animation CSS liée au défilement, deux fois moins ample sur téléphone).
+- En mouvement réduit, chaque scène devient une section simple : texte plein, ovales tracés, étapes en liste, mosaïque en vignette dans la phrase, pas de traînée.
+- Ce qu'on ne reprend pas du modèle : l'écran de chargement (il retarde l'accès aux annonces), le témoignage client chiffré (pas de faux avis), la bande de devise, les photos de banques d'images (les visuels sont les photos des annonces).
+- Les phrases des scènes doivent rester vraies : ne pas promettre ce que le site ne fait pas (par exemple une protection acheteur, qui n'existe pas).
 
 ## Tableau de bord administrateur
 
