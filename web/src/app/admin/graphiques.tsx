@@ -99,7 +99,7 @@ export function Anneau({ parts, miseEnAvant }: { parts: Part[]; miseEnAvant: str
 export function BarresMois({ mois }: { mois: { cle: string; libelle: string; valeur: number; detail: string }[] }) {
   const max = Math.max(1, ...mois.map((m) => m.valeur));
   return (
-    <ol className="grid h-52 grid-cols-6 items-end gap-3" aria-label="Commissions par mois">
+    <ol className="grid h-52 grid-cols-6 items-end gap-3" aria-label="Frais de service par mois">
       {mois.map((m) => (
         <li key={m.cle} className="grid h-full grid-rows-[1fr_auto] gap-2" title={m.detail}>
           <span className="sr-only">{m.detail}</span>

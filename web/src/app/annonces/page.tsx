@@ -71,7 +71,8 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
   let requete = filtrer({ count: "exact" });
   if (f.tri === "prix-croissant") requete = requete.order("prix_centimes", { ascending: true });
   else if (f.tri === "prix-decroissant") requete = requete.order("prix_centimes", { ascending: false });
-  else requete = requete.order("cree_le", { ascending: false });
+  // « Plus récentes » : publiées ou remontées le plus récemment (une remontée est un boost payant)
+  else requete = requete.order("remontee_le", { ascending: false });
 
   // Les annonces boostées passent en tête de la première page, sauf si l'on trie par prix
   const avecBoostees = page === 1 && !f.tri;
@@ -80,7 +81,7 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
     requete.range(debut, debut + PAR_PAGE - 1),
     supabase.from("categories").select("slug, libelle").order("ordre"),
     avecBoostees
-      ? filtrer().gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4)
+      ? filtrer().eq("statut", "publiee").gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4)
       : Promise.resolve({ data: null }),
   ]);
 
@@ -217,6 +218,11 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
             )}
           </>
         )}
+        {/* Critères de classement, à indiquer aux visiteurs (Code de la consommation, L111-7) */}
+        <p className="max-w-[70ch] text-xs text-mauve">
+          Classement « Plus récentes » : date de publication, ou de la dernière remontée achetée par le vendeur. Les annonces
+          marquées « Sponsorisé » sont mises en avant en tête de la première page contre paiement.
+        </p>
         </div>
       </main>
       <PiedDePage />

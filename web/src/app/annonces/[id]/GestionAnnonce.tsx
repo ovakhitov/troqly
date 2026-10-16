@@ -21,6 +21,11 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
         <Link href={`/annonces/${id}/modifier`} className={bouton}>
           Modifier
         </Link>
+        {statut === "publiee" && (
+          <Link href={`/annonces/${id}/booster`} className={bouton}>
+            Booster
+          </Link>
+        )}
         {(["publiee", "reservee", "vendue"] as const)
           .filter((s) => s !== statut)
           .map((s) => (

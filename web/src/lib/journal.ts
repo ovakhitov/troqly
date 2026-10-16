@@ -16,6 +16,7 @@ export const ACTIONS: Record<string, string> = {
   commande_litige: "Commande gelée en litige",
   commande_litige_levee: "Litige levé",
   code_debloque: "Essais de code redonnés",
-  annonce_boostee: "Annonce boostée",
-  boost_arrete: "Boost arrêté",
+  annonce_boostee: "Annonce mise à la une par l'équipe",
+  boost_arrete: "Mise à la une arrêtée",
+  boost_rembourse: "Boost payant remboursé",
 };

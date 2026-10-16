@@ -5,12 +5,18 @@ Ce fichier sert de référence à Claude Code et à Codex avant toute modificati
 
 ## Principes
 
-- Les objets d'abord : la photo porte l'annonce, sans cadre ni bordure autour. Seule exception : les annonces boostées (voir `BordureNeon`).
+- Les objets d'abord : la photo porte l'annonce, sans cadre ni bordure autour. Seule exception : les annonces « À la une » (voir `BordureNeon`).
 - Les prix sont écrits sur une étiquette de papier (`etiquette`) : bout taillé, trou de ficelle, légèrement inclinée.
 - Un seul grand aplat prune (`bg-champ`) : le haut de l'accueil et le pied de page.
 - Le verre (Liquid Glass) est réservé à ce qui flotte : barre du haut sur les pages intérieures, recherche de l'accueil.
 - Pas de grilles de cartes « icône + titre + texte », pas de surtitre au-dessus des titres, pas de dégradé décoratif.
 - Les frais sont montrés sur un exemple chiffré (le ticket de l'accueil), calculé depuis `lib/frais.ts`.
+
+## Frais et boosts
+
+- Le seul barème est `lib/frais.ts` (frais de service Troqly : 4,9 % du prix de l'article + 0,30 €, hors livraison) ; aucun taux écrit en dur dans un composant. Libellé toujours « Frais de service Troqly », jamais « protection acheteur ».
+- Avant tout paiement, montrer séparément prix de l'article, frais de service et livraison.
+- Prix et durées des boosts : `lib/boosts.ts` uniquement. Page de choix : `/annonces/[id]/booster`, avec les règles (`REGLES_BOOST`) affichées avant l'achat.
 
 ## Thème clair et sombre
 
@@ -49,7 +55,7 @@ Le papier des étiquettes et du ticket reste clair dans les deux thèmes.
 - `EnTete` (variante `surChamp` sur l'accueil), `PiedDePage`, `CadreCompte` pour les formulaires.
 - `Pastilles` : choix unique en pastilles (genre, état, réponses courtes du questionnaire). Au-delà de 6 options, une liste déroulante.
 - `Volet` : section repliable des pages de compte (titre et résumé visibles, formulaire à la demande).
-- `BordureNeon` : réservée aux annonces boostées, autour de la photo de `CarteAnnonce`, toujours avec la mention « Boostée » (obligatoire quand un classement n'est pas seulement chronologique). D'après le composant Neon Border d'Originkit : une lumière abricot fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs, sinon elle ne distingue plus rien.
+- `BordureNeon` : réservée aux annonces « À la une » (boost payant ou mise en avant par l'équipe), autour de la photo de `CarteAnnonce`, toujours avec la mention « Sponsorisé » (obligatoire pour une mise en avant contre paiement, Code de la consommation L111-7). Une annonce réservée n'est plus mise en avant. D'après le composant Neon Border d'Originkit : une lumière abricot fait le tour en 5 s, avec deux halos flous derrière et un trait net devant. Chaque carte part d'un point différent. Ne pas l'utiliser ailleurs, sinon elle ne distingue plus rien.
 
 ## Téléphone
 

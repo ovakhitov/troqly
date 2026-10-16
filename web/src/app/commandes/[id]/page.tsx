@@ -8,7 +8,7 @@ import { libellesCommande, type StatutCommande } from "@/lib/commandes";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { montantVendeur } from "@/lib/frais";
-import { enregistrerPaiement, fraisStripe } from "@/lib/synchro-stripe";
+import { enregistrerPaiement } from "@/lib/synchro-stripe";
 import { annulerEtRembourser, confirmerReception } from "../actions";
 import { EnvoiColis } from "./EnvoiColis";
 import { SaisieCode } from "./SaisieCode";
@@ -83,15 +83,11 @@ export default async function PageCommande({
       ? await supabase.rpc("code_remise_acheteur", { id_commande: id })
       : { data: null };
 
-  // Montant exact pour le vendeur : frais de carte réels connus dès le paiement
-  let pourVendeur: { montant: number; fraisCarte: number } | null = null;
-  if (estVendeur && ["payee", "terminee", "litige"].includes(c.statut)) {
-    const { data: s } = await creerClientAdmin().from("commandes").select("stripe_charge").eq("id", id).single();
-    const fraisCarte = s?.stripe_charge ? await fraisStripe(s.stripe_charge) : null;
-    if (fraisCarte !== null) {
-      pourVendeur = { fraisCarte, montant: montantVendeur(c.total_centimes, c.frais_service_centimes, fraisCarte) };
-    }
-  }
+  // Montant exact pour le vendeur : tout sauf les frais de service Troqly (pas de commission vendeur)
+  const pourVendeur =
+    estVendeur && ["payee", "terminee", "litige"].includes(c.statut)
+      ? { montant: montantVendeur(c.total_centimes, c.frais_service_centimes) }
+      : null;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -135,11 +131,11 @@ export default async function PageCommande({
           </div>
 
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-prune-nuit tabular-nums">
-            <dt>Prix de l&apos;objet</dt>
+            <dt>Prix de l&apos;article</dt>
             <dd className="text-right">{formaterPrix(c.prix_centimes)}</dd>
             {estAcheteur && (
               <>
-                <dt>Frais de service</dt>
+                <dt>Frais de service Troqly</dt>
                 <dd className="text-right">{formaterPrix(c.frais_service_centimes)}</dd>
                 {c.livraison_centimes > 0 && (
                   <>
@@ -159,8 +155,8 @@ export default async function PageCommande({
                     <dd className="text-right">+ {formaterPrix(c.livraison_centimes)}</dd>
                   </>
                 )}
-                <dt>Frais de paiement par carte</dt>
-                <dd className="text-right">− {formaterPrix(pourVendeur.fraisCarte)}</dd>
+                <dt>Commission Troqly</dt>
+                <dd className="text-right">0 €</dd>
                 <dt className="font-semibold">{c.statut === "terminee" ? "Versé sur votre compte" : "Vous recevrez"}</dt>
                 <dd className="text-right font-semibold">{formaterPrix(pourVendeur.montant)}</dd>
               </>
