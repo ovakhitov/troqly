@@ -11,12 +11,12 @@ export function ReponseOffre({ offre, pseudo, prixAnnonce }: { offre: Offre; pse
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <form action={repondreOffre.bind(null, offre.id, offre.annonce, "accepter")}>
-          <button type="submit" className="rounded-[10px] bg-action px-3 py-1.5 text-xs font-semibold text-sur-action transition-colors duration-150 hover:bg-action-survol">
+          <button type="submit" className="bouton min-h-10 px-4 text-sm">
             Accepter
           </button>
         </form>
         <form action={repondreOffre.bind(null, offre.id, offre.annonce, "refuser")}>
-          <button type="submit" className="rounded-[10px] border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
+          <button type="submit" className="bouton-contour min-h-10 px-4 text-sm">
             Refuser
           </button>
         </form>
@@ -31,9 +31,9 @@ export function ReponseOffre({ offre, pseudo, prixAnnonce }: { offre: Offre; pse
             required
             placeholder={`${formaterPrix(offre.montant_centimes + 1)} à ${formaterPrix(prixAnnonce - 1)}`}
             aria-describedby={`contre-aide-${offre.id}`}
-            className="w-40 rounded-[10px] border border-ligne bg-surface px-3 py-1.5 text-xs text-prune-nuit outline-none focus:border-prune"
+            className="h-10 w-44 rounded-full border border-ligne bg-surface px-4 text-sm text-prune-nuit outline-none focus:border-prune pointer-coarse:h-11"
           />
-          <button type="submit" className="rounded-[10px] border border-ligne px-3 py-1.5 text-xs font-semibold text-prune-nuit">
+          <button type="submit" className="bouton-contour min-h-10 px-4 text-sm">
             Proposer
           </button>
         </form>

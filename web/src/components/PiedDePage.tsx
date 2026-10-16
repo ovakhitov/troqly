@@ -15,15 +15,15 @@ export function PiedDePage() {
             Les objets qui dorment chez vous trouvent preneur près de chez vous.
           </p>
         </div>
-        <nav aria-label="Annonces" className="grid content-start gap-2.5 text-[15px] text-sur-champ-doux [&_a:hover]:text-sur-champ">
-          <Link href="/annonces" className="w-fit hover:underline">Toutes les annonces</Link>
-          <Link href="/deposer" className="w-fit hover:underline">Déposer une annonce</Link>
-          <Link href="/compte" className="w-fit hover:underline">Mon compte</Link>
+        <nav aria-label="Annonces" className="grid content-start gap-2.5 text-[15px] text-sur-champ-doux pointer-coarse:gap-0 [&_a:hover]:text-sur-champ">
+          <Link href="/annonces" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Toutes les annonces</Link>
+          <Link href="/deposer" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Déposer une annonce</Link>
+          <Link href="/compte" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Mon compte</Link>
         </nav>
-        <nav aria-label="Informations" className="grid content-start gap-2.5 text-[15px] text-sur-champ-doux [&_a:hover]:text-sur-champ">
-          <Link href="/#titre-faq" className="w-fit hover:underline">Questions fréquentes</Link>
-          <Link href="/cgu" className="w-fit hover:underline">Conditions d&apos;utilisation</Link>
-          <Link href="/confidentialite" className="w-fit hover:underline">Confidentialité</Link>
+        <nav aria-label="Informations" className="grid content-start gap-2.5 text-[15px] text-sur-champ-doux pointer-coarse:gap-0 [&_a:hover]:text-sur-champ">
+          <Link href="/#titre-faq" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Questions fréquentes</Link>
+          <Link href="/cgu" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Conditions d&apos;utilisation</Link>
+          <Link href="/confidentialite" className="flex w-fit items-center hover:underline pointer-coarse:min-h-11">Confidentialité</Link>
         </nav>
       </div>
       <div className="mx-auto max-w-[75rem] border-t border-white/10 px-4 py-5 text-sm text-sur-champ-doux sm:py-6">

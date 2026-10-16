@@ -83,7 +83,7 @@ export default async function PageConversation({ params }: { params: Promise<{ i
             )}
           </div>
           <form action={bloquerMembre.bind(null, idAutre, id, !blocage)}>
-            <button type="submit" className="text-sm font-semibold text-mauve hover:text-prune-nuit hover:underline">
+            <button type="submit" className="text-sm font-semibold text-mauve hover:text-prune-nuit hover:underline pointer-coarse:min-h-11">
               {blocage ? `Débloquer ${pseudoAutre}` : `Bloquer ${pseudoAutre}`}
             </button>
           </form>

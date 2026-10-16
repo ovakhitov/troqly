@@ -254,7 +254,7 @@ export function FormulaireAnnonce({ action, idUtilisateur, categories, initiales
             <button
               type="button"
               onClick={() => setAutomatique(true)}
-              className="text-sm font-semibold text-prune hover:underline"
+              className="text-sm font-semibold text-prune hover:underline pointer-coarse:min-h-11"
             >
               Réécrire à partir des réponses
             </button>

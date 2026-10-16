@@ -6,7 +6,7 @@ import { formaterPrix } from "@/lib/annonces";
 import { libellesOffre, prixConvenu, type Offre } from "@/lib/offres";
 import { faireOffre, reponseAcheteur, type EtatOffre } from "../../offres/actions";
 
-const lien = "text-sm font-semibold text-prune hover:underline";
+const lien = "text-sm font-semibold text-prune hover:underline pointer-coarse:min-h-11";
 
 // Côté acheteur : faire une offre, suivre la réponse du vendeur
 export function Negociation({ idAnnonce, prixCentimes, offre }: { idAnnonce: string; prixCentimes: number; offre: Offre | null }) {
@@ -26,7 +26,7 @@ export function Negociation({ idAnnonce, prixCentimes, offre }: { idAnnonce: str
             </p>
             <div className="flex flex-wrap gap-3">
               <form action={reponseAcheteur.bind(null, offre.id, idAnnonce, true)}>
-                <button type="submit" className="rounded-[10px] bg-action px-4 py-2 text-sm font-semibold text-sur-action transition-colors duration-150 hover:bg-action-survol">
+                <button type="submit" className="bouton text-sm">
                   Accepter {formaterPrix(prixConvenu(offre))}
                 </button>
               </form>
@@ -62,7 +62,7 @@ export function Negociation({ idAnnonce, prixCentimes, offre }: { idAnnonce: str
           inputMode="decimal"
           required
           placeholder={`Moins de ${formaterPrix(prixCentimes)}`}
-          className="min-w-0 flex-1 rounded-[10px] border border-ligne bg-surface px-4 py-2.5 text-sm text-prune-nuit outline-none focus:border-prune"
+          className="h-11 min-w-0 flex-1 rounded-full border border-ligne bg-surface px-4 text-sm text-prune-nuit outline-none focus:border-prune"
         />
         <BoutonEnvoyer enCours="Envoi…">Proposer</BoutonEnvoyer>
       </div>

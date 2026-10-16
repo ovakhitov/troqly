@@ -268,6 +268,15 @@ a {
   }
 }
 
+/* Au doigt, les pilules et les boutons gardent au moins 44 px de haut (cible tactile confortable) */
+@media (pointer: coarse) {
+  .pilule,
+  .bouton,
+  .bouton-contour {
+    min-height: 2.75rem;
+  }
+}
+
 /* Boutons : des pilules qui réagissent. Reflet clair en haut, ombre prune qui s'allume au survol,
    léger soulèvement, enfoncement au clic ; une flèche (.fleche) glisse vers la droite. */
 @utility bouton {
@@ -303,6 +312,38 @@ a {
     opacity: 0.6;
     translate: none;
     scale: none;
+  }
+}
+
+/* Bouton clair posé sur une bande sombre : blanc dans les deux thèmes, il s'éclaire de prune au survol */
+@utility bouton-clair {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: var(--r-bouton);
+  background: #ffffff;
+  color: #0f0f10;
+  font-weight: 500;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1), 0 10px 34px -12px rgba(220, 176, 222, 0.55);
+  transition: background-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
+  & .fleche {
+    transition: translate 250ms var(--ease-verre);
+  }
+  &:hover {
+    background: #f6eaf6;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1), 0 14px 44px -10px rgba(220, 176, 222, 0.85);
+    translate: 0 -1px;
+  }
+  &:hover .fleche {
+    translate: 3px 0;
+  }
+  &:active {
+    scale: 0.97;
+    translate: 0 0;
   }
 }
 
@@ -347,6 +388,21 @@ a {
 :is(input, textarea, select).border:focus-visible {
   border-color: var(--prune);
   box-shadow: inset 0 0 0 1px var(--prune);
+}
+
+/* Curseur point (composant CurseurPoint, souris seulement) : la flèche du système s'efface,
+   sauf dans les champs de saisie (le curseur texte revient) et les zones data-curseur="masquer" */
+html.curseur-point,
+html.curseur-point * {
+  cursor: none !important;
+}
+html.curseur-point
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="submit"], [type="button"], [type="file"]), textarea, [contenteditable="true"], [data-curseur="masquer"], [data-curseur="masquer"] *) {
+  cursor: auto !important;
+}
+/* Le point dessine lui-même le soulignement des liens survolés : celui du navigateur s'efface */
+html.curseur-point a:hover {
+  text-decoration-color: transparent;
 }
 
 /* Pas de flash de transition au changement de thème */

@@ -6,7 +6,8 @@ import type { Material } from "three";
 // Étiquette de prix en verre optique (réfraction, dispersion, irisation), d'après le skill « Premium 3D Glass ».
 // Purement décorative : Three.js n'est chargé qu'une fois la page affichée et au repos, l'image s'arrête
 // hors de l'écran ou dans un onglet caché, et une seule image fixe est rendue si l'appareil demande moins d'animations.
-// Sans WebGL, rien ne s'affiche et la place reste réservée.
+// Sans WebGL, ou en mode économie de données, rien ne s'affiche et la place reste réservée.
+// Le pointeur l'incline sur ordinateur ; sur un téléphone Android, c'est l'inclinaison de l'appareil.
 export function ObjetVerre({ className = "" }: { className?: string }) {
   const cadre = useRef<HTMLDivElement>(null);
 
@@ -17,6 +18,9 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
     let annule = false;
 
     const demarrer = async () => {
+      // Économie de données demandée : on ne télécharge pas la 3D
+      const connexion = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+      if (connexion?.saveData) return;
       const THREE = await import("three");
       if (annule) return;
 
@@ -178,6 +182,19 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
         vise.x = (e.clientX / window.innerWidth - 0.5) * 0.5;
         vise.y = (e.clientY / window.innerHeight - 0.5) * 0.35;
       };
+      // Sur téléphone : l'inclinaison, mesurée depuis la façon dont on le tient (le repère suit lentement)
+      let repere: number | null = null;
+      const pencher = (e: DeviceOrientationEvent) => {
+        if (e.gamma === null || e.beta === null) return;
+        repere = repere === null ? e.beta : repere + (e.beta - repere) * 0.02;
+        vise.x = Math.max(-1, Math.min(1, e.gamma / 25)) * 0.25;
+        vise.y = Math.max(-1, Math.min(1, (e.beta - repere) / 20)) * 0.18;
+      };
+      const souris = window.matchMedia("(pointer: fine)").matches;
+      // Sur iPhone, lire l'inclinaison exige une autorisation : on s'en passe
+      const permissionRequise =
+        typeof DeviceOrientationEvent === "undefined" ||
+        typeof (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission === "function";
 
       const poser = (t: number) => {
         incline.x += (vise.x - incline.x) * 0.06;
@@ -224,7 +241,8 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
       sombre.addEventListener("change", changementSysteme);
       calme.addEventListener("change", relancer);
       document.addEventListener("visibilitychange", relancer);
-      window.addEventListener("pointermove", suivrePointeur, { passive: true });
+      if (souris) window.addEventListener("pointermove", suivrePointeur, { passive: true });
+      else if (!permissionRequise) window.addEventListener("deviceorientation", pencher, { passive: true });
 
       // Première image : fixe et de trois quarts si l'appareil demande moins d'animations
       boucle(calme.matches ? 0 : performance.now());
@@ -239,6 +257,7 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
         calme.removeEventListener("change", relancer);
         document.removeEventListener("visibilitychange", relancer);
         window.removeEventListener("pointermove", suivrePointeur);
+        window.removeEventListener("deviceorientation", pencher);
         geometrie.dispose();
         verre.dispose();
         logo.geometry.dispose();

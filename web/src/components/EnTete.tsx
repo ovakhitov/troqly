@@ -2,7 +2,7 @@ import Link from "next/link";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { ChoixTheme } from "./ChoixTheme";
-import { IconeLoupe, LogoTroqly } from "./Icones";
+import { IconeBulle, IconeLoupe, IconePersonne, LogoTroqly } from "./Icones";
 import { NavigationMobile } from "./NavigationMobile";
 import { RailSite } from "./RailSite";
 
@@ -32,7 +32,7 @@ export async function EnTete({ recherche = true }: { recherche?: boolean }) {
           <div className="flex h-14 items-center gap-2 pr-2 pl-4 sm:h-16 sm:gap-4 sm:pl-5">
             <Link
               href="/"
-              className="-ml-1 flex shrink-0 items-center gap-2 rounded-full px-1 text-[1.3rem] font-semibold tracking-[-0.04em] text-prune-nuit lg:hidden"
+              className="-ml-1 flex h-11 shrink-0 items-center gap-2 rounded-full px-1 text-[1.3rem] font-semibold tracking-[-0.04em] text-prune-nuit lg:hidden"
             >
               <LogoTroqly className="size-6 text-prune" />
               Troqly
@@ -52,7 +52,7 @@ export async function EnTete({ recherche = true }: { recherche?: boolean }) {
                   name="q"
                   type="search"
                   placeholder="Vélo, canapé, appareil photo…"
-                  className="w-full min-w-0 bg-transparent text-[15px] text-prune-nuit outline-none placeholder:text-mauve"
+                  className="h-full w-full min-w-0 bg-transparent text-[15px] text-prune-nuit outline-none placeholder:text-mauve"
                 />
                 <button
                   type="submit"
@@ -64,15 +64,18 @@ export async function EnTete({ recherche = true }: { recherche?: boolean }) {
               </form>
             )}
 
+            {/* Sur tablette, la recherche prend la place : messages et compte passent en icônes (leur nom reste lu) */}
             <nav className="ml-auto flex items-center gap-0.5 sm:gap-1" aria-label="Compte">
               {connecte && (
                 <Link
                   href="/messages"
-                  className={`relative hidden h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 sm:inline-flex lg:hidden ${lien}`}
+                  title="Messages"
+                  className={`relative hidden h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150 sm:inline-flex md:w-11 md:justify-center md:px-0 lg:hidden ${lien}`}
                 >
-                  Messages
+                  <IconeBulle className="hidden size-5 md:block" />
+                  <span className="md:sr-only">Messages</span>
                   {nonLus > 0 && (
-                    <span className="inline-grid min-w-5 place-items-center rounded-full bg-action px-1.5 text-xs font-semibold text-sur-action tabular-nums">
+                    <span className="inline-grid min-w-5 place-items-center rounded-full bg-action px-1.5 text-xs font-semibold text-sur-action tabular-nums md:absolute md:top-1 md:right-0.5 md:min-w-4.5 md:px-1 md:text-[10px] md:leading-4.5 md:ring-2 md:ring-surface">
                       <span className="sr-only">, non lus : </span>
                       {nonLus > 99 ? "99+" : nonLus}
                     </span>
@@ -81,9 +84,11 @@ export async function EnTete({ recherche = true }: { recherche?: boolean }) {
               )}
               <Link
                 href={connecte ? "/compte" : "/connexion"}
-                className={`hidden h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors duration-150 sm:inline-flex lg:hidden ${lien}`}
+                title={connecte ? "Mon compte" : "Se connecter"}
+                className={`hidden h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors duration-150 sm:inline-flex md:w-11 md:justify-center md:px-0 lg:hidden ${lien}`}
               >
-                {connecte ? "Mon compte" : "Se connecter"}
+                <IconePersonne className="hidden size-5 md:block" />
+                <span className="md:sr-only">{connecte ? "Mon compte" : "Se connecter"}</span>
               </Link>
               <ChoixTheme className={`lg:hidden ${lien}`} />
               <Link

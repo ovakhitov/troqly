@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CarteAnnonce } from "@/components/CarteAnnonce";
 import { EnTete } from "@/components/EnTete";
+import { ChampAnneau } from "@/components/accueil/ChampAnneau";
 import { Defilement } from "@/components/accueil/Defilement";
 import { Vitrine } from "@/components/accueil/Vitrine";
 import { IconeChevron, IconeFleche, IconeLieu, IconeLoupe, IconePlus } from "@/components/Icones";
@@ -142,7 +143,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               className="arrivee grid h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-full border border-prune-nuit/10 bg-surface pr-1.5 pl-5 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.18),0_2px_6px_-2px_rgba(0,0,0,0.06)] transition-shadow duration-300 ease-verre focus-within:border-prune focus-within:shadow-[0_16px_50px_-14px_color-mix(in_oklab,var(--prune)_45%,transparent)] sm:h-16 sm:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)_auto] sm:pr-2 sm:pl-6"
               style={{ "--arrivee-delai": "260ms" } as CSSProperties}
             >
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3 self-stretch">
                 <IconeLoupe className="size-5 shrink-0 text-mauve" />
                 <label htmlFor="recherche-accueil" className="sr-only">
                   Que recherchez-vous ?
@@ -151,13 +152,13 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   id="recherche-accueil"
                   name="q"
                   type="search"
-                  placeholder="Que recherchez-vous aujourd'hui ?"
-                  className="w-full min-w-0 bg-transparent text-base text-prune-nuit outline-none placeholder:text-mauve"
+                  placeholder="Que recherchez-vous ?"
+                  className="h-full w-full min-w-0 bg-transparent text-base text-prune-nuit outline-none placeholder:text-mauve"
                 />
               </div>
               {/* Sur téléphone, le lieu se choisit dans les filtres de la recherche */}
               <span className="mx-4 hidden h-7 w-px bg-ligne sm:block" aria-hidden="true" />
-              <div className="hidden min-w-0 items-center gap-3 sm:flex">
+              <div className="hidden min-w-0 items-center gap-3 self-stretch sm:flex">
                 <IconeLieu className="size-5 shrink-0 text-mauve" />
                 <label htmlFor="lieu-accueil" className="sr-only">
                   Ville, département ou code postal
@@ -167,7 +168,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   name="lieu"
                   placeholder="Ville ou code postal"
                   autoComplete="address-level2"
-                  className="w-full min-w-0 bg-transparent text-base text-prune-nuit outline-none placeholder:text-mauve"
+                  className="h-full w-full min-w-0 bg-transparent text-base text-prune-nuit outline-none placeholder:text-mauve"
                 />
               </div>
               <button
@@ -252,7 +253,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           {boostees.length > 0 && (
             <section aria-labelledby="titre-boostees" className="revele grid gap-5 sm:gap-6">
               <TitreSection id="titre-boostees" titre="Annonces boostées" />
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 {boostees.map((a, i) => (
                   <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 2} />
                 ))}
@@ -263,7 +264,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           <section aria-labelledby="titre-recentes" className="revele grid gap-5 sm:gap-6">
             <TitreSection id="titre-recentes" titre="Arrivé ces derniers jours" lien={{ href: "/annonces", libelle: "Toutes les annonces" }} />
             {annonces.length ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 {annonces.map((a) => (
                   <CarteAnnonce key={a.id} annonce={a} />
                 ))}
@@ -353,6 +354,32 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   <p className="max-w-[62ch] pb-6 text-mauve">{r}</p>
                 </details>
               ))}
+            </div>
+          </section>
+
+          {/* Dernier appel : un champ de capsules que l'anneau du pointeur allume (d'après Originkit Cursor Ring Field) */}
+          <section
+            aria-labelledby="titre-vendre"
+            className="revele relative isolate grid min-h-[26rem] place-items-center overflow-hidden rounded-[28px] bg-champ px-6 py-16 text-center text-sur-champ sm:min-h-[30rem] sm:px-10 lg:min-h-[34rem]"
+          >
+            <ChampAnneau className="absolute inset-0 -z-10" />
+            {/* Voile doux derrière le texte : les capsules restent vivantes autour, le texte reste lisible */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_55%_at_50%_50%,color-mix(in_oklab,var(--champ)_90%,transparent)_0%,color-mix(in_oklab,var(--champ)_60%,transparent)_45%,transparent_78%)]"
+            />
+            <div className="grid max-w-[42rem] justify-items-center gap-5">
+              <h2 id="titre-vendre" className="text-[2.5rem] leading-none font-semibold tracking-[-0.055em] text-balance sm:text-[3.75rem]">
+                Un placard qui déborde ?
+              </h2>
+              <p className="max-w-[44ch] text-lg text-sur-champ-doux">
+                Prenez-le en photo, fixez votre prix : l&apos;annonce est gratuite et en ligne aussitôt, pour les acheteurs de
+                votre quartier comme de toute la France.
+              </p>
+              <Link href="/deposer" className="bouton-clair mt-3">
+                Déposer une annonce
+                <IconeFleche className="fleche size-4 rotate-45" />
+              </Link>
             </div>
           </section>
         </div>
