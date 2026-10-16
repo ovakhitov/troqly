@@ -48,11 +48,11 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
         <section className="grid gap-3">
           <h2 className="font-titre text-xl font-semibold text-prune-nuit">Offres reçues</h2>
           {recues.length === 0 ? (
-            <p className="rounded-carte border border-ligne bg-surface p-5 text-mauve">Aucune offre reçue pour l&apos;instant.</p>
+            <p className="carte p-5 text-mauve">Aucune offre reçue pour l&apos;instant.</p>
           ) : (
             <ul className="grid gap-3">
               {recues.map((o) => (
-                <li key={o.id} className="grid gap-2 rounded-carte border border-ligne bg-surface p-4">
+                <li key={o.id} className="grid gap-2 carte p-4">
                   <Link href={`/annonces/${o.annonce}`} className="font-titre font-semibold text-prune hover:underline">
                     {o.annonces?.titre ?? "Annonce"}
                   </Link>
@@ -75,11 +75,11 @@ export default async function PageOffres({ searchParams }: { searchParams: Promi
         <section className="grid gap-3">
           <h2 className="font-titre text-xl font-semibold text-prune-nuit">Mes offres</h2>
           {envoyees.length === 0 ? (
-            <p className="rounded-carte border border-ligne bg-surface p-5 text-mauve">
+            <p className="carte p-5 text-mauve">
               Sur une annonce, utilisez « Faire une offre » pour proposer un prix au vendeur.
             </p>
           ) : (
-            <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+            <ul className="grid overflow-hidden carte">
               {envoyees.map((o) => (
                 <li key={o.id} className="border-b border-ligne last:border-b-0">
                   <Link href={`/annonces/${o.annonce}`} className="flex items-center justify-between gap-4 p-4 hover:bg-ivoire">

@@ -1,0 +1,93 @@
+{
+  "brand": "NorthStack",
+  "title": "NorthStack — Infrastructure cloud sur mesure",
+  "meta_description": "NorthStack conçoit et opère l'infrastructure cloud des équipes produit qui veulent aller vite sans casser.",
+  "email": "contact@northstack.io",
+  "lang": "fr",
+  "shape": "cloud",
+  "palette": [
+    "#4d8cff",
+    "#8f52f5",
+    "#fa579e",
+    "#ff9438",
+    "#99123a"
+  ],
+  "nav": [
+    "Accueil",
+    "À propos",
+    "Services",
+    "Résultats",
+    "Contact"
+  ],
+  "hero": {
+    "title": [
+      "Votre infrastructure",
+      "prête à encaisser"
+    ],
+    "lead": "Nous concevons et opérons le socle cloud des équipes produit. Vous livrez vos fonctionnalités, nous tenons la charge, la sécurité et la facture."
+  },
+  "about": {
+    "title": [
+      "Une équipe",
+      "d'infrastructure"
+    ],
+    "text": "Six ingénieurs qui ont exploité des plateformes à plusieurs millions de requêtes par jour. Nous intervenons en direct dans votre code et votre cloud, sans couche de gestion inutile."
+  },
+  "benefits": {
+    "title": [
+      "Ce que nous",
+      "prenons en charge"
+    ],
+    "items": [
+      {
+        "icon": "code",
+        "text": "Déploiement continu et environnements de test à la demande."
+      },
+      {
+        "icon": "shield",
+        "text": "Sécurité, sauvegardes et plan de reprise éprouvé chaque trimestre."
+      },
+      {
+        "icon": "chart",
+        "text": "Supervision et alertes qui réveillent quelqu'un, pas votre équipe."
+      },
+      {
+        "icon": "euro",
+        "text": "Facture cloud auditée chaque mois, économies partagées."
+      }
+    ]
+  },
+  "results": {
+    "title": [
+      "Des chiffres",
+      "qui tiennent"
+    ],
+    "lead": "Moyennes constatées sur nos douze derniers clients, après six mois d'accompagnement.",
+    "figures": []
+  },
+  "figures": [
+    {
+      "value": 99.98,
+      "decimals": 2,
+      "suffix": " %",
+      "label": "de disponibilité<br>sur douze mois"
+    },
+    {
+      "value": 38,
+      "suffix": " %",
+      "label": "de facture cloud<br>économisée en moyenne"
+    },
+    {
+      "value": 14,
+      "suffix": " min",
+      "label": "de délai moyen<br>de remise en service"
+    }
+  ],
+  "contact": {
+    "title": [
+      "Parlons de",
+      "votre socle."
+    ],
+    "lead": "Un projet, une migration, une astreinte à reprendre ?<br>Écrivez-nous."
+  }
+}

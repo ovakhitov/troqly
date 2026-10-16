@@ -20,7 +20,7 @@ export function SupprimerCompte() {
       <dialog
         ref={dialogue}
         aria-labelledby="titre-suppression-compte"
-        className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-carte border border-ligne bg-surface p-6 text-prune-nuit backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100%-2rem))] carte p-6 text-prune-nuit backdrop:bg-black/40"
       >
         <form action={action} className="grid gap-4">
           <h2 id="titre-suppression-compte" className="font-titre text-lg font-semibold">

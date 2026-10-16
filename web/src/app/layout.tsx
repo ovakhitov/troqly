@@ -1,15 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
+import { Hanken_Grotesk } from "next/font/google";
 import { DESCRIPTION_SITE, NOM_SITE, URL_SITE } from "@/lib/site";
 import "./globals.css";
 
-// General Sans provient du template Gency (gency/fonts) ; le texte courant utilise la police du système
-const generalSans = localFont({
-  src: [
-    { path: "./fonts/GeneralSans-500.woff2", weight: "500" },
-    { path: "./fonts/GeneralSans-600.woff2", weight: "600" },
-  ],
-  variable: "--ff-general",
+// Une seule famille pour tout le site, gratuite et proche de GT Standard (référence Shop).
+// Next.js la sert depuis troqly.vercel.app : aucune requête vers Google chez le visiteur.
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--ff-hanken",
   display: "swap",
 });
 
@@ -40,8 +39,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f0f3" },
-    { media: "(prefers-color-scheme: dark)", color: "#141016" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f4f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f10" },
   ],
   colorScheme: "light dark",
 };
@@ -60,7 +59,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: scriptTheme }} />
       </head>
       {/* Sur téléphone, la marge du bas laisse la place à la barre d'onglets */}
-      <body className={`${generalSans.variable} pb-[calc(4rem+env(safe-area-inset-bottom,0px))] font-sans antialiased sm:pb-0`}>
+      <body className={`${hanken.variable} pb-[calc(4rem+env(safe-area-inset-bottom,0px))] font-sans antialiased sm:pb-0`}>
         <a
           href="#contenu"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-champ focus:bg-surface focus:px-4 focus:py-2 focus:font-semibold"

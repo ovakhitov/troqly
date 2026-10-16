@@ -29,7 +29,7 @@ export function Signaler({ idAnnonce }: { idAnnonce: string }) {
       <dialog
         ref={dialogue}
         aria-labelledby={`signaler-${idAnnonce}`}
-        className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-carte border border-ligne bg-surface p-6 text-prune-nuit backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100%-2rem))] carte p-6 text-prune-nuit backdrop:bg-black/40"
       >
         {etat.succes ? (
           <div className="grid gap-4">

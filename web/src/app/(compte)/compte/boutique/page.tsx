@@ -47,7 +47,7 @@ export default async function PageMaBoutique({
   return (
     <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main id="contenu" className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-7 px-4 pt-7 pb-20 sm:pt-10">
+      <main id="contenu" className="mx-auto grid w-full max-w-[75rem] flex-1 content-start gap-7 px-4 pt-7 pb-20 sm:pt-10">
         <header className="grid gap-3">
           <p className="text-sm font-semibold text-mauve">Ma boutique</p>
           <h1 className="font-titre text-[2rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit sm:text-[2.5rem]">
@@ -82,13 +82,13 @@ export default async function PageMaBoutique({
         )}
 
         {profil?.boutique_nom ? (
-          <div className="rounded-carte border border-ligne bg-surface px-5 sm:max-w-xl">
+          <div className="carte px-5 sm:max-w-xl">
             <Volet titre="Nom et présentation" resume={profil.boutique_description ?? "Ajoutez une courte présentation"}>
               <FormulaireBoutique nom={profil.boutique_nom} description={profil.boutique_description ?? ""} />
             </Volet>
           </div>
         ) : (
-          <div className="rounded-carte border border-ligne bg-surface p-5 sm:max-w-xl sm:p-7">
+          <div className="carte p-5 sm:max-w-xl sm:p-7">
             <FormulaireBoutique
               nom=""
               description=""
@@ -136,7 +136,7 @@ export default async function PageMaBoutique({
                 {annonces.length === 0 && <p className="text-mauve">Déposez votre premier objet : c&apos;est gratuit.</p>}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {visibles.map((a) => (
                   <div key={a.id} className="grid content-start gap-2">
                     <CarteAnnonce annonce={versCarte(a)} />

@@ -12,12 +12,14 @@ Les mêmes skills sont copiés à deux endroits :
 | github.com/anthropics/skills | dbd4588 | canvas-design, brand-guidelines, theme-factory | voir LICENSE.txt |
 | github.com/figma/mcp-server-guide | f049329 | figma-design-to-code (nouveau nom de figma-implement-design) | — |
 | github.com/anthropics/claude-code | bf2323b | frontend-design | — |
+| Archive fournie par Ouva le 16/10/2026 (premium-3d-glass-skill.zip) | — | premium-3d-glass | Three.js MIT, Space Grotesk OFL (voir `template/licenses`) |
 
 Les dossiers portent le `name` déclaré dans chaque SKILL.md.
 
 À garder en tête :
-- `brand-guidelines` décrit la marque d'Anthropic, pas celle de Troqly : la direction artistique reste « Verre prune ».
+- `brand-guidelines` décrit la marque d'Anthropic, pas celle de Troqly : la direction artistique de Troqly est décrite dans `web/DESIGN.md`.
 - `figma-design-to-code` ne sert qu'avec le serveur MCP Figma connecté.
+- `premium-3d-glass` génère à l'origine un site vitrine entier en verre 3D. Sur Troqly, on n'en reprend que le matériau (verre, dispersion, studio de lumière) pour l'objet de l'accueil, `web/src/components/ObjetVerre.tsx` ; voir `web/DESIGN.md`.
 - `animate-expo`, `mobile-native` et `write-swift` visent les applis mobiles natives.
 
 Pour mettre à jour un skill : recopier son dossier depuis la source dans les deux emplacements.
