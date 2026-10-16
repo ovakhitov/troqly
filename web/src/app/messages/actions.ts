@@ -55,11 +55,6 @@ export async function envoyerMessage(
   return { envoye: (etat.envoye ?? 0) + 1 };
 }
 
-export async function marquerLu(idConversation: string) {
-  const supabase = await creerClientServeur();
-  await supabase.rpc("marquer_lu", { id_conversation: idConversation });
-}
-
 export async function bloquerMembre(idMembre: string, idConversation: string, bloquer: boolean) {
   const { supabase, id } = await connecte(`/messages/${idConversation}`);
   if (bloquer) {

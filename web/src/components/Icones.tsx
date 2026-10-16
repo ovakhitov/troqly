@@ -76,35 +76,6 @@ export function IconeBouclier({ className }: Props) {
   );
 }
 
-export function IconeMains({ className }: Props) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-      <circle cx="6.5" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="13.5" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M2.5 16c.4-2.6 2-4 4-4s3 1 3.5 2c.5-1 1.5-2 3.5-2s3.6 1.4 4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function IconeColis({ className }: Props) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-      <path d="M3 6.5L10 3l7 3.5v7L10 17l-7-3.5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M3 6.5L10 10l7-3.5M10 10v7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function IconePourcent({ className }: Props) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-      <path d="M15 5L5 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <circle cx="6" cy="6" r="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="14" cy="14" r="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
 export function IconeBulle({ className }: Props) {
   return (
     <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
@@ -183,20 +154,6 @@ export function IconeMaison({ className }: Props) {
     <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
       <path
         d="M3 9.2L10 3.5l7 5.7V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function IconeBoutique({ className }: Props) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-      <path
-        d="M3.5 8.5V16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V8.5M2.5 5l1.6-2.5h11.8L17.5 5v1.2a2.3 2.3 0 0 1-4.5 0 2.3 2.3 0 0 1-4.6 0 2.3 2.3 0 0 1-4.5 0zM8 17v-4.5h4V17"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"
