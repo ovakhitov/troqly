@@ -139,15 +139,24 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
       const texture = new THREE.CanvasTexture(dessin);
       texture.colorSpace = THREE.SRGBColorSpace;
       const logo = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.5, 1.5),
+        new THREE.PlaneGeometry(1.15, 1.15),
         new THREE.MeshBasicMaterial({ map: texture, alphaTest: 0.5, toneMapped: false }),
       );
-      logo.position.set(0.25, 0, -0.9);
+      logo.position.set(0.22, 0, -0.7);
       scene.add(logo);
 
       // La couleur du fond suit le thème, pour que le verre se fonde dans la page
       const suivreFond = () => {
-        scene.background = new THREE.Color(getComputedStyle(document.body).backgroundColor);
+        // Premier fond opaque au-dessus de l'objet (la feuille blanche sur grand écran, sinon la page)
+        let fond = "";
+        for (let n: HTMLElement | null = conteneur; n; n = n.parentElement) {
+          const c = getComputedStyle(n).backgroundColor;
+          if (c && c !== "transparent" && !/rgba\(.*,\s*0\)$/.test(c)) {
+            fond = c;
+            break;
+          }
+        }
+        scene.background = new THREE.Color(fond || getComputedStyle(document.body).backgroundColor);
         dessinerLogo();
         texture.needsUpdate = true;
       };
@@ -198,6 +207,7 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
       observateur.observe(conteneur);
       const taille = new ResizeObserver(() => {
         dimensionner();
+        suivreFond();
         relancer();
       });
       taille.observe(conteneur);

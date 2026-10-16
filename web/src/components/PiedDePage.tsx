@@ -4,7 +4,7 @@ import { LogoTroqly } from "./Icones";
 // Bande sombre qui referme chaque page, colonnes de liens
 export function PiedDePage() {
   return (
-    <footer className="mt-4 bg-champ text-sur-champ">
+    <footer className="mt-4 bg-champ text-sur-champ lg:mx-3 lg:mb-3 lg:rounded-[24px]">
       <div className="mx-auto grid max-w-[75rem] grid-cols-2 gap-x-6 gap-y-8 px-4 pt-10 pb-8 sm:gap-10 sm:pt-14 sm:pb-10 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="col-span-2 grid content-start gap-3 md:col-span-1">
           <Link href="/" className="flex w-fit items-center gap-2 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">

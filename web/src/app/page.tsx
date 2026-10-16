@@ -3,33 +3,50 @@ import Image from "next/image";
 import Link from "next/link";
 import { CarteAnnonce } from "@/components/CarteAnnonce";
 import { EnTete } from "@/components/EnTete";
-import { IconeFleche, IconeLieu, IconeLoupe, IconePlus } from "@/components/Icones";
-import { ObjetVerre } from "@/components/ObjetVerre";
+import { Defilement } from "@/components/accueil/Defilement";
+import { Vitrine } from "@/components/accueil/Vitrine";
+import { IconeChevron, IconeFleche, IconeLieu, IconeLoupe, IconePlus } from "@/components/Icones";
 import { PiedDePage } from "@/components/PiedDePage";
 import { TitreSection } from "@/components/TitreSection";
-import { formaterPrix, SELECTION_CARTE, versCarte } from "@/lib/annonces";
+import { formaterPrix, SELECTION_CARTE, versCarte, type LigneCarte } from "@/lib/annonces";
 import { calculerFrais, libelleBareme } from "@/lib/frais";
 import { DESCRIPTION_SITE, NOM_SITE, URL_SITE } from "@/lib/site";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 
 async function chargerAccueil() {
-  if (!supabaseEnv()) return { categories: [], annonces: [], boostees: [] };
+  if (!supabaseEnv()) return { categories: [], annonces: [], boostees: [], rayons: [] };
   const supabase = await creerClientServeur();
-  const visibles = () =>
-    supabase.from("annonces").select(SELECTION_CARTE).eq("moderation", "visible").neq("statut", "vendue");
-  const [{ data: categories }, { data: recentes }, { data: boostees }] = await Promise.all([
+  const visibles = (selection: string = SELECTION_CARTE) =>
+    supabase.from("annonces").select(selection).eq("moderation", "visible").neq("statut", "vendue");
+  const [{ data: categories }, { data: recentes }, { data: boostees }, { data: parCategorie }] = await Promise.all([
     supabase.from("categories").select("slug, libelle").order("ordre"),
     visibles().order("remontee_le", { ascending: false }).limit(12),
     visibles().eq("statut", "publiee").gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4),
+    visibles(`${SELECTION_CARTE}, categorie`).order("cree_le", { ascending: false }).limit(80),
   ]);
-  // Une annonce à la une n'apparaît qu'une fois sur l'accueil
-  const enAvant = (boostees ?? []).map(versCarte);
+  // Une annonce à la une n'apparaît qu'une fois dans les grilles de l'accueil
+  const enAvant = ((boostees ?? []) as unknown as LigneCarte[]).map(versCarte);
   const dejaAffichees = new Set(enAvant.map((a) => a.id));
+
+  // Rayons : pour chaque catégorie, ses quatre dernières annonces avec photo
+  const lignes = (parCategorie ?? []) as unknown as (LigneCarte & { categorie: string })[];
+  const rayons = (categories ?? [])
+    .map((c) => ({
+      ...c,
+      annonces: lignes
+        .filter((l) => l.categorie === c.slug)
+        .map(versCarte)
+        .filter((a) => a.photo)
+        .slice(0, 4),
+    }))
+    .filter((r) => r.annonces.length > 0);
+
   return {
-    categories: categories ?? [],
-    annonces: (recentes ?? []).map(versCarte).filter((a) => !dejaAffichees.has(a.id)).slice(0, 8),
+    categories: (categories ?? []).map((c) => ({ ...c, photo: rayons.find((r) => r.slug === c.slug)?.annonces[0]?.photo ?? null })),
+    annonces: ((recentes ?? []) as unknown as LigneCarte[]).map(versCarte).filter((a) => !dejaAffichees.has(a.id)).slice(0, 8),
     boostees: enAvant,
+    rayons,
   };
 }
 
@@ -76,18 +93,12 @@ const jsonLd = {
 const auCentime = (centimes: number) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(centimes / 100);
 
-// Constellation de l'accueil : quatre vraies annonces flottent autour de l'étiquette de verre.
-// Les deux cartes extérieures n'apparaissent que sur grand écran.
-const constellation = [
-  "left-0 top-[26%] w-[15%] -rotate-[4deg] hidden lg:block",
-  "left-[3%] lg:left-[16%] top-[2%] w-[24%] lg:w-[18%] rotate-[2deg]",
-  "right-[3%] lg:right-[16%] top-[8%] w-[24%] lg:w-[18%] -rotate-[2.5deg]",
-  "right-0 top-[34%] w-[15%] rotate-[4deg] hidden lg:block",
-];
-
 export default async function Accueil({ searchParams }: { searchParams: Promise<{ compte?: string }> }) {
-  const [{ categories, annonces, boostees }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
-  const vitrine = [...boostees, ...annonces].filter((a) => a.photo).slice(0, 4);
+  const [{ categories, annonces, boostees, rayons }, { compte }] = await Promise.all([chargerAccueil(), searchParams]);
+  const vitrine = [...boostees, ...annonces]
+    .filter((a) => a.photo)
+    .slice(0, 5)
+    .map((a) => ({ id: a.id, titre: a.titre, prix: formaterPrix(a.prixCentimes), ville: a.ville, photo: a.photo!, sponsorise: a.boostee }));
   const exemple = calculerFrais(10_000);
   const bareme = libelleBareme();
 
@@ -97,48 +108,39 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
       <EnTete recherche={false} />
 
       <main id="contenu">
-        {/* Vitrine : des objets du moment qui flottent, la promesse, la recherche et les catégories */}
-        <section className="mx-auto max-w-[75rem] px-4 pt-4 pb-12 sm:pt-8 sm:pb-20">
-          <div className="relative mx-auto hidden aspect-[16/6] max-w-[60rem] sm:block" aria-hidden="true">
-            <ObjetVerre className="absolute top-[4%] left-1/2 h-[92%] w-[34%] -translate-x-1/2" />
-            {vitrine.map((a, i) => (
-              <Link
-                key={a.id}
-                href={`/annonces/${a.id}`}
-                tabIndex={-1}
-                className={`absolute ${constellation[i]}`}
-              >
-                <span
-                  className="flotte carte block rounded-[24px] p-1.5 shadow-large transition-transform duration-500 ease-verre hover:-translate-y-1"
-                  style={{ "--flotte-depart": `-${i * 1.7}s` } as CSSProperties}
-                >
-                  <span className="relative block aspect-square overflow-hidden rounded-[18px] bg-creux">
-                    <Image src={a.photo!} alt="" fill sizes="200px" className="object-cover" priority={i < 2} />
-                    <span className="etiquette absolute bottom-1.5 left-1.5 text-[13px]">{formaterPrix(a.prixCentimes)}</span>
-                  </span>
-                  <span className="block truncate px-1.5 pt-2 pb-1 text-[13px] font-medium tracking-[-0.015em] text-prune-nuit">
-                    {a.titre}
-                  </span>
-                </span>
-              </Link>
-            ))}
-          </div>
+        {/* Bandeau sombre en haut de la feuille, comme celui de la référence Shop */}
+        <Link
+          href="/deposer"
+          className="group flex h-10 items-center justify-center gap-2 bg-champ px-4 text-[13px] text-sur-champ-doux transition-colors duration-200 hover:text-sur-champ"
+        >
+          <span className="rounded-full bg-white/12 px-2 py-0.5 text-[11px] font-medium text-sur-champ">Gratuit</span>
+          <span className="truncate">
+            <span className="font-medium text-sur-champ">Déposez une annonce en deux minutes.</span>
+            <span className="hidden sm:inline"> Elle est en ligne aussitôt, partout en France.</span>
+          </span>
+          <IconeFleche className="fleche size-3.5 shrink-0 rotate-45 transition-transform duration-300 ease-verre group-hover:translate-x-0.5" />
+        </Link>
 
-          <div className="mx-auto grid max-w-[46rem] justify-items-center gap-5 text-center sm:-mt-2 sm:gap-6">
-            {/* Sur téléphone, la recherche suffit : le texte reste lu par les lecteurs d'écran et les moteurs */}
-            <div className="sr-only sm:not-sr-only sm:grid sm:gap-3">
-              <h1 className="mx-auto max-w-[20ch] text-[2.75rem] leading-[1.02] font-semibold tracking-[-0.055em] text-balance text-prune-nuit lg:text-[3.5rem]">
-                Ce qui dort au grenier cherche preneur à deux rues d&apos;ici.
-              </h1>
-              <p className="mx-auto max-w-xl text-lg text-mauve">
-                Achetez et vendez entre particuliers, en main propre ou par colis, partout en France.
-              </p>
-            </div>
+        {/* Vitrine : des objets du moment flottent en perspective au-dessus du grand lettrage, puis la recherche */}
+        <section className="relative mx-auto max-w-[75rem] overflow-x-clip px-4 pt-4 pb-14 sm:px-6 sm:pt-8 sm:pb-20">
+          {vitrine.length > 0 && <Vitrine objets={vitrine} />}
+
+          <div className={`relative mx-auto grid max-w-[46rem] justify-items-center gap-5 text-center sm:gap-6 ${vitrine.length ? "-mt-[4%] sm:-mt-[5%]" : "pt-10"}`}>
+            <h1 className="arrivee grid justify-items-center" style={{ "--arrivee-delai": "80ms" } as CSSProperties}>
+              <span aria-hidden="true" className="lettrage text-[clamp(5rem,17vw,10.5rem)] leading-[0.82] font-semibold tracking-[-0.075em]">
+                troqly
+              </span>
+              <span className="sr-only">Troqly, petites annonces entre particuliers près de chez vous</span>
+            </h1>
+            <p className="arrivee max-w-xl text-[17px] text-mauve" style={{ "--arrivee-delai": "180ms" } as CSSProperties}>
+              Ce qui dort au grenier cherche preneur à deux rues d&apos;ici.
+            </p>
 
             <form
               action="/annonces"
               role="search"
-              className="grid h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-full border border-prune-nuit/10 bg-surface pr-1.5 pl-5 shadow-carte focus-within:border-prune sm:h-16 sm:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)_auto] sm:pr-2 sm:pl-6"
+              className="arrivee grid h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center rounded-full border border-prune-nuit/10 bg-surface pr-1.5 pl-5 shadow-[0_10px_40px_-12px_rgba(0,0,0,0.18),0_2px_6px_-2px_rgba(0,0,0,0.06)] transition-shadow duration-300 ease-verre focus-within:border-prune focus-within:shadow-[0_16px_50px_-14px_color-mix(in_oklab,var(--prune)_45%,transparent)] sm:h-16 sm:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)_auto] sm:pr-2 sm:pl-6"
+              style={{ "--arrivee-delai": "260ms" } as CSSProperties}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <IconeLoupe className="size-5 shrink-0 text-mauve" />
@@ -149,7 +151,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   id="recherche-accueil"
                   name="q"
                   type="search"
-                  placeholder="Que recherchez-vous ?"
+                  placeholder="Que recherchez-vous aujourd'hui ?"
                   className="w-full min-w-0 bg-transparent text-base text-prune-nuit outline-none placeholder:text-mauve"
                 />
               </div>
@@ -171,19 +173,23 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               <button
                 type="submit"
                 aria-label="Rechercher"
-                className="ml-2 grid size-11 place-items-center rounded-full bg-action text-sur-action shadow-action transition-[background-color,transform] duration-150 ease-verre hover:bg-action-survol active:scale-95 sm:size-12"
+                className="group ml-2 grid size-11 place-items-center rounded-full bg-action text-sur-action shadow-action transition-[background-color,scale,box-shadow] duration-200 ease-verre hover:scale-105 hover:bg-action-survol hover:shadow-[0_6px_30px_color-mix(in_oklab,var(--prune)_50%,transparent)] active:scale-95 sm:size-12"
               >
-                <IconeFleche className="size-5 rotate-45" />
+                <IconeFleche className="size-5 rotate-45 transition-transform duration-300 ease-verre group-hover:translate-x-0.5" />
               </button>
             </form>
 
             {categories.length > 0 && (
               <nav
                 aria-label="Catégories"
-                className="-mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:mx-0 sm:w-full sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
+                className="arrivee -mx-4 flex w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:max-w-[60rem] sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
+                style={{ "--arrivee-delai": "340ms" } as CSSProperties}
               >
                 {categories.map((c) => (
-                  <Link key={c.slug} href={`/annonces?categorie=${c.slug}`} className="pilule text-[15px]">
+                  <Link key={c.slug} href={`/annonces?categorie=${c.slug}`} className="pilule min-h-10 gap-2 pr-4 pl-1.5 text-[15px]">
+                    <span className="relative grid size-7 shrink-0 place-items-center overflow-hidden rounded-full bg-creux text-[12px] font-semibold text-prune">
+                      {c.photo ? <Image src={c.photo} alt="" fill sizes="28px" className="object-cover" /> : c.libelle.slice(0, 1)}
+                    </span>
                     {c.libelle}
                   </Link>
                 ))}
@@ -198,9 +204,53 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           </div>
         </section>
 
-        <div className="mx-auto grid max-w-[75rem] gap-16 px-4 pb-16 sm:gap-20 sm:pb-24">
+        <div className="mx-auto grid max-w-[75rem] grid-cols-[minmax(0,1fr)] gap-16 px-4 pb-16 sm:gap-20 sm:px-6 sm:pb-24">
+          {/* Rayons : une mosaïque de quatre photos par catégorie, dans une rangée qui défile */}
+          {rayons.length > 0 && (
+            <section aria-labelledby="titre-rayons" className="revele grid grid-cols-[minmax(0,1fr)] gap-5">
+              <h2 id="titre-rayons" className="sr-only">
+                Parcourir par catégorie
+              </h2>
+              <Defilement libelle="Catégories en images">
+                {rayons.map((r) => (
+                  <div key={r.slug} className="grid w-[78%] shrink-0 snap-start gap-3 sm:w-[20.5rem]">
+                    <Link
+                      href={`/annonces?categorie=${r.slug}`}
+                      className="group flex w-fit items-center gap-1.5 text-[1.25rem] font-semibold tracking-[-0.045em] text-prune-nuit"
+                    >
+                      {r.libelle}
+                      <IconeChevron className="size-4 transition-transform duration-300 ease-verre group-hover:translate-x-1" />
+                    </Link>
+                    <div className="grid grid-cols-2 gap-0.5 overflow-hidden rounded-[22px] bg-surface shadow-carte">
+                      {Array.from({ length: 4 }, (_, i) => r.annonces[i]).map((a, i) =>
+                        a ? (
+                          <Link key={a.id} href={`/annonces/${a.id}`} className="group relative aspect-square overflow-hidden bg-creux">
+                            <Image
+                              src={a.photo!}
+                              alt=""
+                              fill
+                              sizes="(min-width: 640px) 164px, 39vw"
+                              className="object-cover transition-transform duration-700 ease-verre group-hover:scale-[1.06]"
+                            />
+                            <span className="verre-fort absolute right-2 bottom-2 left-2 truncate rounded-[12px] px-2.5 py-1.5 text-[12px] font-medium text-prune-nuit">
+                              <span className="sr-only">{a.titre}, </span>
+                              <span aria-hidden="true">{a.titre.split(" ").slice(0, 3).join(" ")}</span>
+                              <span className="ml-1 font-semibold tabular-nums">· {formaterPrix(a.prixCentimes)}</span>
+                            </span>
+                          </Link>
+                        ) : (
+                          <span key={i} className="aspect-square bg-creux" />
+                        ),
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </Defilement>
+            </section>
+          )}
+
           {boostees.length > 0 && (
-            <section aria-labelledby="titre-boostees" className="grid gap-5 sm:gap-6">
+            <section aria-labelledby="titre-boostees" className="revele grid gap-5 sm:gap-6">
               <TitreSection id="titre-boostees" titre="À la une" />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {boostees.map((a, i) => (
@@ -210,7 +260,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
             </section>
           )}
 
-          <section aria-labelledby="titre-recentes" className="grid gap-5 sm:gap-6">
+          <section aria-labelledby="titre-recentes" className="revele grid gap-5 sm:gap-6">
             <TitreSection id="titre-recentes" titre="Arrivé ces derniers jours" lien={{ href: "/annonces", libelle: "Toutes les annonces" }} />
             {annonces.length ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
@@ -232,14 +282,14 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           {/* Les frais montrés sur un exemple chiffré plutôt qu'annoncés */}
           <section
             aria-labelledby="titre-ticket"
-            className="carte grid items-start gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16 lg:p-12"
+            className="revele relative grid items-center gap-10 overflow-hidden rounded-[28px] bg-champ p-6 text-sur-champ sm:p-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16 lg:p-14"
           >
             <div className="grid gap-8">
               <div className="grid gap-3">
                 <h2 id="titre-ticket" className="max-w-[18ch] text-[1.875rem] leading-[1.08] font-semibold tracking-[-0.045em] text-balance sm:text-[2.5rem]">
                   Ce que chacun paie, au centime près.
                 </h2>
-                <p className="max-w-[56ch] text-lg text-mauve">
+                <p className="max-w-[56ch] text-lg text-sur-champ-doux">
                   Déposer une annonce ne coûte rien. Quand l&apos;acheteur paie en ligne, il règle des frais de service
                   Troqly de {bareme} du prix de l&apos;article, et c&apos;est tout ce que garde Troqly.
                 </p>
@@ -248,21 +298,21 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                 {etapes.map((e, i) => (
                   <li key={e.titre} className="grid grid-cols-[2rem_minmax(0,1fr)] items-baseline gap-x-3">
                     <span
-                      className="grid size-7 place-items-center rounded-full bg-ivoire text-sm font-semibold text-prune tabular-nums"
+                      className="grid size-7 place-items-center rounded-full bg-white/10 text-sm font-semibold text-[#e6c2e8] tabular-nums ring-1 ring-white/15"
                       aria-hidden="true"
                     >
                       {i + 1}
                     </span>
-                    <p className="max-w-[60ch] text-prune-nuit">
-                      <span className="font-medium">{e.titre}</span> <span className="text-mauve">{e.texte}</span>
+                    <p className="max-w-[60ch] text-sur-champ">
+                      <span className="font-medium">{e.titre}</span> <span className="text-sur-champ-doux">{e.texte}</span>
                     </p>
                   </li>
                 ))}
               </ol>
             </div>
 
-            <figure className="rounded-photo bg-ivoire p-6 text-prune-nuit">
-              <figcaption className="text-sm font-medium text-mauve">
+            <figure className="relative -rotate-2 rounded-[24px] bg-papier p-6 text-encre-papier shadow-[0_40px_80px_-30px_rgba(0,0,0,0.8)] transition-transform duration-700 ease-verre hover:rotate-0 lg:-mr-2">
+              <figcaption className="text-sm font-medium text-[#6b6867]">
                 Exemple : un objet à {formaterPrix(exemple.prixCentimes)}
               </figcaption>
               <dl className="mt-5 grid gap-3 text-[15px] tabular-nums">
@@ -274,12 +324,12 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   <dt>Frais de service Troqly</dt>
                   <dd>{auCentime(exemple.fraisServiceCentimes)}</dd>
                 </div>
-                <div className="flex justify-between gap-4 border-t border-ligne pt-3 text-lg font-semibold tracking-[-0.02em]">
+                <div className="flex justify-between gap-4 border-t border-dashed border-black/15 pt-3 text-lg font-semibold tracking-[-0.02em]">
                   <dt>L&apos;acheteur paie</dt>
                   <dd>{auCentime(exemple.totalCentimes)}</dd>
                 </div>
               </dl>
-              <p className="mt-5 text-sm leading-relaxed text-mauve">
+              <p className="mt-5 text-sm leading-relaxed text-[#6b6867]">
                 Frais de service : {bareme} du prix de l&apos;article. Le vendeur reçoit {formaterPrix(exemple.prixCentimes)},
                 sans commission. Pour un envoi en colis, la livraison s&apos;ajoute au prix payé par l&apos;acheteur,
                 sans frais de service dessus.
@@ -287,7 +337,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
             </figure>
           </section>
 
-          <section aria-labelledby="titre-faq" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+          <section aria-labelledby="titre-faq" className="revele grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
             <h2 id="titre-faq" className="text-[1.875rem] leading-tight font-semibold tracking-[-0.045em] sm:text-[2.5rem]">
               Questions fréquentes
             </h2>

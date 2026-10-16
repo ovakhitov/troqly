@@ -11,6 +11,7 @@ Ce fichier sert de référence à Claude Code et à Codex avant toute modificati
 - Les cartes flottent par l'ombre seule (`carte` : surface blanche + double ombre douce), sans bordure, sur un fond gris très clair.
 - Une seule couleur vive : la prune de Troqly (choisie par Ouva le 16/10/2026 à la place du violet de la référence). Elle sert au logo, au bouton principal et au bouton de recherche, dont l'ombre est teintée de prune (`shadow-action`). Ne pas ajouter de deuxième couleur vive.
 - Le verre est réservé à ce qui flotte : barre du haut en pilule, barre d'onglets du téléphone, objet 3D de l'accueil.
+- Coque façon Shop sur grand écran (v2, 16/10/2026, d'après la capture de Shop envoyée par Ouva) : rail d'icônes à gauche (`RailSite`, libellés en bulle au survol), la page posée dessus comme une grande feuille blanche à 28 px (`.coquille:has(.rail-site)` dans `globals.css`), pied de page en bande sombre arrondie dans la feuille. Le tableau de bord n'a pas de rail, donc pas de feuille.
 - Pas de dégradé décoratif, pas d'illustration, pas de grille « icône + titre + texte », pas de surtitre.
 - Rythme : 12 à 16 px entre les cartes, 64 à 80 px entre les grandes sections.
 - Les frais sont montrés sur un exemple chiffré (encadré de l'accueil), calculé depuis `lib/frais.ts`.
@@ -69,6 +70,13 @@ Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules
 
 ## Accueil
 
+(v2, 16/10/2026) De haut en bas : bandeau sombre « Déposez une annonce en deux minutes », vitrine `Vitrine`
+(cartes et photos en perspective 3D qui suivent la souris, étiquette de verre au centre), grand lettrage « troqly »
+en prune (`.lettrage`, le vrai titre reste pour les lecteurs d'écran), recherche, catégories en pilules avec une
+pastille photo de la catégorie, rayons par catégorie (mosaïque 2 × 2 de photos dans une rangée qui défile avec
+flèches rondes, `Defilement`), annonces « À la une », dernières annonces, frais dans une grande carte sombre avec le
+ticket blanc incliné, FAQ.
+
 - Vitrine : quatre vraies annonces (« À la une » d'abord) flottent en constellation autour d'une étiquette de prix en verre 3D, puis le titre centré, la recherche en pilule (quoi | où | bouton prune) et les catégories en pilules.
 - `ObjetVerre` reprend le matériau du skill `premium-3d-glass` (verre en transmission totale, dispersion, irisation, studio de panneaux lumineux) sur une seule forme : une étiquette percée, devant le logo Troqly qu'elle réfracte. Three.js n'est chargé que sur l'accueil, au repos, après l'affichage ; l'image s'arrête hors écran et en onglet caché ; une image fixe si l'appareil demande moins d'animations ; rien sans WebGL 2. Le fond et la couleur du logo suivent le thème.
 - Sur téléphone, ni constellation ni grand titre (gardé pour les lecteurs d'écran et les moteurs) : la recherche et les catégories d'abord.
@@ -82,6 +90,10 @@ Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules
 - « Mon compte » est un sommaire : les raccourcis d'abord, les réglages repliés.
 
 ## Mouvement
+
+(v2) Boutons : reflet clair en haut, ombre prune qui s'allume au survol, soulèvement de 1 px, enfoncement au clic, flèche `.fleche` qui glisse.
+Pilules et cartes montent au survol. La vitrine arrive en cascade (`.arrivee`), les sections glissent en entrant
+dans l'écran (`.revele`, animation liée au défilement, sans JavaScript ; ailleurs elles sont simplement visibles).
 
 Transitions courtes (150 à 500 ms, courbe `ease-verre`), au survol et au clic.
 Animations continues, toutes douces et coupées si l'appareil demande moins d'animations (`prefers-reduced-motion`) :
