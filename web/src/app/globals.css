@@ -256,17 +256,22 @@ a {
   color: var(--prune-nuit);
   box-shadow: var(--ombre-douce);
   white-space: nowrap;
-  transition: border-color 160ms var(--ease-verre), transform 160ms var(--ease-verre);
+  transition: border-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
   &:hover {
     border-color: var(--bord-champ);
+    box-shadow: var(--ombre-large);
+    translate: 0 -2px;
   }
   &:active {
-    transform: scale(0.97);
+    scale: 0.97;
+    translate: 0 0;
   }
 }
 
-/* Boutons : des pilules, comme toutes les commandes posées dans le texte */
+/* Boutons : des pilules qui réagissent. Reflet clair en haut, ombre prune qui s'allume au survol,
+   léger soulèvement, enfoncement au clic ; une flèche (.fleche) glisse vers la droite. */
 @utility bouton {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -277,16 +282,27 @@ a {
   background: var(--action);
   color: var(--sur-action);
   font-weight: 500;
-  transition: background-color 160ms var(--ease-verre), transform 160ms var(--ease-verre);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  transition: background-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
+  & .fleche {
+    transition: translate 250ms var(--ease-verre);
+  }
   &:hover {
     background: var(--action-survol);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--ombre-action);
+    translate: 0 -1px;
+  }
+  &:hover .fleche {
+    translate: 3px 0;
   }
   &:active {
-    transform: scale(0.97);
+    scale: 0.97;
+    translate: 0 0;
   }
   &:disabled {
     opacity: 0.6;
-    transform: none;
+    translate: none;
+    scale: none;
   }
 }
 
@@ -303,12 +319,15 @@ a {
   color: var(--prune-nuit);
   font-weight: 500;
   box-shadow: var(--ombre-douce);
-  transition: border-color 160ms var(--ease-verre), transform 160ms var(--ease-verre);
+  transition: border-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
   &:hover {
     border-color: var(--bord-champ);
+    box-shadow: var(--ombre-large);
+    translate: 0 -1px;
   }
   &:active {
-    transform: scale(0.97);
+    scale: 0.97;
+    translate: 0 0;
   }
 }
 
@@ -365,6 +384,76 @@ a {
   }
 }
 
+/* Coque façon Shop sur grand écran : le rail d'icônes à gauche, la page posée dessus comme une grande feuille.
+   Ne s'applique qu'aux pages qui affichent le rail (pas au tableau de bord). */
+@media (min-width: 1024px) {
+  .coquille:has(.rail-site) {
+    margin: 0.625rem 0.625rem 0.625rem 4.5rem;
+    min-height: calc(100vh - 1.25rem);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--ombre-douce), 0 0 0 1px var(--ligne);
+    overflow: clip;
+  }
+}
+
+/* Bulle du rail : le libellé sort à droite de l'icône au survol et au clavier */
+.bulle-rail::after {
+  content: attr(data-libelle);
+  position: absolute;
+  left: calc(100% + 0.625rem);
+  top: 50%;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  background: var(--prune-nuit);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  translate: -4px -50%;
+  transition: opacity 160ms var(--ease-verre), translate 160ms var(--ease-verre);
+  z-index: 50;
+}
+.bulle-rail:hover::after,
+.bulle-rail:focus-visible::after {
+  opacity: 1;
+  translate: 0 -50%;
+}
+
+/* Arrivée des éléments de la vitrine : ils montent, se précisent et se posent, l'un après l'autre */
+.arrivee {
+  animation: arrivee 1s var(--ease-verre) both;
+  animation-delay: var(--arrivee-delai, 0ms);
+}
+@keyframes arrivee {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+    scale: 0.92;
+    filter: blur(8px);
+  }
+}
+
+/* Apparition au défilement : chaque section glisse doucement en entrant dans l'écran (sans JavaScript) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revele {
+      animation: revele linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+    @keyframes revele {
+      from {
+        opacity: 0;
+        translate: 0 36px;
+        scale: 0.98;
+      }
+    }
+  }
+}
+
 /* Constellation de l'accueil : les cartes flottent doucement, chacune à son rythme */
 .flotte {
   animation: flotte 7s ease-in-out infinite alternate;
@@ -379,9 +468,16 @@ a {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .flotte {
+  .flotte,
+  .arrivee {
     animation: none;
   }
+}
+
+/* Lettrage géant de la vitrine : la prune avec un léger relief de verre */
+.lettrage {
+  color: var(--prune);
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--prune) 60%, white), 0 18px 40px color-mix(in oklab, var(--prune) 28%, transparent);
 }
 
 /* Bordure néon des annonces boostées (composant BordureNeon).

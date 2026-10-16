@@ -66,7 +66,7 @@ export default function RootLayout({
         >
           Aller au contenu
         </a>
-        {children}
+        <div className="coquille">{children}</div>
       </body>
     </html>
   );
