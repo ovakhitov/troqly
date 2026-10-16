@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { NextResponse, type NextRequest } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { creerClientAdmin } from "@/lib/supabase/admin";
+import { arreterBoost, enregistrerPaiementBoost } from "@/lib/boosts-serveur";
 import { enregistrerPaiement } from "@/lib/synchro-stripe";
 
 // Notifications envoyées par Stripe. La signature est vérifiée avant toute action.
@@ -25,12 +26,16 @@ export async function POST(request: NextRequest) {
       const session = evenement.data.object;
       const idCommande = session.metadata?.commande;
       if (idCommande) await enregistrerPaiement(idCommande, session.id);
+      const idBoost = session.metadata?.boost;
+      if (idBoost) await enregistrerPaiementBoost(idBoost, session.id);
       break;
     }
 
     case "checkout.session.expired": {
       const idCommande = evenement.data.object.metadata?.commande;
       if (idCommande) await admin.from("commandes").update({ statut: "annulee" }).eq("id", idCommande).eq("statut", "en_attente");
+      const idBoost = evenement.data.object.metadata?.boost;
+      if (idBoost) await admin.from("achats_boost").update({ statut: "annule" }).eq("id", idBoost).eq("statut", "en_attente");
       break;
     }
 
@@ -50,6 +55,9 @@ export async function POST(request: NextRequest) {
       const charge = evenement.data.object;
       if (charge.refunded) {
         await admin.from("commandes").update({ statut: "remboursee" }).eq("stripe_charge", charge.id).in("statut", ["payee", "litige"]);
+        // Boost remboursé (depuis Troqly ou directement dans Stripe) : il s'arrête aussitôt
+        const { data: boost } = await admin.from("achats_boost").select("id").eq("stripe_charge", charge.id).maybeSingle();
+        if (boost) await arreterBoost(boost.id, "rembourse", "Paiement remboursé");
       }
       break;
     }
@@ -57,6 +65,8 @@ export async function POST(request: NextRequest) {
     case "charge.dispute.created": {
       const litige = evenement.data.object;
       const charge = typeof litige.charge === "string" ? litige.charge : litige.charge.id;
+      const { data: boost } = await admin.from("achats_boost").select("id").eq("stripe_charge", charge).maybeSingle();
+      if (boost) await arreterBoost(boost.id, "interrompu", "Paiement contesté auprès de la banque");
       const { data } = await admin
         .from("commandes")
         .update({ statut: "litige" })

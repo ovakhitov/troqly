@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigerAdmin, journaliser } from "@/lib/admin";
+import { arreterBoost, rembourserBoost } from "@/lib/boosts-serveur";
 import { stripe } from "@/lib/stripe";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { verserAuVendeur } from "@/lib/versement";
@@ -108,8 +109,28 @@ export async function boosterAnnonce(idAnnonce: string, formData: FormData) {
   const jusqua = jours === 0 ? null : new Date(Date.now() + jours * 86_400_000).toISOString();
   const { error } = await admin.from("annonces").update({ boost_jusqua: jusqua }).eq("id", idAnnonce);
   if (error) retour(formData, { erreur: error.message });
+  // Arrêt : un « À la une » payé en cours s'arrête aussi (le remboursement reste un geste séparé, dans Argent)
+  if (!jours) {
+    const { data: payes } = await admin.from("achats_boost").select("id").eq("annonce", idAnnonce).eq("formule", "une_7j").eq("statut", "actif");
+    for (const b of payes ?? []) await arreterBoost(b.id, "interrompu", "Arrêté par l'équipe Troqly");
+  }
   await journaliser(id, jours ? "annonce_boostee" : "boost_arrete", { type: "annonce", id: idAnnonce }, { jours });
-  retour(formData, { ok: jours ? `Annonce boostée pendant ${jours} jour${jours > 1 ? "s" : ""}.` : "Boost arrêté." });
+  retour(formData, { ok: jours ? `Annonce à la une pendant ${jours} jour${jours > 1 ? "s" : ""}.` : "Mise à la une arrêtée." });
+}
+
+export async function rembourserAchatBoost(idAchat: string, formData: FormData) {
+  const { id } = await exigerAdmin();
+  if (!confirme(formData)) retour(formData, { erreur: "Cochez la case de confirmation pour rembourser ce boost." });
+  const motif = motifDe(formData) ?? "Remboursé par l'équipe Troqly";
+  let fait = false;
+  try {
+    fait = await rembourserBoost(idAchat, motif);
+  } catch (e) {
+    retour(formData, { erreur: `Stripe a refusé le remboursement : ${e instanceof Error ? e.message : "erreur inconnue"}` });
+  }
+  if (!fait) retour(formData, { erreur: "Seul un boost payé peut être remboursé." });
+  await journaliser(id, "boost_rembourse", { type: "achat_boost", id: idAchat }, { motif });
+  retour(formData, { ok: "Boost remboursé intégralement ; il s'est arrêté." });
 }
 
 // Masquer, réafficher et supprimer passent par les fonctions de la modération, qui journalisent elles-mêmes

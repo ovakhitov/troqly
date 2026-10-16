@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { ObjetVerre } from "../ObjetVerre";
 
-export type ObjetVitrine = { id: string; titre: string; prix: string; ville: string; photo: string };
+// sponsorise : annonce « À la une » (mise en avant contre paiement), signalée par la mention « Sponsorisé »
+export type ObjetVitrine = { id: string; titre: string; prix: string; ville: string; photo: string; sponsorise: boolean };
 
 // Emplacements de la constellation : position, taille, inclinaison et profondeur (plus c'est profond, plus ça suit la souris).
 // Les deux premiers sont des cartes blanches, les autres des photos seules ; le dernier n'apparaît que sur grand écran.
@@ -16,6 +17,15 @@ const places = [
   { carte: false, classe: "hidden sm:block sm:right-[22%] sm:top-[50%] sm:w-[10%]", rx: 8, ry: -18, rz: -7, p: 0.95 },
   { carte: false, classe: "hidden lg:block lg:left-[25%] lg:top-[60%] lg:w-[7.5%]", rx: -4, ry: 12, rz: -10, p: 1.6 },
 ];
+
+// Même mention que sur CarteAnnonce (Code de la consommation, L111-7)
+function Sponsorise() {
+  return (
+    <span className="verre-fort absolute top-1.5 left-1.5 rounded-full px-2 py-0.5 text-[12px] font-semibold text-abricot">
+      Sponsorisé
+    </span>
+  );
+}
 
 // Vitrine de l'accueil, d'après la capture Shop : des objets du moment flottent en perspective autour de l'étiquette
 // de verre et suivent légèrement la souris, au-dessus du grand lettrage « troqly ». Sans souris ou si l'appareil
@@ -82,6 +92,7 @@ export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
                   <span className="block rounded-[26px] bg-surface p-2 shadow-[0_30px_60px_-24px_rgba(0,0,0,0.35),0_6px_14px_-6px_rgba(0,0,0,0.12)] transition-transform duration-500 ease-verre group-hover:-translate-y-1.5">
                     <span className="relative block aspect-square overflow-hidden rounded-[20px] bg-creux">
                       <Image src={o.photo} alt="" fill sizes="220px" className="object-cover" priority={i < 2} />
+                      {o.sponsorise && <Sponsorise />}
                     </span>
                     <span className="block truncate px-1.5 pt-2.5 text-[13px] font-medium tracking-[-0.02em] text-prune-nuit">{o.titre}</span>
                     <span className="flex items-center justify-between gap-2 px-1.5 pt-0.5 pb-1 text-[12px] text-mauve">
@@ -92,6 +103,7 @@ export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
                 ) : (
                   <span className="relative block aspect-square overflow-hidden rounded-[22px] bg-creux shadow-[0_30px_60px_-24px_rgba(0,0,0,0.4)] transition-transform duration-500 ease-verre group-hover:-translate-y-1.5">
                     <Image src={o.photo} alt="" fill sizes="160px" className="object-cover" />
+                    {o.sponsorise && <Sponsorise />}
                     <span className="etiquette absolute bottom-1.5 left-1.5 text-[12px]">{o.prix}</span>
                   </span>
                 )}

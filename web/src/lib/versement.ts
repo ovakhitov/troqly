@@ -2,9 +2,8 @@ import "server-only";
 import { montantVendeur } from "./frais";
 import { stripe } from "./stripe";
 import { creerClientAdmin } from "./supabase/admin";
-import { fraisStripe } from "./synchro-stripe";
 
-// Fin de la commande : virement de sa part au vendeur. La commission Troqly reste sur le compte Stripe.
+// Fin de la commande : virement de sa part au vendeur. Les frais de service Troqly restent sur le compte Stripe.
 // Hors du fichier des actions serveur pour ne jamais être appelable directement depuis un navigateur.
 export async function verserAuVendeur(idCommande: string) {
   const admin = creerClientAdmin();
@@ -18,10 +17,9 @@ export async function verserAuVendeur(idCommande: string) {
   const { data: compte } = await admin.from("comptes_paiement").select("stripe_compte").eq("membre", c.vendeur).single();
   if (!compte) return false;
 
-  // Le vendeur reçoit le total moins la commission Troqly et les frais de carte réels
-  const frais = await fraisStripe(c.stripe_charge);
-  if (frais === null) return false;
-  const montant = montantVendeur(c.total_centimes, c.frais_service_centimes, frais);
+  // Le vendeur reçoit le prix de l'article et la livraison en entier : seuls les frais de service
+  // restent à Troqly, qui y prend les frais de carte Stripe (pas de commission vendeur)
+  const montant = montantVendeur(c.total_centimes, c.frais_service_centimes);
 
   const virement = await stripe().transfers.create(
     {

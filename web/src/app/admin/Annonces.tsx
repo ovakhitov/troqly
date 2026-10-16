@@ -7,7 +7,7 @@ import { bouton, boutonDanger, boutonFort, CarteChiffre, champ, Confirmer, dateC
 const FILTRES = [
   ["toutes", "Toutes"],
   ["en_ligne", "En ligne"],
-  ["boostees", "Boostées"],
+  ["boostees", "À la une"],
   ["masquees", "Masquées"],
   ["vendues", "Vendues"],
 ] as const;
@@ -57,7 +57,7 @@ export async function Annonces({ filtre, recherche }: { filtre?: string; recherc
     <div className="grid gap-4">
       <RangeeChiffres>
         <CarteChiffre libelle="En ligne" valeur={String(enLigne)} detail="visibles sur le site" teinte="statut" href="/admin/annonces?filtre=en_ligne" />
-        <CarteChiffre libelle="Boostées" valeur={String(boosteesActives)} detail="en tête des résultats" teinte="abricot" href="/admin/annonces?filtre=boostees" />
+        <CarteChiffre libelle="À la une" valeur={String(boosteesActives)} detail="en tête des résultats" teinte="abricot" href="/admin/annonces?filtre=boostees" />
         <CarteChiffre libelle="Masquées" valeur={String(masquees)} detail="par la modération" teinte="alerte" href="/admin/annonces?filtre=masquees" />
         <CarteChiffre libelle="Vendues" valeur={String(vendues)} detail="depuis l'ouverture" teinte="info" href="/admin/annonces?filtre=vendues" />
       </RangeeChiffres>
@@ -95,7 +95,7 @@ export async function Annonces({ filtre, recherche }: { filtre?: string; recherc
                   {a.moderation === "masquee" && (
                     <span className="rounded-full bg-alerte/12 px-2.5 py-0.5 text-xs font-semibold text-alerte">Masquée</span>
                   )}
-                  {boostee && <span className="rounded-full bg-prune/12 px-2.5 py-0.5 text-xs font-semibold text-prune">Boostée</span>}
+                  {boostee && <span className="rounded-full bg-prune/12 px-2.5 py-0.5 text-xs font-semibold text-prune">À la une</span>}
                 </div>
 
                 <Gerer>
@@ -103,14 +103,14 @@ export async function Annonces({ filtre, recherche }: { filtre?: string; recherc
                     <form action={boosterAnnonce.bind(null, a.id)} className="flex flex-wrap items-center gap-2">
                       <Retour vers={retour} />
                       <label htmlFor={`boost-${a.id}`} className="text-xs text-prune-nuit">
-                        {boostee ? `Boostée jusqu'au ${dateCourte.format(new Date(a.boost_jusqua!))}` : "Booster"}
+                        {boostee ? `À la une jusqu'au ${dateCourte.format(new Date(a.boost_jusqua!))}` : "Mettre à la une"}
                       </label>
                       <select id={`boost-${a.id}`} name="jours" defaultValue="7" className={champ}>
                         <option value="3">3 jours</option>
                         <option value="7">7 jours</option>
                         <option value="14">14 jours</option>
                         <option value="30">30 jours</option>
-                        {boostee && <option value="0">Arrêter le boost</option>}
+                        {boostee && <option value="0">Arrêter la mise à la une</option>}
                       </select>
                       <button type="submit" className={bouton}>Appliquer</button>
                     </form>

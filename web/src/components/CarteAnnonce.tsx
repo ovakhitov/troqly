@@ -24,10 +24,10 @@ export function CarteAnnonce({ annonce, prioritaire = false }: { annonce: Donnee
       ) : (
         <div className="grid size-full place-items-center text-sm text-mauve">Sans photo</div>
       )}
-      {/* Mention obligatoire : une annonce boostée est mise en avant contre paiement ou par Troqly */}
+      {/* Mention obligatoire (Code de la consommation, L111-7) : une annonce à la une est mise en avant contre paiement */}
       {annonce.boostee && (
         <span className="verre-fort absolute top-2 left-2 rounded-full px-2.5 py-0.5 text-xs font-semibold text-abricot">
-          Boostée
+          Sponsorisé
         </span>
       )}
       {annonce.statut !== "publiee" && (

@@ -108,7 +108,7 @@ export default async function PageMembreAdmin({
               <>
                 <Ligne libelle="Reçoit des paiements" valeur={paiement.versements_actifs ? "oui" : "non, activation inachevée"} />
                 <Ligne libelle="Ventes terminées" valeur={`${ventes.length} · ${formaterPrix(ventes.reduce((t, c) => t + c.total_centimes, 0))}`} />
-                <Ligne libelle="Commissions générées" valeur={formaterPrix(ventes.reduce((t, c) => t + c.frais_service_centimes, 0))} />
+                <Ligne libelle="Frais de service générés" valeur={formaterPrix(ventes.reduce((t, c) => t + c.frais_service_centimes, 0))} />
                 <a href={lienStripe(`connect/accounts/${paiement.stripe_compte}`)} target="_blank" rel="noreferrer" className={`${bouton} justify-self-start`}>
                   Compte vendeur dans Stripe
                 </a>

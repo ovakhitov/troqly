@@ -106,7 +106,7 @@ export async function Apercu() {
       cle,
       libelle,
       valeur,
-      detail: `${complet} : ${formaterPrix(valeur)} de commission sur ${ventes.length} vente${ventes.length > 1 ? "s" : ""} (${formaterPrix(somme(ventes, "prix_centimes"))})`,
+      detail: `${complet} : ${formaterPrix(valeur)} de frais de service sur ${ventes.length} vente${ventes.length > 1 ? "s" : ""} (${formaterPrix(somme(ventes, "prix_centimes"))})`,
     };
   });
 
@@ -148,7 +148,7 @@ export async function Apercu() {
     ...commandes.flatMap((c) => [
       ...(c.payee_le ? [{ date: c.payee_le, texte: `Commande payée · ${c.titre} (${formaterPrix(c.total_centimes)})`, teinte: "info" as const, href: `/commandes/${c.id}` }] : []),
       ...(c.terminee_le
-        ? [{ date: c.terminee_le, texte: `Vente terminée · ${c.titre}, ${formaterPrix(c.frais_service_centimes)} de commission`, teinte: "statut" as const, href: `/commandes/${c.id}` }]
+        ? [{ date: c.terminee_le, texte: `Vente terminée · ${c.titre}, ${formaterPrix(c.frais_service_centimes)} de frais de service`, teinte: "statut" as const, href: `/commandes/${c.id}` }]
         : []),
     ]),
     ...(profils.data ?? []).map((p) => ({ date: p.cree_le, texte: `Nouveau membre · ${p.pseudo}`, teinte: "prune" as const, href: `/admin/membres/${p.id}` })),
@@ -216,7 +216,7 @@ export function VueApercu({ chiffres: c, parts, miseEnAvant, mois, taches, evene
     <>
       <RangeeChiffres>
         <CarteChiffre
-          libelle="Commissions ce mois-ci"
+          libelle="Frais de service ce mois-ci"
           valeur={formaterPrix(c.commissionsMois)}
           detail={`${formaterPrix(c.commissionsTotal)} depuis le début`}
           teinte="prune"
@@ -249,7 +249,7 @@ export function VueApercu({ chiffres: c, parts, miseEnAvant, mois, taches, evene
         <Carte titre="Où en est l'argent" indication="Cliquez une part pour l'ouvrir">
           <Anneau parts={parts} miseEnAvant={miseEnAvant} />
         </Carte>
-        <Carte titre="Commissions sur 6 mois" indication={`${formaterPrix(mois.reduce((t, m) => t + m.valeur, 0))} au total`}>
+        <Carte titre="Frais de service sur 6 mois" indication={`${formaterPrix(mois.reduce((t, m) => t + m.valeur, 0))} au total`}>
           <BarresMois mois={mois} />
         </Carte>
       </div>
@@ -313,7 +313,7 @@ export function VueApercu({ chiffres: c, parts, miseEnAvant, mois, taches, evene
       <RangeeChiffres>
         <CarteChiffre libelle="Membres" valeur={String(c.membres)} detail={`+${c.nouveaux} ces 7 derniers jours`} teinte="prune" href="/admin/membres" />
         <CarteChiffre libelle="Annonces en ligne" valeur={String(c.enLigne)} detail="visibles sur le site" teinte="neutre" href="/admin/annonces?filtre=en_ligne" />
-        <CarteChiffre libelle="Annonces boostées" valeur={String(c.boostees)} detail="en tête des résultats" teinte="abricot" href="/admin/annonces?filtre=boostees" />
+        <CarteChiffre libelle="Annonces à la une" valeur={String(c.boostees)} detail="en tête des résultats" teinte="abricot" href="/admin/annonces?filtre=boostees" />
         <CarteChiffre
           libelle="Signalements ouverts"
           valeur={c.signalements >= 20 ? "20+" : String(c.signalements)}

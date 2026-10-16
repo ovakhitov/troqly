@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formaterPrix } from "@/lib/annonces";
+import { calculerFrais, EXPLICATION_FRAIS, type Bareme } from "@/lib/frais";
 
 export type Tarif = {
   id: number;
@@ -18,23 +19,23 @@ type Props = {
   offre: { id: number; prix: number; jusquAu: string } | null;
   mainPropre: boolean;
   tarifs: Tarif[];
-  commissionBps: number;
+  // Barème transmis par le serveur : le navigateur calcule avec les mêmes chiffres que Stripe
+  bareme: Bareme;
 };
 
 const champ =
   "w-full rounded-champ border border-ligne bg-surface px-3 py-2.5 text-sm text-prune-nuit outline-none focus:border-prune";
 
-export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, commissionBps }: Props) {
+export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, bareme }: Props) {
   const [mode, setMode] = useState<"main_propre" | "livraison">(mainPropre ? "main_propre" : "livraison");
   const [idTarif, setIdTarif] = useState<number | null>(tarifs[0]?.id ?? null);
 
   const prix = offre?.prix ?? prixCentimes;
-  const commission = Math.ceil((prix * commissionBps) / 10_000);
   const tarif = mode === "livraison" ? tarifs.find((t) => t.id === idTarif) : undefined;
-  const livraison = tarif?.prix_centimes ?? 0;
+  const montants = calculerFrais(prix, tarif?.prix_centimes ?? 0, bareme);
 
   return (
-    <form action={action} className="grid gap-3 rounded-champ border border-ligne bg-ivoire p-4">
+    <form action={action} className="grid gap-3 rounded-photo bg-ivoire p-4">
       {offre && <input type="hidden" name="offre" value={offre.id} />}
 
       {mainPropre && tarifs.length > 0 ? (
@@ -91,18 +92,14 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, commiss
       )}
 
       <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm text-prune-nuit tabular-nums">
-        <dt>{offre ? "Prix négocié" : "Prix"}</dt>
-        <dd className="text-right">{formaterPrix(prix)}</dd>
-        <dt>Frais de service (1,25 %)</dt>
-        <dd className="text-right">{formaterPrix(commission)}</dd>
-        {mode === "livraison" && (
-          <>
-            <dt>Livraison</dt>
-            <dd className="text-right">{formaterPrix(livraison)}</dd>
-          </>
-        )}
-        <dt className="font-semibold">Total</dt>
-        <dd className="text-right font-semibold">{formaterPrix(prix + commission + livraison)}</dd>
+        <dt>{offre ? "Prix négocié de l'article" : "Prix de l'article"}</dt>
+        <dd className="text-right">{formaterPrix(montants.prixCentimes)}</dd>
+        <dt>Frais de service Troqly</dt>
+        <dd className="text-right">{formaterPrix(montants.fraisServiceCentimes)}</dd>
+        <dt>Livraison</dt>
+        <dd className="text-right">{mode === "livraison" ? formaterPrix(montants.livraisonCentimes) : "Main propre, gratuite"}</dd>
+        <dt className="font-semibold tracking-[-0.02em]">Total à payer</dt>
+        <dd className="text-right font-semibold tracking-[-0.02em]">{formaterPrix(montants.totalCentimes)}</dd>
       </dl>
 
       <button
@@ -111,8 +108,9 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, commiss
       >
         {offre ? `Acheter à ${formaterPrix(prix)}` : "Acheter"}
       </button>
+      <p className="text-xs text-mauve">{EXPLICATION_FRAIS}</p>
       <p className="text-xs text-mauve">
-        Paiement sécurisé par Stripe. Le vendeur n&apos;est payé qu&apos;après la remise ou la réception de l&apos;objet.
+        Paiement par carte via Stripe. Le vendeur n&apos;est payé qu&apos;après la remise ou la réception de l&apos;objet.
         {offre && ` Prix négocié valable jusqu'au ${new Date(offre.jusquAu).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Paris" })}.`}
       </p>
     </form>

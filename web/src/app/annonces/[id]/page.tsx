@@ -8,7 +8,7 @@ import { formaterDateRelative, formaterPrix, libellesStatut, urlPhoto, type Stat
 import { etatSchemaOrg, lignesCaracteristiques } from "@/lib/caracteristiques";
 import { creerClientServeur } from "@/lib/supabase/serveur";
 import { URL_SITE } from "@/lib/site";
-import { COMMISSION_BPS } from "@/lib/frais";
+import { BAREME } from "@/lib/frais";
 import { COLONNES_OFFRE, offreUtilisable, prixConvenu, type Offre } from "@/lib/offres";
 import { stripeConfigure } from "@/lib/stripe";
 import { Achat, type Tarif } from "./Achat";
@@ -271,7 +271,7 @@ export default async function PageAnnonce({ params, searchParams }: Params) {
                       offre={offreAcceptee}
                       mainPropre={annonce.main_propre}
                       tarifs={tarifs}
-                      commissionBps={COMMISSION_BPS}
+                      bareme={BAREME}
                     />
                   )}
                   {achetable && idMembre && !offreAcceptee && (

@@ -53,12 +53,13 @@ export function versCarte(l: LigneCarte): DonneesCarte {
     mainPropre: l.main_propre,
     livraison: l.livraison,
     creeLe: l.cree_le,
-    boostee: estBoostee(l.boost_jusqua),
+    // Une annonce réservée n'est plus mise en avant, même si son boost court encore
+    boostee: l.statut === "publiee" && estBoostee(l.boost_jusqua),
     photo: premiere ? urlPhoto(premiere.chemin) : null,
   };
 }
 
-// Une annonce est boostée tant que la date de fin du boost n'est pas passée
+// Une annonce est à la une tant que la date de fin du boost n'est pas passée
 export function estBoostee(jusqua: string | null, maintenant = Date.now()) {
   return jusqua !== null && Date.parse(jusqua) > maintenant;
 }

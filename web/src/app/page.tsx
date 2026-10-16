@@ -9,7 +9,7 @@ import { IconeChevron, IconeFleche, IconeLieu, IconeLoupe, IconePlus } from "@/c
 import { PiedDePage } from "@/components/PiedDePage";
 import { TitreSection } from "@/components/TitreSection";
 import { formaterPrix, SELECTION_CARTE, versCarte, type LigneCarte } from "@/lib/annonces";
-import { calculerFrais, COMMISSION_BPS } from "@/lib/frais";
+import { calculerFrais, libelleBareme } from "@/lib/frais";
 import { DESCRIPTION_SITE, NOM_SITE, URL_SITE } from "@/lib/site";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { creerClientServeur } from "@/lib/supabase/serveur";
@@ -21,11 +21,11 @@ async function chargerAccueil() {
     supabase.from("annonces").select(selection).eq("moderation", "visible").neq("statut", "vendue");
   const [{ data: categories }, { data: recentes }, { data: boostees }, { data: parCategorie }] = await Promise.all([
     supabase.from("categories").select("slug, libelle").order("ordre"),
-    visibles().order("cree_le", { ascending: false }).limit(12),
-    visibles().gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4),
+    visibles().order("remontee_le", { ascending: false }).limit(12),
+    visibles().eq("statut", "publiee").gt("boost_jusqua", new Date().toISOString()).order("boost_jusqua", { ascending: false }).limit(4),
     visibles(`${SELECTION_CARTE}, categorie`).order("cree_le", { ascending: false }).limit(80),
   ]);
-  // Une annonce boostée n'apparaît qu'une fois dans les grilles de l'accueil
+  // Une annonce à la une n'apparaît qu'une fois dans les grilles de l'accueil
   const enAvant = ((boostees ?? []) as unknown as LigneCarte[]).map(versCarte);
   const dejaAffichees = new Set(enAvant.map((a) => a.id));
 
@@ -59,7 +59,7 @@ const etapes = [
 const questions = [
   {
     q: "Combien coûte une vente sur Troqly ?",
-    r: "Déposer une annonce est gratuit. L'acheteur qui paie en ligne règle 1,25 % de frais de service. Le vendeur reçoit le prix moins les frais de paiement par carte, et le montant exact lui est affiché dans sa vente.",
+    r: `Déposer une annonce est gratuit. L'acheteur qui paie en ligne règle des frais de service Troqly de ${libelleBareme()} du prix de l'article, hors livraison. Le vendeur reçoit le prix de l'article en entier, sans commission. Une vente en main propre payée en dehors du site ne coûte rien.`,
   },
   {
     q: "Comment se passe une remise en main propre ?",
@@ -98,9 +98,9 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
   const vitrine = [...boostees, ...annonces]
     .filter((a) => a.photo)
     .slice(0, 5)
-    .map((a) => ({ id: a.id, titre: a.titre, prix: formaterPrix(a.prixCentimes), ville: a.ville, photo: a.photo! }));
+    .map((a) => ({ id: a.id, titre: a.titre, prix: formaterPrix(a.prixCentimes), ville: a.ville, photo: a.photo!, sponsorise: a.boostee }));
   const exemple = calculerFrais(10_000);
-  const taux = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(COMMISSION_BPS / 100);
+  const bareme = libelleBareme();
 
   return (
     <>
@@ -251,7 +251,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
 
           {boostees.length > 0 && (
             <section aria-labelledby="titre-boostees" className="revele grid gap-5 sm:gap-6">
-              <TitreSection id="titre-boostees" titre="Annonces boostées" />
+              <TitreSection id="titre-boostees" titre="À la une" />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {boostees.map((a, i) => (
                   <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 2} />
@@ -290,8 +290,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                   Ce que chacun paie, au centime près.
                 </h2>
                 <p className="max-w-[56ch] text-lg text-sur-champ-doux">
-                  Déposer une annonce ne coûte rien. Quand l&apos;acheteur paie en ligne, il règle {taux} % de frais de
-                  service, et c&apos;est tout ce que garde Troqly.
+                  Déposer une annonce ne coûte rien. Quand l&apos;acheteur paie en ligne, il règle des frais de service
+                  Troqly de {bareme} du prix de l&apos;article, et c&apos;est tout ce que garde Troqly.
                 </p>
               </div>
               <ol className="grid gap-4">
@@ -317,11 +317,11 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               </figcaption>
               <dl className="mt-5 grid gap-3 text-[15px] tabular-nums">
                 <div className="flex justify-between gap-4">
-                  <dt>Prix de l&apos;objet</dt>
+                  <dt>Prix de l&apos;article</dt>
                   <dd>{formaterPrix(exemple.prixCentimes).replace(/ €|\s€/, ",00 €")}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt>Frais de service ({taux} %)</dt>
+                  <dt>Frais de service Troqly</dt>
                   <dd>{auCentime(exemple.fraisServiceCentimes)}</dd>
                 </div>
                 <div className="flex justify-between gap-4 border-t border-dashed border-black/15 pt-3 text-lg font-semibold tracking-[-0.02em]">
@@ -330,9 +330,9 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                 </div>
               </dl>
               <p className="mt-5 text-sm leading-relaxed text-[#6b6867]">
-                Le vendeur reçoit {formaterPrix(exemple.prixCentimes)} moins les frais de carte bancaire. Le montant exact
-                lui est affiché dans sa vente. Pour un envoi en colis, la livraison s&apos;ajoute au prix payé par
-                l&apos;acheteur.
+                Frais de service : {bareme} du prix de l&apos;article. Le vendeur reçoit {formaterPrix(exemple.prixCentimes)},
+                sans commission. Pour un envoi en colis, la livraison s&apos;ajoute au prix payé par l&apos;acheteur,
+                sans frais de service dessus.
               </p>
             </figure>
           </section>

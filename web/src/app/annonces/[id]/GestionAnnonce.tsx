@@ -11,8 +11,8 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
   const dialogue = useRef<HTMLDialogElement>(null);
   const [ouvert, setOuvert] = useState(false);
 
-  const bouton =
-    "rounded-[10px] border border-ligne px-4 py-2 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune disabled:opacity-60";
+  // Commandes en pilules, comme partout dans la vitrine (DESIGN.md)
+  const bouton = "pilule text-sm font-medium disabled:opacity-60";
 
   return (
     <section className="grid gap-3 carte p-5" aria-label="Gérer mon annonce">
@@ -21,6 +21,11 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
         <Link href={`/annonces/${id}/modifier`} className={bouton}>
           Modifier
         </Link>
+        {statut === "publiee" && (
+          <Link href={`/annonces/${id}/booster`} className={bouton}>
+            Booster
+          </Link>
+        )}
         {(["publiee", "reservee", "vendue"] as const)
           .filter((s) => s !== statut)
           .map((s) => (

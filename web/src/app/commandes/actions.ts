@@ -133,8 +133,9 @@ export async function acheter(idAnnonce: string, formData: FormData) {
     .maybeSingle();
   if (!compteVendeur?.versements_actifs) retourErreur("vendeur");
 
-  const frais = calculerFrais(prix);
-  const livraison = tarif?.prix_centimes ?? 0;
+  // Un seul détail de commande pour la base, Stripe, le versement au vendeur et les remboursements.
+  // Les frais de service portent sur le prix de l'article seul, jamais sur la livraison.
+  const frais = calculerFrais(prix, tarif?.prix_centimes ?? 0);
   const { data: commande, error } = await admin
     .from("commandes")
     .insert({
@@ -144,8 +145,8 @@ export async function acheter(idAnnonce: string, formData: FormData) {
       vendeur: annonce.vendeur,
       prix_centimes: frais.prixCentimes,
       frais_service_centimes: frais.fraisServiceCentimes,
-      livraison_centimes: livraison,
-      total_centimes: frais.totalCentimes + livraison,
+      livraison_centimes: frais.livraisonCentimes,
+      total_centimes: frais.totalCentimes,
       mode_remise: mode,
       transporteur: tarif?.libelle ?? null,
       mode_livraison: tarif?.mode ?? null,
@@ -161,7 +162,7 @@ export async function acheter(idAnnonce: string, formData: FormData) {
     { quantity: 1, price_data: { currency: "eur", unit_amount: frais.prixCentimes, product_data: { name: annonce.titre } } },
     {
       quantity: 1,
-      price_data: { currency: "eur", unit_amount: frais.fraisServiceCentimes, product_data: { name: "Frais de service Troqly (1,25 %)" } },
+      price_data: { currency: "eur", unit_amount: frais.fraisServiceCentimes, product_data: { name: "Frais de service Troqly" } },
     },
   ];
   if (tarif) {
@@ -169,7 +170,7 @@ export async function acheter(idAnnonce: string, formData: FormData) {
       quantity: 1,
       price_data: {
         currency: "eur",
-        unit_amount: tarif.prix_centimes,
+        unit_amount: frais.livraisonCentimes,
         product_data: { name: `Livraison ${tarif.libelle} (${tarif.mode === "point_relais" ? "point relais" : "à domicile"})` },
       },
     });
