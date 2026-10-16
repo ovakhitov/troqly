@@ -15,7 +15,7 @@ export async function OffresRecues({ idAnnonce, prixCentimes }: { idAnnonce: str
   if (!offres.length) return null;
 
   return (
-    <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-5" aria-label="Offres reçues">
+    <section className="grid gap-3 carte p-5" aria-label="Offres reçues">
       <h2 className="font-titre text-base font-semibold text-prune-nuit">
         Offres reçues ({offres.length})
       </h2>

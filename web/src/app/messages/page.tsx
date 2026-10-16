@@ -64,7 +64,7 @@ export default async function PageMessages() {
         <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Messages</h1>
 
         {conversations.length === 0 ? (
-          <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
+          <div className="grid justify-items-start gap-3 carte p-8">
             <p className="font-titre text-lg font-semibold text-prune-nuit">Aucune conversation pour l&apos;instant.</p>
             <p className="text-mauve">Pour écrire à un vendeur, ouvrez une annonce et cliquez sur « Contacter le vendeur ».</p>
             <Link href="/annonces" className="font-semibold text-prune hover:underline">
@@ -72,7 +72,7 @@ export default async function PageMessages() {
             </Link>
           </div>
         ) : (
-          <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+          <ul className="grid overflow-hidden carte">
             {conversations.map((c) => {
               const autre = c.acheteur === moi ? c.vendeur_profil?.pseudo : c.acheteur_profil?.pseudo;
               const apercu = apercus.get(c.id);

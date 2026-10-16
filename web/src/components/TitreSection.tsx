@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { IconeFleche } from "./Icones";
+import { IconeChevron } from "./Icones";
 
-// Titre de section, avec un lien « tout voir » à droite
+// Titre de section serré. Avec un lien, le titre entier mène à « tout voir », suivi d'un chevron.
 export function TitreSection({
   titre,
   lien,
@@ -12,17 +12,14 @@ export function TitreSection({
   id?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-      <h2 id={id} className="font-titre text-[1.75rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit sm:text-3xl">
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+      <h2 id={id} className="text-[1.375rem] leading-tight font-semibold tracking-[-0.04em] text-balance text-prune-nuit sm:text-[1.625rem]">
         {titre}
       </h2>
       {lien && (
-        <Link
-          href={lien.href}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-prune underline-offset-4 hover:underline"
-        >
+        <Link href={lien.href} className="pilule min-h-9 px-3.5 text-sm font-medium">
           {lien.libelle}
-          <IconeFleche className="size-4" />
+          <IconeChevron className="size-3.5" />
         </Link>
       )}
     </div>

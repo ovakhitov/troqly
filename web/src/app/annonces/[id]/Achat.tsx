@@ -35,7 +35,7 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, bareme 
   const montants = calculerFrais(prix, tarif?.prix_centimes ?? 0, bareme);
 
   return (
-    <form action={action} className="grid gap-3 rounded-champ border border-ligne bg-ivoire p-4">
+    <form action={action} className="grid gap-3 rounded-photo bg-ivoire p-4">
       {offre && <input type="hidden" name="offre" value={offre.id} />}
 
       {mainPropre && tarifs.length > 0 ? (
@@ -98,8 +98,8 @@ export function Achat({ action, prixCentimes, offre, mainPropre, tarifs, bareme 
         <dd className="text-right">{formaterPrix(montants.fraisServiceCentimes)}</dd>
         <dt>Livraison</dt>
         <dd className="text-right">{mode === "livraison" ? formaterPrix(montants.livraisonCentimes) : "Main propre, gratuite"}</dd>
-        <dt className="font-semibold">Total à payer</dt>
-        <dd className="text-right font-semibold">{formaterPrix(montants.totalCentimes)}</dd>
+        <dt className="font-semibold tracking-[-0.02em]">Total à payer</dt>
+        <dd className="text-right font-semibold tracking-[-0.02em]">{formaterPrix(montants.totalCentimes)}</dd>
       </dl>
 
       <button

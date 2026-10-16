@@ -11,11 +11,11 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
   const dialogue = useRef<HTMLDialogElement>(null);
   const [ouvert, setOuvert] = useState(false);
 
-  const bouton =
-    "rounded-[10px] border border-ligne px-4 py-2 text-sm font-semibold text-prune-nuit transition-colors duration-200 hover:border-prune disabled:opacity-60";
+  // Commandes en pilules, comme partout dans la vitrine (DESIGN.md)
+  const bouton = "pilule text-sm font-medium disabled:opacity-60";
 
   return (
-    <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-5" aria-label="Gérer mon annonce">
+    <section className="grid gap-3 carte p-5" aria-label="Gérer mon annonce">
       <h2 className="font-titre text-base font-semibold text-prune-nuit">Gérer mon annonce</h2>
       <div className="flex flex-wrap gap-2">
         <Link href={`/annonces/${id}/modifier`} className={bouton}>
@@ -51,7 +51,7 @@ export function GestionAnnonce({ id, statut }: { id: string; statut: StatutAnnon
         ref={dialogue}
         onClose={() => setOuvert(false)}
         aria-labelledby={`suppression-${id}`}
-        className="m-auto max-w-sm rounded-carte border border-ligne bg-surface p-6 text-prune-nuit backdrop:bg-black/40"
+        className="m-auto max-w-sm carte p-6 text-prune-nuit backdrop:bg-black/40"
       >
         {ouvert && (
           <div className="grid gap-4">

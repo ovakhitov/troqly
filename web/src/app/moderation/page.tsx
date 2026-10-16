@@ -130,7 +130,7 @@ async function Signalements() {
   return (
     <ul className="grid gap-3">
       {signalements.map((s) => (
-        <li key={s.id} className="grid gap-3 rounded-carte border border-ligne bg-surface p-4">
+        <li key={s.id} className="grid gap-3 carte p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="font-titre font-semibold text-prune-nuit">
               {MOTIFS[s.motif] ?? s.motif}
@@ -186,7 +186,7 @@ async function Masquees() {
   return (
     <ul className="grid gap-3">
       {annonces.map((a) => (
-        <li key={a.id} className="grid gap-3 rounded-carte border border-ligne bg-surface p-4">
+        <li key={a.id} className="grid gap-3 carte p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <Link href={`/annonces/${a.id}`} className="font-titre font-semibold text-prune hover:underline">
               {a.titre}
@@ -228,7 +228,7 @@ async function Membres({ recherche, estAdmin }: { recherche?: string; estAdmin: 
       {!membres.length ? (
         <Vide texte="Aucun membre trouvé." />
       ) : (
-        <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+        <ul className="grid overflow-hidden carte">
           {membres.map((m) => (
             <li key={m.id} className="grid gap-2 border-b border-ligne p-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center">
               <div className="grid gap-0.5">
@@ -301,7 +301,7 @@ async function Journal() {
 
   const date = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Paris" });
   return (
-    <div className="overflow-x-auto rounded-carte border border-ligne bg-surface">
+    <div className="overflow-x-auto carte">
       <table className="w-full text-left text-sm">
         <thead className="text-xs tracking-wider text-mauve uppercase">
           <tr>
@@ -332,7 +332,7 @@ async function Journal() {
 }
 
 function Vide({ texte }: { texte: string }) {
-  return <p className="rounded-carte border border-ligne bg-surface p-6 text-mauve">{texte}</p>;
+  return <p className="carte p-6 text-mauve">{texte}</p>;
 }
 
 async function Tarifs() {
@@ -358,7 +358,7 @@ async function Tarifs() {
         Prix d&apos;envoi proposés aux acheteurs, payés par eux et reversés au vendeur. Vérifiez-les sur les grilles des
         transporteurs avant la mise en ligne.
       </p>
-      <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+      <ul className="grid overflow-hidden carte">
         {tarifs.map((t) => (
           <li key={t.id} className="border-b border-ligne p-4 last:border-b-0">
             <form action={modifierTarif.bind(null, t.id)} className="flex flex-wrap items-center gap-3">

@@ -71,7 +71,7 @@ export default async function PageConversation({ params }: { params: Promise<{ i
           Toutes les conversations
         </Link>
 
-        <header className="flex flex-wrap items-center justify-between gap-3 rounded-carte border border-ligne bg-surface p-4">
+        <header className="flex flex-wrap items-center justify-between gap-3 carte p-4">
           <div className="grid min-w-0 gap-0.5">
             <h1 className="font-titre text-xl font-semibold text-prune-nuit">{pseudoAutre}</h1>
             {conversation.annonces ? (
@@ -89,7 +89,7 @@ export default async function PageConversation({ params }: { params: Promise<{ i
           </form>
         </header>
 
-        <ol className="grid gap-2 rounded-carte border border-ligne bg-surface p-4" aria-label="Messages">
+        <ol className="grid gap-2 carte p-4" aria-label="Messages">
           {(messages ?? []).length === 0 && (
             <li className="text-sm text-mauve">Présentez-vous et posez vos questions sur l&apos;objet.</li>
           )}

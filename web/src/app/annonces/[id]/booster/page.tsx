@@ -106,11 +106,11 @@ export default async function PageBooster({
           const offre = FORMULES[f];
           const raison = !paiementsOuverts ? "indisponible" : empechements[i];
           return (
-            <li key={f} className="grid gap-3 rounded-champ border border-ligne p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <li key={f} className="grid gap-3 rounded-photo bg-ivoire p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="grid gap-1">
-                <h2 className="font-titre text-lg font-semibold text-prune-nuit">{offre.nom}</h2>
+                <h2 className="text-lg font-medium tracking-[-0.02em] text-prune-nuit">{offre.nom}</h2>
                 <p className="text-sm text-mauve">{offre.description}</p>
-                <p className="text-sm font-semibold text-prune-nuit">
+                <p className="text-sm font-medium text-prune-nuit tabular-nums">
                   {formaterPrix(offre.prixCentimes)} · {offre.duree}
                 </p>
               </div>
@@ -139,14 +139,14 @@ export default async function PageBooster({
 
       {achats.length > 0 && (
         <section className="grid gap-2 border-t border-ligne pt-5" aria-labelledby="titre-historique">
-          <h2 id="titre-historique" className="font-titre text-base font-semibold text-prune-nuit">
+          <h2 id="titre-historique" className="text-base font-medium tracking-[-0.02em] text-prune-nuit">
             Boosts de cette annonce
           </h2>
           <ul className="grid gap-2 text-sm text-prune-nuit">
             {achats.map((a) => (
               <li key={a.id} className="grid gap-0.5">
                 <span>
-                  <strong className="font-semibold">{FORMULES[a.formule].nom}</strong> · {formaterPrix(a.prix_centimes)} ·{" "}
+                  <span className="font-medium">{FORMULES[a.formule].nom}</span> · {formaterPrix(a.prix_centimes)} ·{" "}
                   {libellesStatutBoost[a.statut]}
                 </span>
                 <span className="text-xs text-mauve">
