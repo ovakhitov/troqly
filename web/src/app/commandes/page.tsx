@@ -64,9 +64,9 @@ function Liste({
     <section className="grid gap-3">
       <h2 className="font-titre text-xl font-semibold text-prune-nuit">{titre}</h2>
       {commandes.length === 0 ? (
-        <p className="rounded-carte border border-ligne bg-surface p-5 text-mauve">{vide}</p>
+        <p className="carte p-5 text-mauve">{vide}</p>
       ) : (
-        <ul className="grid overflow-hidden rounded-carte border border-ligne bg-surface">
+        <ul className="grid overflow-hidden carte">
           {commandes.map((c) => (
             <li key={c.id} className="border-b border-ligne last:border-b-0">
               <Link href={`/commandes/${c.id}`} className="flex items-center justify-between gap-4 p-4 hover:bg-ivoire">

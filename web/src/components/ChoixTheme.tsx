@@ -44,7 +44,7 @@ export function ChoixTheme({ className = "" }: { className?: string }) {
       onClick={basculer}
       aria-label={sombre ? "Passer en mode clair" : "Passer en mode sombre"}
       title={sombre ? "Mode clair" : "Mode sombre"}
-      className={`grid size-11 shrink-0 place-items-center rounded-champ transition-colors duration-150 ${className}`}
+      className={`grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-150 ${className}`}
     >
       {/* Avant l'hydratation, l'icône suit le thème par la feuille de style */}
       <IconeLune className={`size-5 ${theme === null ? "dark-cache" : sombre ? "hidden" : ""}`} />

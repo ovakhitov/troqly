@@ -76,7 +76,7 @@ export default async function PageBoutique({ params }: Params) {
     <div className="flex min-h-screen flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <EnTete />
-      <main id="contenu" className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-8 px-4 pt-7 pb-20 sm:pt-10">
+      <main id="contenu" className="mx-auto grid w-full max-w-[75rem] flex-1 content-start gap-8 px-4 pt-7 pb-20 sm:pt-10">
         <header className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:gap-6">
           <span
             className="grid size-16 place-items-center rounded-full bg-champ font-titre text-2xl font-semibold text-sur-champ uppercase sm:size-20 sm:text-3xl"
@@ -110,7 +110,7 @@ export default async function PageBoutique({ params }: Params) {
             )}
           </div>
           {annonces.length ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {annonces.map((a, i) => (
                 <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 2} />
               ))}

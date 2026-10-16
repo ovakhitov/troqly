@@ -157,7 +157,7 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
   return (
     <>
       <EnTete />
-      <main id="contenu" className="mx-auto grid max-w-6xl gap-8 px-4 pt-8 pb-24 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
+      <main id="contenu" className="mx-auto grid max-w-[75rem] gap-8 px-4 pt-8 pb-24 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
         <div className="grid gap-1 lg:col-span-2">
           <h1 className="font-titre text-[2rem] leading-tight font-semibold tracking-tight text-balance text-prune-nuit sm:text-[2.5rem]">
             {q ? `Résultats pour « ${q} »` : "Toutes les annonces"}
@@ -174,7 +174,7 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
         <aside className="hidden lg:block">
           <div className="sticky top-24">{filtres("")}</div>
         </aside>
-        <details className="group rounded-carte border border-ligne bg-surface lg:hidden">
+        <details className="group carte lg:hidden">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 font-semibold text-prune-nuit [&::-webkit-details-marker]:hidden">
             <span>
               Filtres et tri
@@ -203,7 +203,7 @@ export default async function PageAnnonces({ searchParams }: { searchParams: Pro
         ) : (
           <>
             <h2 className="sr-only">Résultats</h2>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {annonces.map((a, i) => (
                 <CarteAnnonce key={a.id} annonce={a} prioritaire={i < 4} />
               ))}

@@ -1,94 +1,134 @@
 @import "tailwindcss";
 
 /*
-  Direction « étiquette de vide-grenier » : le prune reste la couleur de marque,
-  les prix sont écrits sur des étiquettes de papier, le verre est réservé à ce qui flotte
-  (barre du haut, recherche). Thème clair par défaut, sombre selon le système
-  ou le choix enregistré (attribut data-theme posé avant l'affichage).
+  Direction « vitrine flottante » (refonte du 16/10/2026), d'après la référence Shop choisie par Ouva :
+  fond gris très clair, surfaces blanches qui flottent par l'ombre seule, rayons généreux (28 px pour
+  les cartes, pilules pour les commandes), une seule famille de caractères serrée, et la prune comme
+  unique couleur vive. Le verre est réservé à ce qui flotte (barre du haut, barre d'onglets, objet 3D).
+  Les noms de variables viennent de la direction précédente et sont gardés pour ne rien casser :
+  « prune-nuit » est l'encre, « mauve » le texte secondaire, « ivoire » le fond, « abricot » l'accent vif.
 */
 :root {
-  --ivoire: #f2f0f3;
+  --ivoire: #f2f4f5;
   --surface: #ffffff;
-  --creux: #e9e5ea;
-  --ligne: #ddd6de;
+  --creux: #e8eaec;
+  --ligne: #ebebeb;
+  /* Bord des champs de saisie : plus marqué que les filets, pour qu'on voie où écrire */
+  --bord-champ: #a9a7a6;
   --prune: #5a2a5a;
-  --prune-nuit: #1f1421;
-  --mauve: #66566a;
-  --abricot: #b8461f;
+  --prune-nuit: #0f0f10;
+  --mauve: #6b6867;
+  --abricot: #7b3a7d;
   --statut: #1f7a4d;
   /* Tableau de bord : argent en cours (bleu) et litiges (rouge) */
   --info: #2f6bd8;
   --alerte: #c23a2f;
   --action: #5a2a5a;
-  --action-survol: #431d45;
+  --action-survol: #47204a;
   --sur-action: #ffffff;
-  /* Grand aplat de marque (accueil, pied de page) */
-  --champ: #3b1840;
-  --sur-champ: #f8eff8;
-  --sur-champ-doux: #d8c3dc;
-  /* Papier des étiquettes : il reste clair même la nuit */
-  --papier: #fffaf1;
-  --encre-papier: #1f1421;
-  --verre: rgba(255, 255, 255, 0.62);
-  --verre-fort: rgba(255, 255, 255, 0.86);
-  --verre-bord: rgba(255, 255, 255, 0.72);
-  --ombre: 0 1px 2px rgba(31, 20, 33, 0.06), 0 12px 32px -12px rgba(31, 20, 33, 0.22);
+  /* Bande sombre du pied de page */
+  --champ: #111112;
+  --sur-champ: #f5f5f5;
+  --sur-champ-doux: #a8a5a4;
+  /* Pastille de prix posée sur les photos : claire dans les deux thèmes */
+  --papier: #ffffff;
+  --encre-papier: #0f0f10;
+  --neon-couleur: #b257b5;
+  --verre: rgba(255, 255, 255, 0.72);
+  --verre-fort: rgba(255, 255, 255, 0.9);
+  --verre-bord: rgba(255, 255, 255, 0.85);
+  /* Élévations de la référence : double ombre douce, ombre de pilule, ombre large, ombre teintée prune */
+  --ombre: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+  --ombre-douce: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --ombre-large: 0 4px 24px rgba(0, 0, 0, 0.12);
+  --ombre-action: 0 4px 24px rgba(90, 42, 90, 0.34);
+  --r-carte: 28px;
+  --r-photo: 20px;
+  --r-champ: 16px;
+  --r-bouton: 9999px;
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --ivoire: #141016;
-  --surface: #1d171f;
-  --creux: #262028;
-  --ligne: #372d39;
-  --prune: #e4b9e4;
-  --prune-nuit: #f2eaf2;
-  --mauve: #b4a3b6;
-  --abricot: #ff8a5b;
+  --ivoire: #0e0f10;
+  --surface: #18191b;
+  --creux: #232427;
+  --ligne: #2b2c2f;
+  --bord-champ: #5c5a5a;
+  --prune: #dcb0de;
+  --prune-nuit: #f3f3f4;
+  --mauve: #a3a09f;
+  --abricot: #e3a6e5;
   --statut: #5fd39a;
   --info: #5b8def;
   --alerte: #e85a4f;
-  --action: #e7c3e8;
-  --action-survol: #f3dcf3;
-  --sur-action: #1f1421;
-  --champ: #29132d;
-  --sur-champ: #f8eff8;
-  --sur-champ-doux: #cdb3d1;
-  --papier: #f4ecdf;
-  --encre-papier: #1f1421;
-  --verre: rgba(36, 26, 38, 0.66);
-  --verre-fort: rgba(29, 23, 31, 0.88);
-  --verre-bord: rgba(255, 255, 255, 0.1);
-  --ombre: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 36px -14px rgba(0, 0, 0, 0.7);
+  --action: #e2bde3;
+  --action-survol: #efd5f0;
+  --sur-action: #1a0f1b;
+  --champ: #050506;
+  --sur-champ: #f3f3f4;
+  --sur-champ-doux: #9c9998;
+  --papier: #ffffff;
+  --encre-papier: #0f0f10;
+  --neon-couleur: #e09be2;
+  --verre: rgba(28, 29, 31, 0.7);
+  --verre-fort: rgba(24, 25, 27, 0.9);
+  --verre-bord: rgba(255, 255, 255, 0.08);
+  --ombre: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --ombre-douce: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --ombre-large: 0 4px 24px rgba(0, 0, 0, 0.55);
+  --ombre-action: 0 4px 24px rgba(226, 189, 227, 0.28);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ivoire: #141016;
-    --surface: #1d171f;
-    --creux: #262028;
-    --ligne: #372d39;
-    --prune: #e4b9e4;
-    --prune-nuit: #f2eaf2;
-    --mauve: #b4a3b6;
-    --abricot: #ff8a5b;
+    --ivoire: #0e0f10;
+    --surface: #18191b;
+    --creux: #232427;
+    --ligne: #2b2c2f;
+    --bord-champ: #5c5a5a;
+    --prune: #dcb0de;
+    --prune-nuit: #f3f3f4;
+    --mauve: #a3a09f;
+    --abricot: #e3a6e5;
     --statut: #5fd39a;
     --info: #5b8def;
     --alerte: #e85a4f;
-    --action: #e7c3e8;
-    --action-survol: #f3dcf3;
-    --sur-action: #1f1421;
-    --champ: #29132d;
-    --sur-champ: #f8eff8;
-    --sur-champ-doux: #cdb3d1;
-    --papier: #f4ecdf;
-    --encre-papier: #1f1421;
-    --verre: rgba(36, 26, 38, 0.66);
-    --verre-fort: rgba(29, 23, 31, 0.88);
-    --verre-bord: rgba(255, 255, 255, 0.1);
-    --ombre: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 36px -14px rgba(0, 0, 0, 0.7);
+    --action: #e2bde3;
+    --action-survol: #efd5f0;
+    --sur-action: #1a0f1b;
+    --champ: #050506;
+    --sur-champ: #f3f3f4;
+    --sur-champ-doux: #9c9998;
+    --papier: #ffffff;
+    --encre-papier: #0f0f10;
+    --neon-couleur: #e09be2;
+    --verre: rgba(28, 29, 31, 0.7);
+    --verre-fort: rgba(24, 25, 27, 0.9);
+    --verre-bord: rgba(255, 255, 255, 0.08);
+    --ombre: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+    --ombre-douce: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --ombre-large: 0 4px 24px rgba(0, 0, 0, 0.55);
+    --ombre-action: 0 4px 24px rgba(226, 189, 227, 0.28);
     color-scheme: dark;
+  }
+}
+
+/* Le tableau de bord garde ses rayons et son orange d'origine (choisis par Ouva le 15/10/2026) */
+.coque-admin {
+  --r-carte: 18px;
+  --r-photo: 14px;
+  --r-champ: 12px;
+  --r-bouton: 12px;
+  --abricot: #b8461f;
+}
+:root[data-theme="dark"] .coque-admin {
+  --abricot: #ff8a5b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .coque-admin {
+    --abricot: #ff8a5b;
   }
 }
 
@@ -112,11 +152,16 @@
   --color-encre-papier: var(--encre-papier);
   --color-sur-champ: var(--sur-champ);
   --color-sur-champ-doux: var(--sur-champ-doux);
-  --font-titre: var(--ff-general), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --radius-carte: 18px;
-  --radius-photo: 14px;
-  --radius-champ: 12px;
+  /* Une seule famille partout : Hanken Grotesk, gratuite et proche de GT Standard */
+  --font-titre: var(--ff-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--ff-hanken), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-carte: var(--r-carte);
+  --radius-photo: var(--r-photo);
+  --radius-champ: var(--r-champ);
+  --shadow-carte: var(--ombre);
+  --shadow-douce: var(--ombre-douce);
+  --shadow-large: var(--ombre-large);
+  --shadow-action: var(--ombre-action);
   --ease-verre: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -128,12 +173,20 @@ html {
 body {
   background: var(--ivoire);
   color: var(--prune-nuit);
-  caret-color: var(--abricot);
+  caret-color: var(--action);
   accent-color: var(--action);
+  letter-spacing: -0.011em;
+}
+
+/* Les grands textes se serrent, les petits respirent : la hiérarchie passe par l'approche, pas par le gras */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.025em;
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--abricot) 32%, transparent);
+  background: color-mix(in oklab, var(--abricot) 26%, transparent);
   color: inherit;
 }
 
@@ -142,13 +195,13 @@ a {
   text-decoration-thickness: 1px;
 }
 
-/* Surface de verre : barre du haut, recherche posée sur l'aplat prune */
+/* Surface de verre : barre du haut et barre d'onglets, qui flottent au-dessus du contenu */
 @utility verre {
   background: var(--verre);
   border: 1px solid var(--verre-bord);
-  box-shadow: var(--ombre), inset 0 1px 0 var(--verre-bord);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: var(--ombre-large), inset 0 1px 0 var(--verre-bord);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
 }
 
 /* Verre plus opaque pour un texte posé sur une photo */
@@ -166,46 +219,90 @@ a {
   }
 }
 
-/*
-  Étiquette de prix : papier, bout taillé en pointe et trou de ficelle.
-  Le trou laisse voir ce qu'il y a dessous (photo ou fond).
-*/
+/* Carte flottante : surface blanche détachée du fond par l'ombre seule, sans bordure */
+@utility carte {
+  background: var(--surface);
+  border-radius: var(--r-carte);
+  box-shadow: var(--ombre);
+}
+
+/* Pastille de prix posée en bas à gauche d'une photo */
 @utility etiquette {
   display: inline-flex;
   align-items: center;
-  padding: 0.3em 0.75em 0.3em 1.45em;
-  background: radial-gradient(circle at 0.72em 50%, transparent 0.2em, var(--papier) calc(0.2em + 0.5px));
+  padding: 0.28em 0.7em;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--papier) 92%, transparent);
   color: var(--encre-papier);
-  font-family: var(--font-titre);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
   line-height: 1.2;
-  clip-path: polygon(0.55em 0, 100% 0, 100% 100%, 0.55em 100%, 0 50%);
-  filter: drop-shadow(0 1px 1.5px rgba(31, 20, 33, 0.25));
+  box-shadow: var(--ombre-douce);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
-/* Boutons */
+/* Pilule de catégorie ou de filtre */
+@utility pilule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--ligne);
+  background: var(--surface);
+  color: var(--prune-nuit);
+  box-shadow: var(--ombre-douce);
+  white-space: nowrap;
+  transition: border-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
+  &:hover {
+    border-color: var(--bord-champ);
+    box-shadow: var(--ombre-large);
+    translate: 0 -2px;
+  }
+  &:active {
+    scale: 0.97;
+    translate: 0 0;
+  }
+}
+
+/* Boutons : des pilules qui réagissent. Reflet clair en haut, ombre prune qui s'allume au survol,
+   léger soulèvement, enfoncement au clic ; une flèche (.fleche) glisse vers la droite. */
 @utility bouton {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0 1.25rem;
-  border-radius: var(--radius-champ);
+  border-radius: var(--r-bouton);
   background: var(--action);
   color: var(--sur-action);
-  font-weight: 600;
-  transition: background-color 160ms var(--ease-verre), transform 160ms var(--ease-verre);
+  font-weight: 500;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  transition: background-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
+  & .fleche {
+    transition: translate 250ms var(--ease-verre);
+  }
   &:hover {
     background: var(--action-survol);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--ombre-action);
+    translate: 0 -1px;
+  }
+  &:hover .fleche {
+    translate: 3px 0;
   }
   &:active {
-    transform: scale(0.98);
+    scale: 0.97;
+    translate: 0 0;
   }
   &:disabled {
     opacity: 0.6;
-    transform: none;
+    translate: none;
+    scale: none;
   }
 }
 
@@ -216,17 +313,21 @@ a {
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0 1.25rem;
-  border-radius: var(--radius-champ);
+  border-radius: var(--r-bouton);
   border: 1px solid var(--ligne);
   background: var(--surface);
   color: var(--prune-nuit);
-  font-weight: 600;
-  transition: border-color 160ms var(--ease-verre), transform 160ms var(--ease-verre);
+  font-weight: 500;
+  box-shadow: var(--ombre-douce);
+  transition: border-color 200ms var(--ease-verre), box-shadow 300ms var(--ease-verre), translate 200ms var(--ease-verre), scale 160ms var(--ease-verre);
   &:hover {
-    border-color: var(--prune);
+    border-color: var(--bord-champ);
+    box-shadow: var(--ombre-large);
+    translate: 0 -1px;
   }
   &:active {
-    transform: scale(0.98);
+    scale: 0.97;
+    translate: 0 0;
   }
 }
 
@@ -235,8 +336,11 @@ a {
   outline-offset: 2px;
 }
 
-/* Champs de saisie : pas de contour orange au toucher. Le bord du champ passe en prune
-   et s'épaissit ; les recherches sans bord le montrent sur leur cadre (focus-within). */
+/* Champs de saisie : un bord gris lisible, qui passe en prune au focus (pas de contour au toucher).
+   Les recherches sans bord le montrent sur leur cadre (focus-within). */
+:is(input:not([type="checkbox"], [type="radio"]), textarea, select).border-ligne {
+  border-color: var(--bord-champ);
+}
 :is(input:not([type="checkbox"], [type="radio"]), textarea, select):focus-visible {
   outline: none;
 }
@@ -280,17 +384,107 @@ a {
   }
 }
 
-/* Ticket de caisse : bord inférieur dentelé */
-.ticket {
-  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+/* Coque façon Shop sur grand écran : le rail d'icônes à gauche, la page posée dessus comme une grande feuille.
+   Ne s'applique qu'aux pages qui affichent le rail (pas au tableau de bord). */
+@media (min-width: 1024px) {
+  .coquille:has(.rail-site) {
+    margin: 0.625rem 0.625rem 0.625rem 4.5rem;
+    min-height: calc(100vh - 1.25rem);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: var(--ombre-douce), 0 0 0 1px var(--ligne);
+    overflow: clip;
+  }
+}
+
+/* Bulle du rail : le libellé sort à droite de l'icône au survol et au clavier */
+.bulle-rail::after {
+  content: attr(data-libelle);
+  position: absolute;
+  left: calc(100% + 0.625rem);
+  top: 50%;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  background: var(--prune-nuit);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  translate: -4px -50%;
+  transition: opacity 160ms var(--ease-verre), translate 160ms var(--ease-verre);
+  z-index: 50;
+}
+.bulle-rail:hover::after,
+.bulle-rail:focus-visible::after {
+  opacity: 1;
+  translate: 0 -50%;
+}
+
+/* Arrivée des éléments de la vitrine : ils montent, se précisent et se posent, l'un après l'autre */
+.arrivee {
+  animation: arrivee 1s var(--ease-verre) both;
+  animation-delay: var(--arrivee-delai, 0ms);
+}
+@keyframes arrivee {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+    scale: 0.92;
+    filter: blur(8px);
+  }
+}
+
+/* Apparition au défilement : chaque section glisse doucement en entrant dans l'écran (sans JavaScript) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revele {
+      animation: revele linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+    @keyframes revele {
+      from {
+        opacity: 0;
+        translate: 0 36px;
+        scale: 0.98;
+      }
+    }
+  }
+}
+
+/* Constellation de l'accueil : les cartes flottent doucement, chacune à son rythme */
+.flotte {
+  animation: flotte 7s ease-in-out infinite alternate;
+  animation-delay: var(--flotte-depart, 0s);
+}
+@keyframes flotte {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flotte,
+  .arrivee {
+    animation: none;
+  }
+}
+
+/* Lettrage géant de la vitrine : la prune avec un léger relief de verre */
+.lettrage {
+  color: var(--prune);
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--prune) 60%, white), 0 18px 40px color-mix(in oklab, var(--prune) 28%, transparent);
 }
 
 /* Bordure néon des annonces boostées (composant BordureNeon).
    Une lumière à traîne fait le tour de la photo : deux halos flous derrière, un trait net devant.
    Seule une rotation est animée, ce qui reste léger pour le téléphone. */
 .neon {
-  --neon: var(--abricot);
+  --neon: var(--neon-couleur);
   --neon-trait: 3px;
   position: relative;
   border-radius: var(--radius-photo);

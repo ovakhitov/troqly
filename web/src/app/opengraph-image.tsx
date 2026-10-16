@@ -16,30 +16,30 @@ export default function ImagePartage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "#3b1840",
-          color: "#f8eff8",
+          background: "#f2f4f5",
+          color: "#0f0f10",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 44, fontWeight: 700 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 44, fontWeight: 600 }}>
           <svg width="56" height="56" viewBox="0 0 26 26">
-            <path d="M8 7.5a5.5 5.5 0 1 0 0 11h10a5.5 5.5 0 1 0 0-11" fill="none" stroke="#f8eff8" strokeWidth="2.4" strokeLinecap="round" />
-            <path d="M15.5 4.5l3 3-3 3" fill="none" stroke="#f8eff8" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M8 7.5a5.5 5.5 0 1 0 0 11h10a5.5 5.5 0 1 0 0-11" fill="none" stroke="#5a2a5a" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M15.5 4.5l3 3-3 3" fill="none" stroke="#5a2a5a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Troqly
         </div>
-        <div style={{ display: "flex", fontSize: 76, fontWeight: 700, lineHeight: 1.05, letterSpacing: -2, maxWidth: 900 }}>
+        <div style={{ display: "flex", fontSize: 76, fontWeight: 600, lineHeight: 1.04, letterSpacing: -3, maxWidth: 900 }}>
           Ce qui dort au grenier cherche preneur à deux rues d&apos;ici.
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 30, color: "#d8c3dc" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 30, color: "#6b6867" }}>
           <span
             style={{
               display: "flex",
-              background: "#fffaf1",
-              color: "#1f1421",
-              padding: "8px 22px",
-              borderRadius: 8,
-              fontWeight: 700,
-              transform: "rotate(-3deg)",
+              background: "#5a2a5a",
+              color: "#ffffff",
+              padding: "10px 26px",
+              borderRadius: 9999,
+              fontWeight: 600,
+              boxShadow: "0 4px 24px rgba(90, 42, 90, 0.34)",
             }}
           >
             Main propre ou colis

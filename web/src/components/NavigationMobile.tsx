@@ -21,7 +21,7 @@ export function NavigationMobile({ connecte, nonLus }: { connecte: boolean; nonL
   return (
     <nav
       aria-label="Navigation principale"
-      className="verre-fort fixed inset-x-0 bottom-0 z-40 border-x-0 border-b-0 sm:hidden"
+      className="verre fixed inset-x-0 bottom-0 z-40 rounded-t-[24px] border-b-0 sm:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <ul className="mx-auto grid h-16 max-w-md grid-cols-5">
@@ -32,18 +32,20 @@ export function NavigationMobile({ connecte, nonLus }: { connecte: boolean; nonL
               <Link
                 href={href}
                 aria-current={courant ? "page" : undefined}
-                className={`relative grid place-items-center content-center gap-0.5 text-[11px] font-semibold ${
-                  courant ? "text-prune" : "text-mauve"
+                className={`relative grid place-items-center content-center gap-0.5 text-[11px] font-medium ${
+                  courant ? "text-prune-nuit" : "text-mauve"
                 }`}
               >
                 <span
-                  className={`grid size-8 place-items-center rounded-full ${principal ? "bg-action text-sur-action" : ""}`}
+                  className={`grid h-8 w-12 place-items-center rounded-full transition-colors duration-150 ${
+                    principal ? "bg-action text-sur-action shadow-action" : courant ? "bg-creux" : ""
+                  }`}
                 >
                   <Icone className={principal ? "size-3.5" : "size-[22px]"} />
                 </span>
                 {libelle}
                 {Boolean(badge) && (
-                  <span className="absolute top-1 left-1/2 ml-1.5 inline-grid min-w-4.5 place-items-center rounded-full bg-abricot px-1 text-[10px] leading-4.5 font-bold text-white tabular-nums">
+                  <span className="absolute top-1 left-1/2 ml-1.5 inline-grid min-w-4.5 place-items-center rounded-full bg-action px-1 text-[10px] leading-4.5 font-semibold text-sur-action tabular-nums">
                     <span className="sr-only">, non lus : </span>
                     {badge! > 99 ? "99+" : badge}
                   </span>

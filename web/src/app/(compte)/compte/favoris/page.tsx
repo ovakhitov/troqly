@@ -30,7 +30,7 @@ export default async function PageFavoris() {
   return (
     <div className="flex min-h-screen flex-col">
       <EnTete />
-      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-6xl gap-6 px-4 pt-8 pb-20">
+      <main id="contenu" className="w-full flex-1 mx-auto grid max-w-[75rem] gap-6 px-4 pt-8 pb-20">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-titre text-3xl font-semibold tracking-tight text-prune-nuit">Mes favoris</h1>
           <Link href="/compte" className="text-sm font-semibold text-prune hover:underline">
@@ -38,7 +38,7 @@ export default async function PageFavoris() {
           </Link>
         </div>
         {annonces.length === 0 ? (
-          <div className="grid justify-items-start gap-3 rounded-carte border border-ligne bg-surface p-8">
+          <div className="grid justify-items-start gap-3 carte p-8">
             <p className="font-titre text-lg font-semibold text-prune-nuit">Aucun favori pour l&apos;instant.</p>
             <p className="text-mauve">Sur une annonce, cliquez sur « Ajouter aux favoris » pour la retrouver ici.</p>
           </div>

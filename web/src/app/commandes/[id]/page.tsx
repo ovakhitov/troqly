@@ -117,7 +117,7 @@ export default async function PageCommande({
           </p>
         )}
 
-        <section className="grid gap-4 rounded-carte border border-ligne bg-surface p-6">
+        <section className="grid gap-4 carte p-6">
           <div className="grid gap-1">
             <span className="text-xs font-semibold tracking-wider text-mauve uppercase">
               {estAcheteur ? "Mon achat" : "Ma vente"} · {c.mode_remise === "main_propre" ? "Main propre" : "Livraison"}
@@ -169,7 +169,7 @@ export default async function PageCommande({
         </section>
 
         {c.statut === "payee" && estAcheteur && c.mode_remise === "main_propre" && (
-          <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-6">
+          <section className="grid gap-3 carte p-6">
             <h2 className="font-titre text-lg font-semibold text-prune-nuit">Votre code de remise</h2>
             <p className="font-titre text-4xl font-semibold tracking-[0.3em] tabular-nums text-prune-nuit">{code ?? "······"}</p>
             <p className="text-sm text-mauve">
@@ -180,7 +180,7 @@ export default async function PageCommande({
         )}
 
         {c.statut === "payee" && estAcheteur && c.mode_remise === "livraison" && (
-          <section className="grid gap-3 rounded-carte border border-ligne bg-surface p-6">
+          <section className="grid gap-3 carte p-6">
             <p className="text-sm text-prune-nuit">
               {c.expediee_le ? (
                 <>
@@ -207,7 +207,7 @@ export default async function PageCommande({
         )}
 
         {c.statut === "payee" && estVendeur && (
-          <section className="grid gap-4 rounded-carte border border-ligne bg-surface p-6">
+          <section className="grid gap-4 carte p-6">
             {c.mode_remise === "main_propre" ? (
               <SaisieCode idCommande={c.id} />
             ) : (
