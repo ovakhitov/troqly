@@ -70,13 +70,13 @@ Ombres : `shadow-carte` (double ombre douce des cartes), `shadow-douce` (pilules
 en prune (`.lettrage`, le vrai titre reste pour les lecteurs d'écran), recherche, catégories en pilules avec une
 pastille photo de la catégorie, rayons par catégorie (mosaïque 2 × 2 de photos dans une rangée qui défile avec
 flèches rondes, `Defilement`), annonces boostées, dernières annonces, le manifeste et les trois étapes (scènes
-épinglées, voir « Scènes immersives »), frais dans une grande carte sombre avec le ticket blanc incliné, FAQ, les
+légères, voir « Scènes immersives »), frais dans une grande carte sombre avec le ticket blanc incliné, FAQ, les
 objections, puis l'appel final « Un placard qui déborde ? » sur une bande sombre animée par le champ d'anneau
 (`ChampAnneau`, voir plus bas) avec un `bouton-clair` vers `/deposer`. Les scènes viennent après les annonces :
 l'acheteur trouve d'abord la recherche et les objets.
 
 - Vitrine : quatre vraies annonces (boostées d'abord) flottent en constellation autour d'une étiquette de prix en verre 3D, puis le titre centré, la recherche en pilule (quoi | où | bouton prune) et les catégories en pilules.
-- `ObjetVerre` reprend le matériau du skill `premium-3d-glass` (verre en transmission totale, dispersion, irisation, studio de panneaux lumineux) sur une seule forme : une étiquette percée, devant le logo Troqly qu'elle réfracte. Three.js n'est chargé que sur l'accueil, au repos, après l'affichage ; l'image s'arrête hors écran et en onglet caché ; une image fixe si l'appareil demande moins d'animations ; rien sans WebGL 2. Le fond et la couleur du logo suivent le thème.
+- `ObjetVerre` reprend le matériau du skill `premium-3d-glass` (verre en transmission totale, dispersion, irisation, studio de panneaux lumineux) sur une seule forme : une étiquette percée, devant le logo Troqly qu'elle réfracte. Three.js n'est chargé que sur l'accueil, au repos, après l'affichage. L'image n'est redessinée que pendant que l'étiquette s'incline (souris, téléphone penché), jamais en continu ; son flottement est une simple animation CSS (`flotte`) ; elle ne dessine rien hors écran ni en onglet caché, reste fixe si l'appareil demande moins d'animations, et n'apparaît pas sans WebGL 2. Le fond et la couleur du logo suivent le thème.
 - Sur téléphone, la vitrine se resserre : deux cartes de part et d'autre de l'étiquette de verre (les deux vignettes sont masquées), puis le lettrage, la recherche et les catégories.
 - Puis les annonces boostées, les dernières annonces, l'encadré des frais et la FAQ, chacun dans sa carte.
 - Les grilles d'annonces passent de 2 colonnes à 4 dès 768 px, jamais 3 : une grille de 3 laisse une annonce seule sur sa ligne.
@@ -100,19 +100,21 @@ dans l'écran (`.revele`, animation liée au défilement, sans JavaScript ; aill
 Transitions courtes (150 à 500 ms, courbe `ease-verre`), au survol et au clic.
 Animations continues, toutes douces et coupées si l'appareil demande moins d'animations (`prefers-reduced-motion`) :
 la lumière de `BordureNeon` (elle reste alors allumée sans bouger), le flottement des cartes de la constellation (`flotte`, 10 px sur 7 s),
-la respiration de l'objet en verre (une image fixe à la place), le curseur point (la flèche normale revient) et le champ d'anneau (une image fixe).
+le flottement et l'inclinaison de l'étiquette de verre (elle reste immobile), l'anneau des boutons (absent), les scènes de l'accueil
+(texte plein, étapes en place, ovales tracés) et le champ d'anneau (une image fixe).
 
 ## Curseur et champ d'anneau
 
 Deux composants d'Originkit (« Dot Cursor » et « Cursor Ring Field », ajoutés le 16/10/2026 à la demande d'Ouva),
 refaits à la main d'après leur page car la commande `originkit add` ne passe pas depuis les fils dans le cloud, aux couleurs de Troqly.
+Du « Dot Cursor », on ne garde que l'anneau : le 17/10/2026, Ouva n'a pas aimé le point qui remplaçait la flèche.
 
-- `CurseurPoint` (tout le site sauf `/admin`) : sur ordinateur, un point prune de 14 px remplace la flèche, suivi d'une courte traînée
-  qui s'affine. Au-dessus d'un bouton ou d'une carte cliquable, il s'ouvre en anneau de 46 px ; sur un lien de texte, il devient un trait
-  de soulignement. Sa couleur suit le fond sous la souris (prune sur fond clair, lilas sur fond sombre). Le curseur texte normal revient
-  dans les champs de saisie. Coupé au doigt, si l'appareil demande moins d'animations et en contraste élevé de Windows (`forced-colors`).
-  Réglages par élément : `data-curseur="anneau"` (forcer l'anneau), `data-curseur="lien"` (forcer le soulignement),
-  `data-curseur="masquer"` (cacher le point, la flèche normale revient dans la zone).
+- `AnneauBouton` (tout le site sauf `/admin`) : la flèche normale du système reste. Au-dessus d'un bouton, d'une pastille ou d'un
+  lien-icône, un anneau prune de 46 px apparaît autour d'elle et la suit avec un léger ressort, se resserre au clic, puis s'efface en
+  quittant le bouton, au défilement ou hors de la fenêtre. Pas d'anneau sur les liens de texte ni sur les cartes. Lilas sur un bouton
+  ou un fond sombre. Coupé au doigt, si l'appareil demande moins d'animations et en contraste élevé de Windows (`forced-colors`).
+  `data-curseur="anneau"` force l'anneau sur un élément. C'est un seul petit élément déplacé par `transform`, qui ne calcule rien
+  tant que la souris ne survole pas de bouton.
 - `ChampAnneau` (appel final de l'accueil seulement) : des centaines de petits bâtonnets en WebGL ; un anneau de lumière suit la souris,
   les pousse et les allume en prune puis lilas. Sans souris, l'anneau se promène seul. Il s'arrête hors écran et en onglet caché, et sans
   WebGL la bande reste simplement sombre. Un voile sombre derrière le texte garde le contraste : ne jamais poser de texte long ni de
@@ -123,17 +125,31 @@ refaits à la main d'après leur page car la commande `originkit add` ne passe p
 D'après le skill `site-immersif-skill` (ajouté le 16/10/2026 à la demande d'Ouva). Le skill produit à l'origine un site
 vitrine d'une page dont on ne doit pas toucher le moteur ; sur Troqly, on n'en reprend que les scènes, refaites en
 composants React dans `src/components/immersif/`, avec le défilement normal du navigateur (pas de défilement détourné),
-aux couleurs et à la typographie de Troqly. Une scène est une section haute dont le contenu reste épinglé
-(`position: sticky`) pendant qu'on la traverse ; `useScene` (`scene.ts`) donne sa progression, lissée, et ne tourne
-qu'à l'écran.
+aux couleurs et à la typographie de Troqly.
 
-- `Manifeste` : trois phrases s'encrent lettre après lettre ; un ovale tracé à la main entoure « tout près » quand l'encre l'atteint. Entre `[[…]]` du modèle : deux ou trois mots au plus.
-- `Processus` : « Une annonce, [mosaïque de 4 photos d'annonces] trois étapes. » La mosaïque naît entre les mots et grandit jusqu'à une grande carte de 28 px de rayon ; un rideau de 7 lames prune la couvre puis se retire de droite à gauche ; les étapes se relaient (chacune tient un moment) à côté d'un numéro géant en filigrane qui défile comme un compteur ; l'appel « Déposer une annonce → » se dessine d'un ovale. Sur téléphone, le numéro passe au-dessus du texte.
+Depuis le 17/10/2026, à la demande d'Ouva (« il y a trop de choses, allège »), le manifeste et les trois étapes sont des
+sections légères, sans épinglage : leurs animations sont liées au défilement en CSS (`animation-timeline`), calculées par le
+navigateur sans script ; le script ne fait que mesurer les ovales (`useTrait`, `scene.ts`). Seules les objections restent une
+scène épinglée (section haute dont le contenu reste à l'écran, `position: sticky`, progression donnée par `useScene`).
+
+- `Manifeste` : une seule phrase, « Chaque objet mérite une seconde vie, tout près de chez vous. », qui s'encre mot après mot en montant vers le milieu de l'écran ; un ovale tracé à la main entoure « tout près » quand l'encre l'atteint. Ne pas la rallonger.
+- `Processus` : « Une annonce, [mosaïque de 4 photos d'annonces] trois étapes. » La petite mosaïque s'ouvre une fois entre les mots quand le titre arrive ; les trois étapes sont trois cartes (numéro prune 01, 02, 03, titre, une phrase) qui montent en entrant dans l'écran, de gauche à droite quand elles sont côte à côte ; l'appel « Déposer une annonce → » s'entoure d'un ovale en arrivant. Pas de rideau, de compteur ni de mosaïque plein écran : c'est ce qu'Ouva a trouvé trop chargé.
 - `Objections` : « Pas d'abonnement. Pas de frais pour déposer. Pas d'appli à installer. Juste vous, et (votre prix.) » s'encrent une à une ; à la souris, une traînée de photos d'annonces surgit sous le pointeur puis s'efface.
 - Cartes d'annonces de l'accueil (`grille-arrivee`) : elles arrivent décalées et penchées, puis se posent au fil du défilement (animation CSS liée au défilement, deux fois moins ample sur téléphone).
-- En mouvement réduit, chaque scène devient une section simple : texte plein, ovales tracés, étapes en liste, mosaïque en vignette dans la phrase, pas de traînée.
+- En mouvement réduit, chaque scène devient une section simple : texte plein, ovales tracés, étapes en place, mosaïque ouverte dans la phrase, pas de traînée. Les navigateurs sans animations liées au défilement montrent la même chose.
 - Ce qu'on ne reprend pas du modèle : l'écran de chargement (il retarde l'accès aux annonces), le témoignage client chiffré (pas de faux avis), la bande de devise, les photos de banques d'images (les visuels sont les photos des annonces).
 - Les phrases des scènes doivent rester vraies : ne pas promettre ce que le site ne fait pas (par exemple une protection acheteur, qui n'existe pas).
+
+## Performance
+
+Ouva a trouvé le site lent le 17/10/2026. Mesuré sur un navigateur ralenti : l'étiquette de verre redessinée en continu
+bloquait l'accueil, avant les flous répétés et le curseur. Règles qui en découlent :
+
+- WebGL (`ObjetVerre`, `ChampAnneau`) : ne redessiner que ce qui bouge, s'arrêter hors écran et en onglet caché ; jamais de boucle qui tourne en continu pour une animation douce qu'une transformation CSS peut faire.
+- Pas de `backdrop-filter` (flou d'arrière-plan) sur un élément répété (cartes, étiquettes de prix, vignettes) : un flou par carte ralentit tout le défilement. Il reste réservé à l'en-tête, à la barre d'onglets et aux fenêtres.
+- Ne pas changer de variable CSS à chaque image sur un conteneur : tous ses enfants sont recalculés. Déplacer directement les éléments concernés (`transform`).
+- Au défilement, préférer les animations CSS liées au défilement (`animation-timeline: view()`) ; ne rien mesurer (`getBoundingClientRect`, `elementFromPoint`) à chaque événement de défilement ; pas de nouvelle section épinglée de plusieurs écrans.
+- Les pages sont calculées à Paris, à côté de la base Supabase : `web/vercel.json` fixe la région `cdg1`. Ne pas retirer ce réglage.
 
 ## Tableau de bord administrateur
 

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk } from "next/font/google";
-import { CurseurPoint } from "@/components/CurseurPoint";
+import { AnneauBouton } from "@/components/AnneauBouton";
 import { DESCRIPTION_SITE, NOM_SITE, URL_SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -68,7 +68,7 @@ export default function RootLayout({
           Aller au contenu
         </a>
         <div className="coquille">{children}</div>
-        <CurseurPoint />
+        <AnneauBouton />
       </body>
     </html>
   );
