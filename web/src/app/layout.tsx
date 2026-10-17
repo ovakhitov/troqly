@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 import { AnneauBouton } from "@/components/AnneauBouton";
+import { DefilementDoux } from "@/components/DefilementDoux";
 import { DESCRIPTION_SITE, NOM_SITE, URL_SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -69,6 +70,7 @@ export default function RootLayout({
         </a>
         <div className="coquille">{children}</div>
         <AnneauBouton />
+        <DefilementDoux />
       </body>
     </html>
   );

@@ -414,6 +414,16 @@ a {
     inset 0 0 0 1.5px rgb(15 15 16 / 0.35);
 }
 
+/* Défilement fluide à la molette (composant DefilementDoux, bibliothèque Lenis, d'après lenis/dist/lenis.css) :
+   la page reste la zone qui défile, et les cadres intégrés ne captent pas la molette pendant un glissé. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 /* ═══ Scènes de l'accueil (d'après le skill site-immersif-skill, composants dans components/immersif) ═══ */
 
 /* Objections : le texte s'encre au défilement. data-anime est posé par le script ;
