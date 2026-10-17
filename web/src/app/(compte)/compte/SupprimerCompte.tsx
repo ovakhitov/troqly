@@ -13,7 +13,7 @@ export function SupprimerCompte() {
       <button
         type="button"
         onClick={() => dialogue.current?.showModal()}
-        className="justify-self-start text-sm font-semibold text-mauve hover:text-prune-nuit hover:underline"
+        className="justify-self-start text-sm font-semibold text-mauve hover:text-prune-nuit hover:underline pointer-coarse:min-h-11"
       >
         Supprimer mon compte
       </button>

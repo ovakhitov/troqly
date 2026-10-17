@@ -240,7 +240,7 @@ export default async function PageCommande({
                 <input type="checkbox" required className="mt-0.5 size-4 accent-[var(--action)]" />
                 Je ne peux pas honorer cette vente et je veux rembourser intégralement l&apos;acheteur.
               </label>
-              <button type="submit" className="justify-self-start text-sm font-semibold text-prune hover:underline">
+              <button type="submit" className="justify-self-start text-sm font-semibold text-prune hover:underline pointer-coarse:min-h-11">
                 Annuler et rembourser
               </button>
             </form>
