@@ -100,8 +100,15 @@ dans l'écran (`.revele`, animation liée au défilement, sans JavaScript ; aill
 Transitions courtes (150 à 500 ms, courbe `ease-verre`), au survol et au clic.
 Animations continues, toutes douces et coupées si l'appareil demande moins d'animations (`prefers-reduced-motion`) :
 la lumière de `BordureNeon` (elle reste alors allumée sans bouger), le flottement des cartes de la constellation (`flotte`, 10 px sur 7 s),
-le flottement et l'inclinaison de l'étiquette de verre (elle reste immobile), l'anneau des boutons (absent), les scènes de l'accueil
-(texte plein, étapes en place, ovales tracés) et le champ d'anneau (une image fixe).
+le flottement et l'inclinaison de l'étiquette de verre (elle reste immobile), l'anneau des boutons (absent), le défilement fluide
+(défilement normal), les scènes de l'accueil (texte plein, étapes en place, ovales tracés) et le champ d'anneau (une image fixe).
+
+Défilement fluide (`DefilementDoux`, bibliothèque Lenis, demandé par Ouva le 17/10/2026) : à la souris ou au pavé tactile, la page
+glisse puis ralentit au lieu d'avancer par crans. C'est la vraie position de la page qui bouge : animations liées au défilement,
+éléments collants et ancres fonctionnent comme avant. Restent ceux du navigateur : le doigt (téléphone, tablette), le clavier, la
+barre de défilement, ce qui défile à l'intérieur de la page (zone de texte, rangée de photos) et les fenêtres `<dialog>`. Un clic,
+une touche ou un retour arrière arrête un glissé net. Absent de `/admin`. Pas d'option `anchors` de Lenis : les liens d'ancre et
+« Aller au contenu » gardent le saut et le focus du navigateur.
 
 ## Curseur et champ d'anneau
 
@@ -149,6 +156,7 @@ bloquait l'accueil, avant les flous répétés et le curseur. Règles qui en dé
 - Pas de `backdrop-filter` (flou d'arrière-plan) sur un élément répété (cartes, étiquettes de prix, vignettes) : un flou par carte ralentit tout le défilement. Il reste réservé à l'en-tête, à la barre d'onglets et aux fenêtres.
 - Ne pas changer de variable CSS à chaque image sur un conteneur : tous ses enfants sont recalculés. Déplacer directement les éléments concernés (`transform`).
 - Au défilement, préférer les animations CSS liées au défilement (`animation-timeline: view()`) ; ne rien mesurer (`getBoundingClientRect`, `elementFromPoint`) à chaque événement de défilement ; pas de nouvelle section épinglée de plusieurs écrans.
+- Défilement fluide : Lenis ne calcule des images que pendant un glissé à la molette, jamais au repos, et repart à chaque geste de la vraie position de la page. Chaque image d'un glissé fait un peu travailler le processeur (mesuré le 17/10/2026 sur un navigateur ralenti 4× : 33 images/s au lieu de 42 au milieu de l'accueil, 20 en haut avant comme après) : ne pas y ajouter de travail à chaque image (mesures, style modifié dans un événement `scroll`).
 - Les pages sont calculées à Paris, à côté de la base Supabase : `web/vercel.json` fixe la région `cdg1`. Ne pas retirer ce réglage.
 
 ## Tableau de bord administrateur
