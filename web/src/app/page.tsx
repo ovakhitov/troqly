@@ -285,7 +285,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
             )}
           </section>
 
-          {/* Scènes épinglées au défilement (skill site-immersif-skill) : l'idée, puis les trois étapes d'une vente */}
+          {/* Scènes légères au défilement (skill site-immersif-skill) : l'idée, puis les trois étapes d'une vente */}
           <Manifeste />
           <Processus photos={photos.slice(0, 4)} />
 

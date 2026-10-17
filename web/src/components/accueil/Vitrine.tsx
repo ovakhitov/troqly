@@ -18,10 +18,16 @@ const places = [
   { carte: false, classe: "hidden lg:block lg:left-[25%] lg:top-[60%] lg:w-[7.5%]", rx: -4, ry: 12, rz: -10, p: 1.6 },
 ];
 
+// Inclinaison d'un emplacement pour une position de souris (de -1 à 1 sur chaque axe)
+const incliner = (p: (typeof places)[number], x: number, y: number) =>
+  `translate3d(${(x * 18 * p.p).toFixed(2)}px, ${(y * 12 * p.p).toFixed(2)}px, 0) rotateX(${(p.rx - y * 5).toFixed(2)}deg) rotateY(${(p.ry + x * 7).toFixed(2)}deg) rotateZ(${p.rz}deg)`;
+
 // Vitrine de l'accueil, d'après la capture Shop : des objets du moment flottent en perspective autour de l'étiquette
 // de verre et suivent légèrement la souris, au-dessus du grand lettrage « troqly ». Sur un téléphone Android,
 // c'est l'inclinaison de l'appareil qui les fait bouger (sans rien demander : sur iPhone, l'autorisation serait
 // obligatoire, donc la vitrine y flotte seule). Si l'appareil demande moins d'animations, tout reste immobile.
+// Chaque emplacement reçoit directement sa transformation : une variable CSS posée sur la vitrine ferait
+// recalculer le style de tout ce qu'elle contient à chaque image.
 export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
   const scene = useRef<HTMLDivElement>(null);
 
@@ -34,11 +40,11 @@ export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
     const pos = { x: 0, y: 0 };
     let image = 0;
     let visible = true;
+    const emplacements = [...el.querySelectorAll<HTMLElement>("[data-place]")];
     const pas = () => {
       pos.x += (vise.x - pos.x) * 0.08;
       pos.y += (vise.y - pos.y) * 0.08;
-      el.style.setProperty("--px", pos.x.toFixed(4));
-      el.style.setProperty("--py", pos.y.toFixed(4));
+      emplacements.forEach((e) => (e.style.transform = incliner(places[Number(e.dataset.place)], pos.x, pos.y)));
       image = Math.abs(vise.x - pos.x) + Math.abs(vise.y - pos.y) > 0.001 ? requestAnimationFrame(pas) : 0;
     };
     const viser = (x: number, y: number) => {
@@ -76,7 +82,7 @@ export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
       {/* Le centrage (translate) et l'arrivée (qui anime aussi translate) sont sur deux boîtes distinctes */}
       <div className="absolute top-[30%] left-1/2 h-[70%] w-[44%] -translate-x-1/2 sm:top-[2%] sm:h-[96%] sm:w-[32%]">
         <div className="arrivee size-full" style={{ "--arrivee-delai": "250ms" } as CSSProperties}>
-          <ObjetVerre className="size-full" />
+          <ObjetVerre className="flotte size-full" />
         </div>
       </div>
 
@@ -85,13 +91,9 @@ export function Vitrine({ objets }: { objets: ObjetVitrine[] }) {
         return (
           <div
             key={o.id}
-            className={`absolute ${p.classe}`}
-            style={
-              {
-                transform: `translate3d(calc(var(--px, 0) * ${18 * p.p}px), calc(var(--py, 0) * ${12 * p.p}px), 0) rotateX(calc(${p.rx}deg + var(--py, 0) * -5deg)) rotateY(calc(${p.ry}deg + var(--px, 0) * 7deg)) rotateZ(${p.rz}deg)`,
-                transformStyle: "preserve-3d",
-              } as CSSProperties
-            }
+            data-place={i}
+            className={`absolute will-change-transform ${p.classe}`}
+            style={{ transform: incliner(p, 0, 0), transformStyle: "preserve-3d" }}
           >
             <div className="arrivee" style={{ "--arrivee-delai": `${120 + i * 110}ms` } as CSSProperties}>
               <Link

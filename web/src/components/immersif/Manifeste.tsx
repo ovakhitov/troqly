@@ -1,103 +1,48 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { creerTrace, douce, mouvementReduit, OVALE, tranche, useScene } from "./scene";
+import { Fragment, useRef, type CSSProperties } from "react";
+import { OVALE, useTrait } from "./scene";
 
-// Le texte s'encre lettre après lettre pendant qu'on fait défiler ; un ovale tracé à la main entoure deux mots
-// quand l'encre les atteint (scène « manifeste » du skill site-immersif-skill). Sans animation : texte plein, ovale tracé.
-const MORCEAUX = [
-  { texte: "Chaque objet mérite une seconde vie. Sur Troqly, ce qui dort au fond d'un placard trouve preneur " },
-  { texte: "tout près", entoure: true },
-  { texte: " de chez vous, ou à l'autre bout de la France. Vous fixez le prix, vous choisissez comment le remettre." },
-];
-const TEXTE = MORCEAUX.map((m) => m.texte).join("");
-const DEBUT = 0;
-const FIN = 0.62;
+// Une seule phrase, qui s'encre mot après mot pendant qu'elle monte vers le milieu de l'écran ; un ovale tracé à
+// la main entoure « tout près » quand l'encre l'atteint (scène « manifeste » du skill site-immersif-skill, en version
+// légère : pas d'épinglage, et l'animation est faite par le navigateur en CSS, sans script pendant le défilement).
+// Sans cette prise en charge ou en mouvement réduit : texte plein, ovale tracé.
+const MOTS = "Chaque objet mérite une seconde vie, tout près de chez vous.".split(" ");
+const OVALE_DE = 6; // « tout près »
+const OVALE_A = 8;
 
-// Chaque mot reste insécable, chaque lettre a son span
-function Lettres({ texte }: { texte: string }) {
-  return texte.split(/(\s+)/).map((mot, i) =>
-    /^\s+$/.test(mot) ? (
-      " "
-    ) : mot ? (
-      <span key={i} className="whitespace-nowrap">
-        {[...mot].map((c, j) => (
-          <span key={j} data-c="">
-            {c}
-          </span>
-        ))}
+// Les mots [de, a[ de la phrase, chacun dans son span numéroté (--i règle le moment où il s'encre)
+const mots = (de: number, a: number) =>
+  MOTS.slice(de, a).map((mot, k) => (
+    <Fragment key={de + k}>
+      {k > 0 && " "}
+      <span data-mot="" style={{ "--i": de + k } as CSSProperties}>
+        {mot}
       </span>
-    ) : null,
-  );
-}
+    </Fragment>
+  ));
 
 export function Manifeste() {
-  const racine = useRef<HTMLElement>(null);
-  const paragraphe = useRef<HTMLParagraphElement>(null);
   const chemin = useRef<SVGPathElement>(null);
-  const etat = useRef<{ lettres: HTMLElement[]; allumees: number; finOvale: number; trace: ReturnType<typeof creerTrace> } | null>(null);
-
-  useEffect(() => {
-    const p = paragraphe.current;
-    if (!p || !chemin.current || mouvementReduit()) return;
-    p.dataset.anime = "";
-    const lettres = [...p.querySelectorAll<HTMLElement>("[data-c]")];
-    const ovale = p.querySelectorAll<HTMLElement>(".ovale [data-c]");
-    const trace = creerTrace(chemin.current);
-    trace.poser(1);
-    etat.current = { lettres, allumees: 0, finOvale: lettres.indexOf(ovale[ovale.length - 1]), trace };
-    const remesurer = () => trace.mesurer();
-    document.fonts?.ready.then(remesurer);
-    window.addEventListener("resize", remesurer);
-    return () => {
-      window.removeEventListener("resize", remesurer);
-      delete p.dataset.anime;
-      lettres.forEach((l) => l.classList.remove("on"));
-      etat.current = null;
-    };
-  }, []);
-
-  useScene(racine, (p) => {
-    const e = etat.current;
-    if (!e) return;
-    const n = e.lettres.length;
-    const idx = Math.round(tranche(p, DEBUT, FIN) * n);
-    if (idx !== e.allumees) {
-      for (let i = Math.min(idx, e.allumees); i < Math.max(idx, e.allumees); i++) e.lettres[i].classList.toggle("on", i < idx);
-      e.allumees = idx;
-    }
-    // L'ovale ne se trace qu'une fois l'encre arrivée au bout des mots entourés
-    const t = DEBUT + ((e.finOvale + 1) / n) * (FIN - DEBUT);
-    e.trace.poser(1 - tranche(p, t, t + 0.16, douce));
-  });
+  useTrait(chemin);
 
   return (
-    <section ref={racine} aria-label="L'idée de Troqly" className="relative h-[240svh] motion-reduce:h-auto">
-      <div className="sticky top-0 grid h-[100svh] place-items-center motion-reduce:static motion-reduce:h-auto motion-reduce:py-16">
-        <p className="sr-only">{TEXTE}</p>
-        <p
-          ref={paragraphe}
-          aria-hidden="true"
-          className="manifeste max-w-[55rem] text-[clamp(1.375rem,5.8vw,1.875rem)] leading-[1.18] font-medium tracking-[-0.03em] text-prune-nuit sm:text-[clamp(1.75rem,3.6vw,3.25rem)] sm:leading-[1.14]"
-        >
-          {MORCEAUX.map((m, i) =>
-            m.entoure ? (
-              <span key={i} className="ovale relative whitespace-nowrap text-prune">
-                <Lettres texte={m.texte} />
-                <svg
-                  className="pointer-events-none absolute -inset-x-[0.35em] -inset-y-[0.22em] h-[calc(100%+0.44em)] w-[calc(100%+0.7em)] overflow-visible"
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                >
-                  <path ref={chemin} d={OVALE} className="fill-none stroke-prune [stroke-width:1.5] [vector-effect:non-scaling-stroke]" />
-                </svg>
-              </span>
-            ) : (
-              <Lettres key={i} texte={m.texte} />
-            ),
-          )}
-        </p>
-      </div>
+    <section aria-label="L'idée de Troqly" className="grid place-items-center py-[8svh] text-center sm:py-[12svh]">
+      <p className="manifeste max-w-[16em] text-[clamp(1.875rem,8.4vw,2.75rem)] leading-[1.12] font-medium tracking-[-0.045em] text-balance text-prune-nuit sm:text-[clamp(2.75rem,5.6vw,4.5rem)]">
+        {mots(0, OVALE_DE)}{" "}
+        <span className="relative whitespace-nowrap text-prune">
+          {mots(OVALE_DE, OVALE_A)}
+          <svg
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-x-[0.3em] -inset-y-[0.08em] h-[calc(100%+0.16em)] w-[calc(100%+0.6em)] overflow-visible"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            <path ref={chemin} d={OVALE} className="trait fill-none stroke-prune [stroke-width:1.5] [vector-effect:non-scaling-stroke]" />
+          </svg>
+        </span>{" "}
+        {mots(OVALE_A, MOTS.length)}
+      </p>
     </section>
   );
 }

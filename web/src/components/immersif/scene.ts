@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 
-// Outils des scènes « immersives » (d'après le skill site-immersif-skill, adapté au défilement natif de Next.js) :
-// une scène est une section haute dont le contenu reste épinglé à l'écran (position: sticky) pendant qu'on la
-// traverse ; sa progression va de 0 (son haut touche le haut de l'écran) à 1 (son bas touche le bas de l'écran).
+// Outils des scènes « immersives » (d'après le skill site-immersif-skill, adapté au défilement natif de Next.js).
+// Une scène épinglée (Objections) est une section haute dont le contenu reste à l'écran (position: sticky) pendant
+// qu'on la traverse ; sa progression va de 0 (son haut touche le haut de l'écran) à 1 (son bas touche le bas de l'écran).
+// Les scènes légères (Manifeste, Processus) n'utilisent que useTrait : le reste est en CSS.
 
 export const borner = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 export const melanger = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -106,6 +107,34 @@ export function creerTrace(chemin: SVGPathElement) {
   };
   mesurer();
   return { mesurer, poser };
+}
+
+// Trait SVG qui se dessine par une animation CSS liée au défilement (classe .trait, voir globals.css) : le script
+// ne fait que donner au style la longueur du trait à sa taille affichée, dans --longueur, et la remesurer si elle change.
+export function useTrait(chemin: RefObject<SVGPathElement | null>) {
+  useEffect(() => {
+    const c = chemin.current;
+    const svg = c?.ownerSVGElement;
+    if (!c || !svg) return;
+    const observateur = new ResizeObserver(() => {
+      if (!svg.clientWidth) return;
+      const vb = svg.viewBox.baseVal;
+      const sx = svg.clientWidth / (vb?.width || 100);
+      const sy = svg.clientHeight / (vb?.height || 100);
+      // Longueur à l'écran, en suivant le trait point par point : l'ovale est étiré différemment en largeur et en hauteur
+      const total = c.getTotalLength();
+      let longueur = 0;
+      let avant = c.getPointAtLength(0);
+      for (let k = 1; k <= 96; k++) {
+        const point = c.getPointAtLength((total * k) / 96);
+        longueur += Math.hypot((point.x - avant.x) * sx, (point.y - avant.y) * sy);
+        avant = point;
+      }
+      c.style.setProperty("--longueur", `${Math.ceil(longueur * 1.04)}px`);
+    });
+    observateur.observe(svg);
+    return () => observateur.disconnect();
+  }, [chemin]);
 }
 
 // Le même ovale tracé à la main que le modèle, étiré sur le mot qu'il entoure

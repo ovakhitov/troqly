@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import type { Material } from "three";
 
 // Étiquette de prix en verre optique (réfraction, dispersion, irisation), d'après le skill « Premium 3D Glass ».
-// Purement décorative : Three.js n'est chargé qu'une fois la page affichée et au repos, l'image s'arrête
-// hors de l'écran ou dans un onglet caché, et une seule image fixe est rendue si l'appareil demande moins d'animations.
+// Purement décorative : Three.js n'est chargé qu'une fois la page affichée et au repos, et l'image n'est redessinée
+// que pendant que l'objet s'incline, à 30 images par seconde au plus : au repos, la carte graphique ne travaille plus
+// (le flottement doux vient de la classe CSS « flotte », posée par la vitrine). Une seule image fixe si l'appareil demande moins d'animations.
 // Sans WebGL, ou en mode économie de données, rien ne s'affiche et la place reste réservée.
 // Le pointeur l'incline sur ordinateur ; sur un téléphone Android, c'est l'inclinaison de l'appareil.
 export function ObjetVerre({ className = "" }: { className?: string }) {
@@ -29,7 +30,8 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
 
       const calme = window.matchMedia("(prefers-reduced-motion: reduce)");
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "low-power" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // Au-delà de 1,5, la différence ne se voit pas sur du verre, mais le coût double
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.2;
       renderer.domElement.setAttribute("aria-hidden", "true");
@@ -175,20 +177,26 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
       };
       dimensionner();
 
-      // Le pointeur incline légèrement l'objet ; le temps le fait respirer
+      // Le pointeur incline légèrement l'objet. La cible est arrondie : un capteur qui tremble ne relance rien.
       const vise = { x: 0, y: 0 };
       const incline = { x: 0, y: 0 };
-      const suivrePointeur = (e: PointerEvent) => {
-        vise.x = (e.clientX / window.innerWidth - 0.5) * 0.5;
-        vise.y = (e.clientY / window.innerHeight - 0.5) * 0.35;
+      const viser = (x: number, y: number) => {
+        if (calme.matches) return;
+        const nx = Math.round(x / 0.004) * 0.004;
+        const ny = Math.round(y / 0.004) * 0.004;
+        if (nx === vise.x && ny === vise.y) return;
+        vise.x = nx;
+        vise.y = ny;
+        relancer();
       };
+      const suivrePointeur = (e: PointerEvent) =>
+        viser((e.clientX / window.innerWidth - 0.5) * 0.5, (e.clientY / window.innerHeight - 0.5) * 0.35);
       // Sur téléphone : l'inclinaison, mesurée depuis la façon dont on le tient (le repère suit lentement)
       let repere: number | null = null;
       const pencher = (e: DeviceOrientationEvent) => {
         if (e.gamma === null || e.beta === null) return;
         repere = repere === null ? e.beta : repere + (e.beta - repere) * 0.02;
-        vise.x = Math.max(-1, Math.min(1, e.gamma / 25)) * 0.25;
-        vise.y = Math.max(-1, Math.min(1, (e.beta - repere) / 20)) * 0.18;
+        viser(Math.max(-1, Math.min(1, e.gamma / 25)) * 0.25, Math.max(-1, Math.min(1, (e.beta - repere) / 20)) * 0.18);
       };
       const souris = window.matchMedia("(pointer: fine)").matches;
       // Sur iPhone, lire l'inclinaison exige une autorisation : on s'en passe
@@ -196,26 +204,38 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
         typeof DeviceOrientationEvent === "undefined" ||
         typeof (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission === "function";
 
-      const poser = (t: number) => {
-        incline.x += (vise.x - incline.x) * 0.06;
-        incline.y += (vise.y - incline.y) * 0.06;
-        etiquette.rotation.y = -0.28 + Math.sin(t * 0.00045) * 0.3 + incline.x;
-        etiquette.rotation.x = 0.14 + Math.sin(t * 0.0006) * 0.08 + incline.y;
-        etiquette.rotation.z = -0.18 + Math.sin(t * 0.0003) * 0.05;
-        etiquette.position.y = Math.sin(t * 0.0009) * 0.06;
+      // Rattrapage exponentiel de la cible, le même quelle que soit la cadence des images
+      const poser = (dt: number) => {
+        const k = 1 - Math.pow(0.92, dt / 16.7);
+        incline.x += (vise.x - incline.x) * k;
+        incline.y += (vise.y - incline.y) * k;
+        etiquette.rotation.y = -0.28 + incline.x;
+        etiquette.rotation.x = 0.14 + incline.y;
+        etiquette.rotation.z = -0.18;
       };
 
+      // Une image à la fois, seulement tant que l'inclinaison n'a pas rejoint sa cible, et au plus 30 par seconde :
+      // le mouvement est lent, et chaque image de verre coûte cher à la carte graphique
       let visible = true;
       let image = 0;
-      const boucle = (t: number) => {
+      let avant = 0;
+      const boucle = (maintenant: number) => {
         image = 0;
-        poser(t);
+        if (maintenant - avant < 30) {
+          image = requestAnimationFrame(boucle);
+          return;
+        }
+        poser(Math.min(maintenant - avant, 100));
+        avant = maintenant;
         renderer.render(scene, camera);
-        if (visible && !calme.matches && !document.hidden) image = requestAnimationFrame(boucle);
+        const bouge = Math.abs(vise.x - incline.x) + Math.abs(vise.y - incline.y) > 0.0005;
+        if (bouge && visible && !calme.matches && !document.hidden) image = requestAnimationFrame(boucle);
       };
-      const relancer = () => {
-        if (!image && visible && !document.hidden) image = requestAnimationFrame(boucle);
-      };
+      function relancer() {
+        if (image || !visible || document.hidden) return;
+        avant = performance.now() - 33;
+        image = requestAnimationFrame(boucle);
+      }
 
       const observateur = new IntersectionObserver(([entree]) => {
         visible = entree.isIntersecting;
@@ -244,8 +264,17 @@ export function ObjetVerre({ className = "" }: { className?: string }) {
       if (souris) window.addEventListener("pointermove", suivrePointeur, { passive: true });
       else if (!permissionRequise) window.addEventListener("deviceorientation", pencher, { passive: true });
 
-      // Première image : fixe et de trois quarts si l'appareil demande moins d'animations
-      boucle(calme.matches ? 0 : performance.now());
+      // Les shaders se compilent en tâche de fond quand le navigateur le permet, sans figer la page
+      await renderer.compileAsync(scene, camera).catch(() => undefined);
+      if (annule) {
+        renderer.dispose();
+        renderer.forceContextLoss();
+        renderer.domElement.remove();
+        return;
+      }
+
+      // Première image, de trois quarts ; elle reste affichée tant que rien ne bouge
+      boucle(performance.now());
       conteneur.dataset.pret = "";
 
       arret = () => {
